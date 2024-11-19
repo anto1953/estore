@@ -1,0 +1,366 @@
+<%- include('../partials/_header') %>
+<%- include('../partials/style') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<body>
+    <%- include('../partials/sidebar') %>
+    <%- include('../partials/topbar') %>
+    <div class="content p-4" id="main-content">
+        <div class="container-fluid mt-5 pt-5">
+            <div id="products" class="section-details active">
+                <h2>order Management</h2>
+                <p>Manage orders here</p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <!-- Search Form -->
+                    <form action="/admin/orders" method="GET" class="d-flex align-items-center" style="flex: 1;">
+                        <input type="text" name="search" class="form-control" style="width: 30%;" placeholder="Search  orders" value="<%= searchQuery %>">
+                        <button type="submit" class="btn btn-primary ms-2" style="border-color: white;">Search</button>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <% if (orders.length > 0) { %>
+                        <table class="table table-striped mt-4">
+                            <thead>
+                                <tr>
+                                    <th>s.no</th>
+                                    <th>Order Id</th>
+                                    <th>User Name</th>
+                                    <th>Product Name</th>
+                                    <th>Total Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% orders.forEach((order, index) => { %>
+                                    <tr>
+                                        <td><%= (currentPage - 1) * 10 + index + 1 %></td>
+                                        <td><%= order._id %></td>
+                                        <td><%= order.userId ? order.userId.name : 'N/A' %></td> 
+                                        <td>
+                                            <% order.products.forEach(p => { %>
+                                                <% if (!p.isCancelled) { %>
+                                                    <%= p.productId ? (p.productId.pname.length > 20 ? p.productId.pname.slice(0, 20) + '...' : p.productId.pname) : 'Unknown Product' %><br>
+                                                <% } %>
+                                            <% }) %>
+                                        </td>
+                                        
+                                        <td>₹<%= order.totalPrice %></td>
+
+                                        <td>
+                                            <% if (order.returnRequestStatus) { %>
+                                                <button class="btn btn-sm <%= order.returnRequestStatus === 'Return accepted' ? 'btn-success' : 'btn-warning' %>" disabled>
+                                                    <%= order.returnRequestStatus.charAt(0).toUpperCase() + order.returnRequestStatus.slice(1) %>
+                                                </button>
+                                            <% } else { %>
+                                                <select 
+                                                    class="form-select" 
+                                                    onchange="updateOrderStatus('<%= order._id %>', this.value)" 
+                                                    <%= order.returnRequestStatus === 'Request Pending' ? 'disabled' : '' %>
+                                                >
+                                                    <% ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].forEach(status => { %>
+                                                        <option value="<%= status %>" <%= order.orderStatus === status ? 'selected' : '' %>><%= status %></option>
+                                                    <% }) %>
+                                                </select>
+                                            <% } %>
+                                        </td>
+                                        
+                                        <td>
+                                            <% if (order.products.some(product => product.returnRequestStatus=='Request Pending')) { %>
+                                                <button class="btn btn-sm btn-info" onclick="viewReturnAProductRequest('<%= order._id %>')">
+                                                    View Request
+                                                </button>
+                                            <% } else { %>
+                                                <% if (order.returnRequestStatus === "Request Pending") { %>
+                                                    <button class="btn btn-sm btn-info" onclick="viewReturnRequest('<%= order._id %>')">View Request</button>
+                                                <% } else { %>
+                                                    <button class="btn btn-sm btn-danger" onclick="cancelOrder('<%= order._id %>')" <%= order.returnRequestStatus || order.orderStatus == 'Delivered' || order.orderStatus=='Cancelled' ? 'disabled' : '' %>>Cancel</button>
+                                                <% } %>
+                                            <% } %>
+                                        </td>
+                                        
+                                        </tr>
+
+                                    <div id="returnRequestModal" class="modal" tabindex="-1" role="dialog">
+                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title " style="color: black;">Return Request message</h5>
+                                        <button type="button" class="close" onclick="closeReturnRequestModal()" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+                                        <div class="modal-body">
+                                        <p style="color: black;" id="returnRequestMessage"><%= order.returnRequest %></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                        <button type="button" class="btn btn-success" data-id="<%= order._id %>"  onclick="acceptReturnRequest()">Accept</button>
+                                        <button type="button" class="btn btn-danger" onclick="rejectReturnRequest('<%= order._id %>')">Reject</button>
+                                        <button type="button" class="btn btn-secondary" onclick="closeReturnRequestModal()">Close</button>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    </div>
+
+
+                                    <div id="returnAProductRequestModal" class="modal" tabindex="-1" role="dialog">
+                                        <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                            <h5 class="modal-title " style="color: black;">Return Request message</h5>
+                                            <button type="button" class="close" onclick="closeReturnRequestModal()" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                            </div>
+                                            <div class="modal-body">
+                                            <p style="color: black;" id="returnRequestMessage"><%= order.products.returnRequest %></p>
+                                            </div>
+                                            <div class="modal-footer">
+                                            <button type="button" class="btn btn-success" data-id="<%= order._id %>"  onclick="acceptReturnRequest()">Accept</button>
+                                            <button type="button" class="btn btn-danger" onclick="rejectReturnRequest('<%= order._id %>')">Reject</button>
+                                            <button type="button" class="btn btn-secondary" onclick="closeReturnRequestModal()">Close</button>
+                                            </div>
+                                        </div>
+                                        </div>
+                                        </div>
+
+
+
+                                <% }) %>
+                            </tbody>
+                            
+                            
+                        </table>
+
+                        <!-- Pagination Controls -->
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                <% if (currentPage > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                <% } %>
+                                <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+                                <% if (currentPage < totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+
+                    <% } else { %>
+                        <h1>NO ORDERS FOUND</h1>
+                    <% } %> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+function updateOrderStatus(orderId, status) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: `You are about to change the order status to ${status}.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, update it!',
+        cancelButtonText: 'No, cancel!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/admin/updateOrderStatus', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId, status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Updated!',
+                        'The order status has been updated.',
+                        'success'
+                    );
+                } else {
+                    Swal.fire(
+                        'Failed!',
+                        'There was an issue updating the order status.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => console.error('Error updating order status:', error));
+        }
+    });
+}
+
+//  cancel the order 
+function cancelOrder(orderId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'You are about to cancel this order.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, cancel it!',
+        cancelButtonText: 'No, keep it!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/admin/cancelOrder', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status=='success') {
+                    Swal.fire({
+                        icon:'success',
+                        text:data.message
+                    }).then(()=>{
+                    location.reload();
+                })
+                } else {
+                    Swal.fire(
+                        'Failed!',
+                        'There was an issue cancelling the order.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => console.log('Error cancelling order:', error));
+        }
+    });
+}
+
+function viewReturnRequest(orderId) {
+    window.sessionStorage.setItem('order-id',orderId)
+    fetch(`/admin/getReturnRequest/${orderId}`,{
+        method:'get'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('returnRequestMessage').textContent = data.returnRequest;
+                document.getElementById('returnRequestModal').style.display = 'block';
+            } else {
+                Swal.fire({
+                    text:data.message
+                })
+            }
+        })
+        .catch(error => {
+           Swal.fire({
+            icon:'error',
+            text:data.message
+           })
+        });
+}
+
+function viewReturnAProductRequest(orderId,productId) {
+    window.sessionStorage.setItem('order-id',orderId)
+    fetch(`/admin/getReturnAProductRequest/${orderId}`,{
+        method:'get'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('returnAProductRequestMessage').textContent = data.returnRequest;
+                document.getElementById('returnAProductRequestModal').style.display = 'block';
+            } else {
+                Swal.fire({
+                    text:data.message
+                })
+            }
+        })
+        .catch(error => {
+           Swal.fire({
+            icon:'error',
+            text:data.message
+           })
+        });
+}
+
+function closeReturnRequestModal() {
+    document.getElementById('returnRequestModal || returnAProductRequestModal').style.display = 'none';
+}
+
+function acceptReturnRequest() {
+    let orderId=window.sessionStorage.getItem('order-id')
+    fetch(`/admin/acceptReturnRequest/${orderId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({
+                icon:'success',
+                text:data.message
+            }).then(()=>{
+                window.location.href="/admin/orders"
+        })
+            closeReturnRequestModal();
+        } else {
+            Swal.fire({
+                icon:'error',
+                text:data.message
+            })
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon:'error',
+            text:data.message
+        })
+    });
+}
+
+function rejectReturnRequest() {
+    let orderId=window.sessionStorage.getItem('order-id')
+    fetch(`/admin/rejectReturnRequest/${orderId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({
+                icon:'success',
+                text:data.message
+            }).then(()=>{
+                window.location.href="/admin/orders"
+        })
+            closeReturnRequestModal();
+            // location.reload(); 
+        } else {
+            Swal.fire({
+                icon:'error',
+                text:data.message
+            })
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon:'error',
+            text:data.message
+        })
+    });
+}
+</script>
+</body>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <%- include('../partials/_header') %>
+    <%- include('../partials/style') %>
+
+    
+</head>
+
+<body>
+    <%- include('../partials/sidebar')  %>
+    <%- include('../partials/topbar')  %>
+
+    
+    <!-- Main Content Area -->
+    <div class="content p-4" id="main-content">
+        <div class="container-fluid mt-5 pt-5">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="section-details active">
+                <h2>Dashboard</h2>
+                <p>Manage your dashboard here</p>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Sales</h5>
+                                <canvas id="salesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Customers</h5>
+                                <canvas id="customersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Orders</h5>
+                                <canvas id="ordersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Revenue</h5>
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Products Section -->
+             <>
+
+              <!-- Categories Section   -->
+             <div id="categories" class="section-details">
+                <h2>Categories Management</h2>
+                <p>Manage your categories here</p>
+                <button class="btn btn-primary mb-3" onclick="alert('Add Category functionality to be implemented.')" style="float: right;"><i class="bi bi-plus-circle"></i> Add Category</button>
+                <table class="table table-striped mt-4">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Category 1</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Category 2</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+             <!-- Coupons Section  -->
+            <div id="coupons" class="section-details">
+                <h2>Coupons Management</h2>
+                <p>Manage your coupons here</p>
+                <button class="btn btn-primary mb-3" onclick="alert('Add Coupon functionality to be implemented.')" style="float: right;"><i class="bi bi-plus-circle"></i> Add Coupon</button>
+                <table class="table table-striped mt-4">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Code</th>
+                            <th>Discount</th>
+                            <th>Expiry Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>COUPON1</td>
+                            <td>10%</td>
+                            <td>2024-12-31</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>COUPON2</td>
+                            <td>20%</td>
+                            <td>2024-11-30</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>    
+                </table>
+            </div> 
+
+            <!-- Offers Section -->
+             <div id="offers" class="section-details">
+                <h2>Offers Management</h2>
+                <p>Manage your offers here</p>
+                <button class="btn btn-primary mb-3" onclick="alert('Add Offer functionality to be implemented.')" style="float: right;"><i class="bi bi-plus-circle"></i> Add Offer</button>
+                <table class="table table-striped mt-4">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Offer Name</th>
+                            <th>Discount</th>
+                            <th>Valid Until</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Offer 1</td>
+                            <td>15%</td>
+                            <td>2024-12-31</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Offer 2</td>
+                            <td>25%</td>
+                            <td>2024-11-30</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>  
+    </div> 
+     
+    <script>
+
+function loadSection(section) {
+            const sectionContent = document.getElementById('main-content');
+            fetch(section)
+                .then(response => response.text())
+                .then(data => {
+                    sectionContent.innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error loading section:', error);
+                });
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section-details').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(section).classList.add('active');
+        }
+
+        function toggleStatus(button) {
+            if (button.classList.contains('btn-success')) {
+                button.classList.remove('btn-success');
+                button.classList.add('btn-warning');
+                button.innerText = 'Inactive';
+            } else {
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-success');
+                button.innerText = 'Active';
+            }
+        }
+
+        // Chart.js code for the charts
+        const ctxSales = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctxSales, {
+            type: 'line',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [65, 59, 80, 81, 56, 55, 40],
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'white' // Change y-axis text color
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'white' // Change x-axis text color
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white' // Change legend text color
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctxCustomers = document.getElementById('customersChart').getContext('2d');
+        const customersChart = new Chart(ctxCustomers, {
+            type: 'bar',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'Customers',
+                    data: [12, 19, 3, 5, 2, 3, 7],
+                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'white' // Change y-axis text color
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'white' // Change x-axis text color
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white' // Change legend text color
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctxOrders = document.getElementById('ordersChart').getContext('2d');
+        const ordersChart = new Chart(ctxOrders, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Pending', 'Cancelled'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [10, 5, 2],
+                    backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white' // Change legend text color
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(ctxRevenue, {
+            type: 'pie',
+            data: {
+                labels: ['Product A', 'Product B', 'Product C'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [300, 50, 100],
+                    backgroundColor: ['#2196f3', '#ffeb3b', '#f44336'],
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white' // Change legend text color
+                        }
+                    }
+                }
+            }
+        });
+
+        
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,145 @@
+<%- include('../partials/_header') %>
+<%- include('../partials/style') %>
+
+<body>
+    <%- include('../partials/sidebar')  %>
+    <%- include('../partials/topbar')  %>
+
+    <div class="content p-4" id="main-content">
+        <div class="container-fluid mt-5 pt-5">
+            <div id="users" class="section-details active">
+                <h2>User Management</h2>
+                <p>Manage your users here</p>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <!-- Search Form -->
+                    <form action="/admin/users" method="GET" class="d-flex align-items-center" style="flex: 1; ">
+                        <input type="text" name="search" class="form-control" style="width: 30%;" placeholder="Search by username" value="<%= searchQuery %>">
+                        <button type="submit" class="btn btn-primary ms-2" style="border-color: white;">Search</button>
+                    </form>
+                
+                    <!-- Add User Button -->
+                    <button class="btn btn-primary ms-auto" onclick="alert('Add User functionality to be implemented.')" style="display: flex; align-items: center;">
+                        <i class="bi bi-plus-circle"></i> Add User
+                    </button>
+                </div>
+                
+                </div>
+                <div class="table-responsive">
+                    <% if (users.length > 0) { %>
+                        <table class="table table-striped mt-4" id="usertable">
+                            <thead>
+                                <tr>
+                                    <th>s.no</th>
+                                    <th>user id</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <!-- <th>Actions</th> -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% users.forEach((user, index) => { %>
+                                    <tr>
+                                        <td><%= (currentPage - 1) * limit + index + 1 %></td>
+                                        <td><%= user._id %></td>
+                                        <td><%= user.name %></td>
+                                        <td><%= user.email %></td>
+                                        <td><%= user.phone %></td>
+                                        <td>
+                                            <% if (user.isBlocked) { %>
+                                                <form action="/admin/unblockuser/<%= user._id %>" method="post" style="display: inline;">
+                                                    <button class="btn btn-success" type="submit">unblock</button>
+                                                </form>
+                                                <% } else { %>
+                                                    <form action="/admin/blockuser/<%= user._id %>" method="post" style="display: inline;">
+                                                        <button class="btn btn-danger" type="submit">Block</button>
+                
+                                                    </form>
+                                                    <% } %>
+                                        </td>
+                                        </td>
+                                        <!-- <td>
+                                            <a class="btn btn-sm btn-primary" href="/edituser/<%= user._id %>"><i class="bi bi-pencil"></i></a>
+                                            <button class="btn btn-sm btn-danger" onclick="return confirm('are you sure?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td> -->
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+
+                        <!-- Pagination Controls -->
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                <% if (currentPage > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                <% } %>
+                                <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                        <a class="page-link" href="?page=<%= i %>&search=<%= searchQuery %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+                                <% if (currentPage < totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+
+                    <% } else { %>
+                        <h1>NO USERS FOUND</h1>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleStatus(id, button) {
+            console.log('function');
+            
+            const newStatus = button.textContent.trim() === 'block' ? 'unblock' : 'block';
+            fetch(`/userStatus/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.textContent = newStatus === 'block' ? 'unblock' : 'block';
+                    button.classList.toggle('btn-danger');
+                    button.classList.toggle('btn-success');
+                }
+            })
+            .then(result=>{
+                if(result.status=='success'){                    
+                    Swal.fire({
+                    title: 'success!',
+                    icon: 'success',
+                    text:result.message,
+                    confirmButtonText: 'OK'
+                })
+            }else{
+                Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: result.message,
+                })
+            }})
+            .catch(error => console.error(error));
+        }
+    </script>
+    

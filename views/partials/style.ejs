@@ -1,0 +1,85 @@
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: rgb(26, 23, 23); /* Dark background */
+        color: white; /* White text */
+    }
+
+    #sidebar {
+        width: 250px;
+        height: 100vh;
+        top: 0px;
+        background-color: #343a40; /* Dark sidebar */
+        transition: all 0.3s;
+    }
+
+   
+
+    #sidebar .nav-link {
+        color: white; /* White text for links */
+        transition: background-color 0.3s, color 0.3s, border-radius 0.3s;
+        border-radius: 8px;
+        margin: 10px;
+    }
+
+    #sidebar .nav-link:hover {
+        background-color: #000000; /* Darker hover effect */
+        color: white;
+    }
+
+    .content {
+        margin-left: 250px;
+        transition: all 0.3s;
+    }
+
+    .card {
+        background-color: #6c757d; /* Dark card background */
+        border-radius: 15px;
+    }
+
+    #sidebarToggle {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        #sidebar {
+            width: 0;
+            visibility: hidden;
+        }
+
+        .content {
+            margin-left: 0;
+        }
+
+        #sidebarToggle {
+            display: inline-block;
+        }
+    }
+
+    .badge {
+        top: -5px;
+        right: -10px;
+    }
+
+    .section-details {
+        display: none;
+    }
+
+    .section-details.active {
+        display: block;
+    }
+
+    table th,
+    table td {
+        vertical-align: middle;
+        color: white; /* White text for table */
+    }
+
+    table {
+        background-color: #343a40; /* Dark table background */
+    }
+
+    th {
+        background-color: #3b4048; /* Darker header background */
+    }
+</style>

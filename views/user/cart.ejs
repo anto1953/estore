@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zxx">
+
+<%- include('../partials/_userhead') %>
+<body>
+  <%- include('../partials/_usertopbar') %>
+  <div class="slider-area">
+    <div class="single-slider slider-height2 d-flex align-items-center" data-background="assets/img/hero/category.jpg">
+      <div class="container">
+        <div class="row">
+          <div class="col-xl-12">
+            <div class="hero-cap text-center">
+              <h2>Cart List</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Slider Area End -->
+
+  <!-- Cart Area Start -->
+  <section class="cart_area" style="position: relative;">
+    <div class="container">
+      <div class="cart_inner">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Product</th>
+                <th scope="col">Price</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Total</th>
+                <th scope="col">Action</th>
+
+              </tr>
+            </thead>
+            <tbody>
+              <% if (cart.products.length === 0) { %>
+                <tr>
+                  <td colspan="5" class="text-center">
+                    <h4>Your cart is empty!</h4>
+                  </td>
+                </tr>
+              <% } else { %>
+                <% cart.products.forEach((item, index) => { %>
+                  <tr>
+                    <td>
+                      <div class="media">
+                        <div class="d-flex">
+                          <img src="uploads/<%= item.product.image[0] %>" alt="" /> 
+                        </div>
+                        <div class="media-body">
+                          <p><%= item.product.pname %></p> 
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <h5 class="product-price" data-index="<%= index %>">₹<%= item.product.pprice.toFixed(2) %></h5> 
+                    </td>
+                    <td>
+                      <div class="product_count">
+                        <span class="input-number-decrement" 
+                              data-index="<%= index %>" 
+                              data-id="<%= item.product._id %>" 
+                              data-stock="<%= item.product.stock %>">
+                          <i class="ti-minus"></i>
+                        </span>
+                        <input class="input-number" 
+                               type="number" 
+                               value="<%= item.quantity %>" 
+                               min="1" 
+                               max="<%= item.product.stock < 10 ? item.product.stock : 10 %>" 
+                               data-index="<%= index %>" 
+                               data-stock="<%= item.product.stock %>" />
+                        <span class="input-number-increment" 
+                              data-index="<%= index %>" 
+                              data-id="<%= item.product._id %>" 
+                              data-stock="<%= item.product.stock %>"
+                              <%= item.quantity >= (item.product.stock < 10 ? item.product.stock : 10) ? 'disabled' : '' %>>
+                          <i class="ti-plus"></i>
+                        </span>
+                      </div>
+                      
+                    </td>
+                    <td>
+                      <h5 class="product-total" data-index="<%= index %>">₹<%= (item.product.pprice * item.quantity).toFixed(2) %></h5> 
+                    </td>
+                    <td>
+                      <button class="btnn btn-danger" onclick="deleteProductFromCart('<%= item.product._id %>')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                                        </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+
+          <div class="total_amount text-right">
+            <h4>Total: ₹<span id="totalAmount"><%= subtotal.toFixed(2) %></span></h4>
+          </div>
+
+          <!-- Checkout Buttons -->
+          <div class="checkout_btn_inner float-right">
+            <a class="btn_1" href="/viewProducts">Continue Shopping</a>
+            <a class="btn_1 checkout_btn_1" href="/checkout">Proceed to Checkout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Cart Area End -->
+  
+  <%- include('../partials/_footer') %>
+  <%- include('../partials/_js') %>
+
+</body>
+</html>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+  const quantityInputs = document.querySelectorAll(".input-number");
+  const totalAmountEl = document.getElementById("totalAmount");
+
+  // Initial total calculation
+  calculateTotal();
+
+  // Function to calculate the total of all products in the cart
+  function calculateTotal() {
+    let total = 0;
+    document.querySelectorAll(".product-total").forEach((totalEl) => {
+      total += parseFloat(totalEl.textContent.replace('₹', ''));
+    });
+    totalAmountEl.textContent = total.toFixed(2);
+  }
+
+  // Function to update the product quantity and total for that product
+  function updateQuantity(index, change) {
+    const quantityInput = quantityInputs[index];
+    let quantity = parseInt(quantityInput.value) + change;
+    const stock = parseInt(quantityInput.getAttribute("data-stock"));
+    const maxQuantity = Math.min(stock, 10);
+
+    if (quantity > maxQuantity) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Quantity Limit Reached',
+        text: `You cannot add more than ${maxQuantity} items.`,
+        confirmButtonText: 'OK'
+      });
+      quantity = maxQuantity;
+    }
+
+    if (quantity < 1) quantity = 1; 
+    quantityInput.value = quantity;
+
+    // Update the product total
+    const productPrice = parseFloat(document.querySelector(`.product-price[data-index="${index}"]`).textContent.replace('₹', ''));
+    const productTotalEl = document.querySelector(`.product-total[data-index="${index}"]`);
+    productTotalEl.textContent = `₹${(productPrice * quantity).toFixed(2)}`;
+
+    calculateTotal();
+
+    // Disable increment button if quantity reaches stock or maxQuantity
+    const incrementButton = document.querySelector(`.input-number-increment[data-index="${index}"]`);
+    incrementButton.disabled = quantity >= maxQuantity;
+
+    const productId = document.querySelector(`.input-number-decrement[data-index="${index}"]`).getAttribute("data-id");
+    updateCartQuantity(productId, quantity);
+  }
+
+  function updateCartQuantity(productId, quantity) {
+    fetch('/updateQuantity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, quantity })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log('Cart updated successfully');
+      } else {
+        console.error('Failed to update cart');
+      }
+    })
+    .catch(error => {
+      console.error('Error updating cart:', error);
+    });
+  }
+
+  document.querySelectorAll(".input-number-decrement").forEach(button => {
+    button.addEventListener("click", (e) => {
+      const index = e.target.closest('.input-number-decrement').getAttribute("data-index");
+      updateQuantity(index, -1);
+    });
+  });
+
+  document.querySelectorAll(".input-number-increment").forEach(button => {
+    button.addEventListener("click", (e) => {
+      const index = e.target.closest('.input-number-increment').getAttribute("data-index");
+      updateQuantity(index, 1); 
+    });
+  });
+});
+
+
+function deleteProductFromCart(productId) {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "Do you want to remove this product from your cart?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, Remove it!'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch('/deleteFromCart', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire({ 
+            title: 'Removed!',
+            text: 'Product has been removed from your cart.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            location.reload(); 
+          });
+        } else {
+          Swal.fire('Error', 'Failed to delete the product.', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting product:', error);
+        Swal.fire('Error', 'Something went wrong!', 'error');
+      });
+    }
+  });
+}
+
+  </script>
+</body>
+</html>

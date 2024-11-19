@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Offer</title>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Add Offer</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #121212;
+                color: #ffffff;
+                margin: 0;
+                padding: 0;
+            }
+    
+            .offer-form-container {
+                width: 50%;
+                margin: 50px auto;
+                padding: 20px;
+                background-color: #1e1e1e;
+                border-radius: 8px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            }
+    
+            h2 {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+    
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 15px;
+            }
+    
+            label {
+                font-size: 14px;
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+    
+            input, select {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background-color: #2e2e2e;
+                color: #ffffff;
+                font-size: 14px;
+                box-sizing: border-box;
+            }
+    
+            button {
+                width: 100%;
+                padding: 12px;
+                background-color: grey;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                color: #ffffff;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+    
+            button:hover {
+                background-color: #1a53a8;
+            }
+            span{
+              color: red;
+            }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    </head>
+    <body>
+      <div class="offer-form-container">
+          <h2>Add New Offer</h2>
+          <form id="addOfferForm" enctype="multipart/form-data">
+              <div class="form-group">
+                  <label for="offerName">Offer Name:</label>
+                  <input type="text" id="offerName" name="offerName">
+                  <span id="offerNameError" class="error"></span>
+              </div>
+  
+              <div class="form-group">
+                  <label for="offerCode">Offer Code:</label>
+                  <input type="text" id="offerCode" name="offerCode">
+                  <span id="offerCodeError" class="error"></span>
+              </div>
+  
+              <div class="form-group">
+                  <label for="discount">Discount (%):</label>
+                  <input type="number" id="discount" name="discount">
+                  <span id="discountError" class="error"></span>
+              </div>
+  
+              <div class="form-group">
+                  <label for="offerType">Offer Type:</label>
+                  <select id="offerType" name="offerType">
+                      <option value="">Select Offer Type</option>
+                      <option value="CategoryOffer">Category Offer</option>
+                      <option value="ProductOffer">Product Offer</option>
+                      <option value="ReferralOffer">Referral Offer</option>
+                  </select>
+                  <span id="offerTypeError" class="error"></span>
+              </div>
+  
+              <div class="form-group">
+                  <label for="expiryDate">Expiry Date:</label>
+                  <input type="date" id="expiryDate" name="expiryDate">
+                  <span id="expiryDateError" class="error"></span>
+              </div>
+  
+              <div class="form-group">
+                  <label for="status">Status:</label>
+                  <select id="status" name="status">
+                      <option value="">Select Status</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                  </select>
+                  <span id="statusError" class="error"></span>
+              </div>
+  
+              <button type="submit">Add Offer</button>
+          </form>
+      </div>
+  
+      <script>
+          document.getElementById("addOfferForm").addEventListener("submit", function (event) {
+              event.preventDefault(); // Prevent form submission
+  
+              let valid = true;
+  
+              // Validate Offer Name
+              const offerName = document.getElementById("offerName").value.trim();
+              const offerNameError = document.getElementById("offerNameError");
+              if (!offerName) {
+                  offerNameError.textContent = "Offer name is required.";
+                  valid = false;
+              } else {
+                  offerNameError.textContent = "";
+              }
+  
+              // Validate Offer Code
+              const offerCode = document.getElementById("offerCode").value.trim();
+              const offerCodeError = document.getElementById("offerCodeError");
+              if (!offerCode) {
+                  offerCodeError.textContent = "Offer code is required.";
+                  valid = false;
+              } else {
+                  offerCodeError.textContent = "";
+              }
+  
+              // Validate Discount
+              const discount = document.getElementById("discount").value.trim();
+              const discountError = document.getElementById("discountError");
+              if (!discount) {
+                  discountError.textContent = "Discount is required.";
+                  valid = false;
+              } else if (isNaN(discount) || discount < 0 || discount > 100) {
+                  discountError.textContent = "Discount must be a number between 0 and 100.";
+                  valid = false;
+              } else {
+                  discountError.textContent = "";
+              }
+  
+              // Validate Offer Type
+              const offerType = document.getElementById("offerType").value;
+              const offerTypeError = document.getElementById("offerTypeError");
+              if (!offerType) {
+                  offerTypeError.textContent = "Offer type is required.";
+                  valid = false;
+              } else {
+                  offerTypeError.textContent = "";
+              }
+  
+              // Validate Expiry Date
+              const expiryDate = document.getElementById("expiryDate").value.trim();
+              const expiryDateError = document.getElementById("expiryDateError");
+              if (!expiryDate) {
+                  expiryDateError.textContent = "Expiry date is required.";
+                  valid = false;
+              } else if (new Date(expiryDate) < new Date()) {
+                  expiryDateError.textContent = "Expiry date cannot be in the past.";
+                  valid = false;
+              } else {
+                  expiryDateError.textContent = "";
+              }
+  
+              // Validate Status
+              const status = document.getElementById("status").value;
+              const statusError = document.getElementById("statusError");
+              if (!status) {
+                  statusError.textContent = "Status is required.";
+                  valid = false;
+              } else {
+                  statusError.textContent = "";
+              }
+  
+              // Submit form if all validations pass
+              if (valid) {
+                  const formData = new FormData(this);
+                  const data = Object.fromEntries(formData.entries());
+  
+                  fetch('/admin/addoffer', {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(data),
+                  })
+                  .then(response => response.json())
+                  .then(result => {
+                      if (result.status === 'success') {
+                          Swal.fire({
+                              title: 'Offer Added Successfully!',
+                              icon: 'success',
+                              confirmButtonText: 'OK',
+                          }).then(() => {
+                              window.location.href = '/admin/offers';
+                          });
+                          this.reset();
+                      } else {
+                          Swal.fire({
+                              icon: 'error',
+                              title: 'Error',
+                              text: result.message,
+                          });
+                      }
+                  })
+                  .catch(error => {
+                      Swal.fire({
+                          icon: 'error',
+                          title: 'Submission Error',
+                          text: 'Please try again later.',
+                      });
+                      console.error('Error:', error);
+                  });
+              }
+          });
+      </script>
+  </body>
+  
+</html>

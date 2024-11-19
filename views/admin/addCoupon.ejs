@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Coupon</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #121212; 
+        color: #ffffff; 
+        margin: 0;
+        padding: 0;
+      }
+
+      .coupon-form-container {
+        width: 50%;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        margin-top: 50px;
+      }
+
+      h2 {
+        text-align: center;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      input,
+      select,
+      button {
+        width: calc(100% - 16px); 
+        max-width: 100%;
+        padding: 8px;
+        margin: 4px 0 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #2e2e2e; 
+        color: #ffffff;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: grey;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      button:hover {
+        background-color: #1a53a8;
+      }
+      span {
+        color: red;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+  <body>
+    <div class="coupon-form-container">
+      <h2>Add New Coupon</h2>
+      <form id="addCouponForm">
+        <div class="form-group">
+          <label for="couponCode">Coupon Code:</label>
+          <input type="text" id="couponCode" name="couponCode" />
+          <span class="error-message" id="couponCodeError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="discount">Discount (%):</label>
+          <input type="number" id="discount" name="discount" />
+          <span class="error-message" id="discountError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="expiryDate">Expiry Date:</label>
+          <input type="date" id="expiryDate" name="expiryDate" />
+          <span class="error-message" id="expiryDateError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="usageLimit">Usage Limit:</label>
+          <input type="number" id="usageLimit" name="usageLimit" />
+          <span class="error-message" id="usageLimitError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status:</label>
+          <select id="status" name="status">
+            <option value="">Select Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+          <span class="error-message" id="statusError"></span>
+        </div>
+
+        <button type="submit" class="button">Add Coupon</button>
+      </form>
+    </div>
+
+    <script>
+      document
+        .getElementById("addCouponForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault(); 
+
+          let valid = true;
+
+          // Validate Coupon Code
+          const couponCode = document.getElementById("couponCode").value.trim();
+          const couponCodeError = document.getElementById("couponCodeError");
+          if (!couponCode) {
+            couponCodeError.textContent = "Coupon code is required.";
+            valid = false;
+          } else {
+            couponCodeError.textContent = "";
+          }
+
+          // Validate Discount
+          const discount = document.getElementById("discount").value.trim();
+          const discountError = document.getElementById("discountError");
+          if (!discount) {
+            discountError.textContent = "Discount is required.";
+            valid = false;
+          } else if (isNaN(discount) || discount < 0 || discount > 100) {
+            discountError.textContent =
+              "Discount must be a number between 0 and 100.";
+            valid = false;
+          } else {
+            discountError.textContent = "";
+          }
+
+          // Validate Expiry Date
+          const expiryDate = document.getElementById("expiryDate").value.trim();
+          const expiryDateError = document.getElementById("expiryDateError");
+          if (!expiryDate) {
+            expiryDateError.textContent = "Expiry date is required.";
+            valid = false;
+          } else if (new Date(expiryDate) < new Date()) {
+            expiryDateError.textContent = "Expiry date cannot be in the past.";
+            valid = false;
+          } else {
+            expiryDateError.textContent = "";
+          }
+
+          // Validate Usage Limit
+          const usageLimit = document.getElementById("usageLimit").value.trim();
+          const usageLimitError = document.getElementById("usageLimitError");
+          if (!usageLimit) {
+            usageLimitError.textContent = "Usage limit is required.";
+            valid = false;
+          } else if (isNaN(usageLimit) || usageLimit <= 0) {
+            usageLimitError.textContent =
+              "Usage limit must be a positive number.";
+            valid = false;
+          } else {
+            usageLimitError.textContent = "";
+          }
+
+          // Validate Status
+          const status = document.getElementById("status").value;
+          const statusError = document.getElementById("statusError");
+          if (!status) {
+            statusError.textContent = "Status is required.";
+            valid = false;
+          } else {
+            statusError.textContent = "";
+          }
+
+          if (valid) {
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch("/admin/addcoupon", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            })
+              .then((response) => response.json())
+              .then((result) => {
+                if (result.status === "success") {
+                  Swal.fire({
+                    title: "Success!",
+                    icon: "success",
+                    text: result.message,
+                    confirmButtonText: "OK",
+                  }).then(() => {
+                    window.location.href = "/admin/coupons";
+                  });
+                  this.reset();
+                } else {
+                  Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: result.message,
+                  }).then(() => {
+                    window.location.href = "/admin/addcoupon";
+                  });
+                }
+              })
+              .catch((error) => {
+                Swal.fire({
+                  text: "An error occurred. Please try again.",
+                  icon: "error",
+                  confirmButtonText: "OK",
+                });
+              });
+          }
+        });
+    </script>
+  </body>
+</html>

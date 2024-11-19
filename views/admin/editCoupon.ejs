@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Coupon</title>
+    <style>
+        /* Basic CSS for styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark theme background */
+            color: #ffffff; /* Text color */
+            margin: 0;
+            padding: 0;
+        }
+
+        .coupon-form-container {
+            width: 50%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e1e1e; /* Dark theme form background */
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin-top: 50px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select, button {
+            width: calc(100% - 16px); /* Same width for input, select, and button */
+            max-width: 100%;
+            padding: 8px;
+            margin: 4px 0 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #2e2e2e; /* Dark input background */
+            color: #ffffff; /* Input text color */
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: grey;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #1a53a8;
+        }
+        span{
+            color: red;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="coupon-form-container">
+        <h2>Edit Coupon</h2>
+        <form id="editCouponForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="couponCode">Coupon Code:</label>
+                <input type="text" id="couponCode" name="couponCode" value="<%= coupon.couponCode %>">
+                <span id="couponCodeError" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="discount">Discount (%):</label>
+                <input type="number" id="discount" name="discount" value="<%= coupon.discount %>">
+                <span id="discountError" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="expiryDate">Expiry Date:</label>
+                <input type="date" id="expiryDate" name="expiryDate" value="<%= coupon.expiryDate %>">
+                <span id="expiryDateError" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="usageLimit">Usage Limit:</label>
+                <input type="number" id="usageLimit" name="usageLimit" value="<%= coupon.usageLimit %>">
+                <span id="usageLimitError" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select id="status" name="status">
+                    <option value="true" <%= coupon.status ? 'selected' : '' %>>Active</option>
+                    <option value="false" <%= !coupon.status ? 'selected' : '' %>>Inactive</option>
+                </select>
+                <span id="statusError" class="error"></span>
+            </div>
+
+            <button type="submit" class="button">Edit Coupon</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("editCouponForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            let valid = true;
+
+            // Validate Coupon Code
+            const couponCode = document.getElementById("couponCode").value.trim();
+            const couponCodeError = document.getElementById("couponCodeError");
+            if (!couponCode) {
+                couponCodeError.textContent = "Coupon code is required.";
+                valid = false;
+            } else {
+                couponCodeError.textContent = "";
+            }
+
+            // Validate Discount
+            const discount = document.getElementById("discount").value.trim();
+            const discountError = document.getElementById("discountError");
+            if (!discount) {
+                discountError.textContent = "Discount is required.";
+                valid = false;
+            } else if (isNaN(discount) || discount < 0 || discount > 100) {
+                discountError.textContent = "Discount must be a number between 0 and 100.";
+                valid = false;
+            } else {
+                discountError.textContent = "";
+            }
+
+            // Validate Expiry Date
+            const expiryDate = document.getElementById("expiryDate").value.trim();
+            const expiryDateError = document.getElementById("expiryDateError");
+            if (!expiryDate) {
+                expiryDateError.textContent = "Expiry date is required.";
+                valid = false;
+            } else if (new Date(expiryDate) < new Date()) {
+                expiryDateError.textContent = "Expiry date cannot be in the past.";
+                valid = false;
+            } else {
+                expiryDateError.textContent = "";
+            }
+
+            // Validate Usage Limit
+            const usageLimit = document.getElementById("usageLimit").value.trim();
+            const usageLimitError = document.getElementById("usageLimitError");
+            if (!usageLimit) {
+                usageLimitError.textContent = "Usage limit is required.";
+                valid = false;
+            } else if (isNaN(usageLimit) || usageLimit < 1) {
+                usageLimitError.textContent = "Usage limit must be a number greater than or equal to 1.";
+                valid = false;
+            } else {
+                usageLimitError.textContent = "";
+            }
+
+            // Validate Status
+            const status = document.getElementById("status").value;
+            const statusError = document.getElementById("statusError");
+            if (!status) {
+                statusError.textContent = "Status is required.";
+                valid = false;
+            } else {
+                statusError.textContent = "";
+            }
+
+            // Submit form if all validations pass
+            if (valid) {
+
+            const formData = new FormData(editCouponForm);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('/admin/editCoupon/<%= coupon._id %>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    Swal.fire({
+                        title: 'Success!',
+                        icon: 'success',
+                        text: result.message,
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location.href = '/admin/coupons';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: result.message,
+                    });
+                }
+            })
+            .catch(error => {
+                console.log(error);
+                
+                Swal.fire({
+                    title: 'Error',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                console.error('Error:', error);
+            });
+        }})
+    </script>
+</body>
+</html>

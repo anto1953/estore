@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="zxx">
+    <%- include('../partials/_userhead') %>
+    <%- include('../partials/_usertopbar') %>
+    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+     
+
+    <!-- slider Area Start -->
+    <div class="slider-area ">
+        <div class="single-slider slider-height2 d-flex align-items-center" data-background="assets/img/hero/category.jpg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="hero-cap text-center">
+                            <h2>COLLECTIONS</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <section class="product_list section_padding 50px">
+        <div class="container">
+            <!-- Filters -->
+            <div class="filters">
+                <form action="/viewProducts" method="GET">
+                    <input type="text" name="Search" placeholder="Search keyword" value="<%= searchQuery || '' %>">
+                </form>
+            
+                <div class="select_option">
+                    <div class="select_option_list">Category <i class="right fas fa-caret-down"></i></div>
+                    <div class="select_option_dropdown">
+                        <% categories.forEach(category => { %>
+                            <p><a href="#" class="category-option" data-category="<%= category %>"><%= category.value %></a></p>
+                        <% }) %>
+                    </div>
+                </div>
+                
+                <div class="select_option">
+                    <div class="select_option_list">Sort by <i class="right fas fa-caret-down"></i></div>
+                    <div class="select_option_dropdown">
+                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=popularity">Popularity</a></p>
+                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=price-asc">Price: Low to High</a></p>
+                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=price-desc">Price: High to Low</a></p>
+                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=ratings">Average Ratings</a></p>                                                
+                        <p><a href="#" class="sort-option" data-sort="featured">Featured</a></p>
+                        <p><a href="#" class="sort-option" data-sort="new-arrivals">New Arrivals</a></p>
+                        <p><a href="#" class="sort-option" data-sort="a-z">A-Z</a></p>
+                        <p><a href="#" class="sort-option" data-sort="z-a">Z-A</a></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Product List -->
+            <div class="product_list">
+                <div class="row" style="display: inline-block;" id="product-container">
+                    <% products.forEach(product => { %>
+                        <div class="col-lg-4">
+                            <div class="single_product_item">
+                                <a href="viewProductDetails/<%= product._id %>">
+                                <img style="width: 300px; height: 300px;" src="/uploads/<%= product.image %>">
+                                <h3><%= product.pname.length > 30 ? product.pname.slice(0, 25) + '...' : product.pname %></h3>
+                                </a>
+                                <p>₹<%= product.pprice %></p>
+                                <p class="<%= product.stock > 0 ? (product.stock < 20 ? 'low-stock' : 'stock-status') : 'out-of-stock' %>">
+                                    <%= product.stock > 0 ? (product.stock < 20 ? product.stock + ' left in stock' : 'In Stock') : 'Out of Stock' %>
+                                </p>
+                                <div class="buttons">
+                                    <button class="btn btn-default btn-sm" onclick="addToCart('<%= product._id %>')" 
+                                        <%= product.stock > 0 && !cart.includes(product._id.toString()) ? '' : 'disabled' %>>
+                                        <i class="fas fa-shopping-cart"></i> 
+                                        <%= cart.includes(product._id.toString()) ? 'Added to Cart' : 'Add to Cart' %>
+                                    </button>
+    
+                                    <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-heart"></span>Wishlist</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+                <div class="load_more_btn text-center">
+                    <a href="#" class="btn_3">Load More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- client review  -->
+    <section class="client_review">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="client_review_slider owl-carousel">
+                        <div class="single_client_review">
+                            <div class="client_img">
+                                <img src="assets/img/client.png" alt="#">
+                            </div>
+                            <p>"Working in conjunction with humanitarian aid agencies, we have supported programmes to help alleviate human suffering.</p>
+                            <h5>- Micky Mouse</h5>
+                        </div>
+                        <div class="single_client_review">
+                            <div class="client_img">
+                                <img src="assets/img/client_1.png" alt="#">
+                            </div>
+                            <p>"Working in conjunction with humanitarian aid agencies, we have supported programmes to help alleviate human suffering.</p>
+                            <h5>- Micky Mouse</h5>
+                        </div>
+                        <div class="single_client_review">
+                            <div class="client_img">
+                                <img src="assets/img/client_2.png" alt="#">
+                            </div>
+                            <p>"Working in conjunction with humanitarian aid agencies, we have supported programmes to help alleviate human suffering.</p>
+                            <h5>- Micky Mouse</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="shop-method-area section-padding30">
+        <div class="container">
+            <div class="row d-flex justify-content-between">
+                <div class="col-xl-3 col-lg-3 col-md-6">
+                    <div class="single-method mb-40">
+                        <i class="ti-package"></i>
+                        <h6>Free Shipping Method</h6>
+                        <p>aorem ixpsacdolor sit ameasecur adipisicing elitsf edasd.</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-6">
+                    <div class="single-method mb-40">
+                        <i class="ti-unlock"></i>
+                        <h6>Secure Payment System</h6>
+                        <p>aorem ixpsacdolor sit ameasecur adipisicing elitsf edasd.</p>
+                    </div>
+                </div> 
+                <div class="col-xl-3 col-lg-3 col-md-6">
+                    <div class="single-method mb-40">
+                        <i class="ti-reload"></i>
+                        <h6>Secure Payment System</h6>
+                        <p>aorem ixpsacdolor sit ameasecur adipisicing elitsf edasd.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="subscribe_part section_padding">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="subscribe_part_content">
+                        <h2>Get promotions & updates!</h2>
+                        <p>Seamlessly empower fully researched growth strategies and interoperable internal or “organic” sources credibly innovate granular internal .</p>
+                        <div class="subscribe_form">
+                            <input type="email" name="email" autocomplete="email" placeholder="Enter your mail">
+                            <a href="#" class="btn_1">Subscribe</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <%- include('../partials/_footer') %>
+    <%- include('../partials/_js') %>
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  
+        function addToCart(productId) {
+    fetch(`/addToCart/${productId }`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId, quantity: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message === "Product added to cart") {
+            Swal.fire({
+                icon: 'success',
+                title: 'Product Added to Cart',
+                text: data.message,
+                confirmButtonText: 'OK'
+            }).then(()=>{
+                window.location.href="/viewProducts"
+            })
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                confirmButtonText: 'Try Again'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while adding the product to the cart.',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.querySelector("input[name='Search']");
+    const sortOptions = document.querySelectorAll(".sort-option");
+
+    function updateProductList() {
+        const searchQuery = searchInput.value;
+        const selectedSort = document.querySelector(".sort-option.active")?.dataset.sort || "";
+
+        window.location.href = `/viewProducts?Search=${encodeURIComponent(searchQuery)}&sortBy=${selectedSort}`;
+    }
+
+    // Trigger search on form submit
+    searchInput.addEventListener("change", updateProductList);
+
+    // Trigger sort on selection
+    sortOptions.forEach(option => {
+        option.addEventListener("click", function() {
+            sortOptions.forEach(opt => opt.classList.remove("active"));
+            option.classList.add("active");
+            updateProductList();
+        });
+    });
+});
+  
+    // Handle sort option selection
+    document.querySelectorAll('.sort-option').forEach(option => {
+        option.addEventListener('click', function () {
+            const sortBy = this.getAttribute('data-sort'); 
+            updateProductList(sortBy);  
+        });
+    });
+
+    function updateProductList(sortBy) {
+        fetch(`/getSortedProducts?sortBy=${sortBy}`, {
+            method: "GET",
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const productContainer = document.getElementById('product-container');
+                productContainer.innerHTML = '';  
+
+                data.products.forEach(product => {
+                    const productItem = document.createElement('div');
+                    productItem.classList.add('col-lg-4');
+                    productItem.innerHTML = `
+                        <div class="single_product_item">
+                            <a href="viewProductDetails/${product._id}">
+                                <img src="/uploads/${product.image}" alt="${product.pname}">
+                                <h3>${product.pname}</h3>
+                            </a>
+                            <p>₹${product.pprice}</p>
+                            <div class="buttons">
+                                <a class="btn btn-default btn-sm add-to-cart" href="javascript:void(0);" data-product-id="${product._id}">
+                                    <span class="glyphicon glyphicon-shopping-cart"></span> Add to Cart
+                                </a>
+                                <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-heart"></span> Wishlist</button>
+                            </div>
+                        </div>
+                    `;
+                    productContainer.appendChild(productItem);
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unable to fetch sorted products.',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while fetching sorted products.',
+            });
+        });
+    }
+
+
+    document.querySelectorAll('.category-option').forEach(option => {
+        option.addEventListener('click', function(event) {
+            event.preventDefault();
+            const selectedCategory = this.dataset.category;
+
+            fetch(`/products?category=${encodeURIComponent(selectedCategory)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayProducts(data.products);
+                })
+                .catch(error => console.error('Error fetching products:', error));
+        });
+    });
+
+    function displayProducts(products) {
+        const productContainer = document.getElementById('product-container');
+        productContainer.innerHTML = ''; 
+        products.forEach(product => {
+            productContainer.innerHTML += `
+                <div class="product-item">
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p>Price: $${product.price}</p>
+                </div>
+            `;
+        });
+    }
+
+</script>
+</html>

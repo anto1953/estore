@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      body,
+      html {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: #ffffff;
+        width: 100%;
+      }
+
+      .container {
+        width: 100%;
+        position: relative;
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      .login-container {
+        background: #262626;
+
+        border-radius: 12px;
+        padding: 60px;
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .login-container h2 {
+        font-size: 32px;
+        color: #fffefe;
+        margin-bottom: 12px;
+        letter-spacing: -0.5px;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .login-subtitle {
+        text-align: center;
+        color: #bdc1ca;
+        font-size: 16px;
+        margin-bottom: 40px;
+      }
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #feffff;
+        margin-bottom: 8px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 15px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background: #ffffff;
+        color: #1a1a1a;
+      }
+
+      .form-group input::placeholder {
+        color: #9ca3af;
+      }
+
+      .form-group input:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .forgot-password {
+        display: block;
+        text-align: right;
+        color: #3b82f6;
+        text-decoration: none;
+        font-size: 14px;
+        margin: -16px 0 24px;
+        font-weight: 500;
+      }
+
+      .forgot-password:hover {
+        color: #2563eb;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #ffffff;
+        background: #3b82f6;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn:hover {
+        background: #2563eb;
+      }
+
+      .divider {
+        text-align: center;
+        margin: 28px 0;
+        position: relative;
+        color: #6b7280;
+        font-size: 14px;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: calc(50% - 20px);
+        height: 1px;
+        background: #e5e7eb;
+      }
+
+      .divider::before {
+        left: 0;
+      }
+
+      .divider::after {
+        right: 0;
+      }
+
+      .btn-google {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #374151;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+      }
+
+      .btn-google:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+      }
+
+      .google-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 12px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%234285F4' d='M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z'/%3E%3Cpath fill='%2334A853' d='M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z'/%3E%3Cpath fill='%23FBBC05' d='M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z'/%3E%3Cpath fill='%23EA4335' d='M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 32px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .footer a {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .footer a:hover {
+        color: #2563eb;
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 20px;
+        }
+
+        .login-container {
+          padding: 32px 24px;
+        }
+
+        .login-container h2 {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="login-container">
+        <h2>Welcome back</h2>
+        <p class="login-subtitle">Please enter your details to sign in</p>
+
+        <form id="loginForm" action="/login" method="post">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+            />
+            <span
+              style="color: red"
+              class="error-message"
+              id="emailError"
+            ></span>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+            />
+            <span
+              style="color: red"
+              class="error-message"
+              id="passwordError"
+            ></span>
+          </div>
+          <a href="/email" class="forgot-password">Forgot password?</a>
+          <button type="submit" class="btn">Sign in</button>
+        </form>
+
+        <div class="divider">or</div>
+
+        <a href="/loadAuth" class="btn-google">
+          <span class="google-icon"></span>
+          Sign in with Google
+        </a>
+
+        <div class="footer">
+          <p>Don't have an account? <a href="/signup">Sign up</a></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      // Prevent spaces from being typed in email and password fields
+      document.getElementById("email").addEventListener("input", function () {
+        this.value = this.value.replace(/\s/g, "");
+      });
+
+      document
+        .getElementById("password")
+        .addEventListener("input", function () {
+          this.value = this.value.replace(/\s/g, "");
+        });
+
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (event) {
+          let valid = true;
+
+          // Validate email
+          const email = document.getElementById("email").value;
+          const emailError = document.getElementById("emailError");
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!email) {
+            emailError.textContent = "Email is required.";
+            valid = false;
+          } else if (!emailRegex.test(email)) {
+            emailError.textContent = "Please enter a valid email address.";
+            valid = false;
+          } else {
+            emailError.textContent = "";
+          }
+
+          // Validate password
+          const password = document.getElementById("password").value;
+          const passwordError = document.getElementById("passwordError");
+          if (!password) {
+            passwordError.textContent = "Password is required.";
+            valid = false;
+          } else if (password.length < 4) {
+            passwordError.textContent =
+              "Password must be at least 4 characters long.";
+            valid = false;
+          } else {
+            passwordError.textContent = "";
+          }
+
+          // Prevent form submission if validation fails
+          if (!valid) {
+            event.preventDefault();
+          }
+        });
+
+      const loginForm = document.getElementById("loginForm");
+      loginForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(loginForm);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch("/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => response.json())
+          .then((result) => {
+            if (result.status === "success") {
+              Swal.fire({
+                title: "Success!",
+                icon: "success",
+                text: result.message,
+                confirmButtonText: "OK",
+              }).then(() => {
+                window.location.href = result.redirectUrl;
+              });
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: result.message,
+                confirmButtonText: "Try Again",
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: "Something went wrong, please try again later.",
+            });
+          });
+      });
+    </script>
+  </body>
+</html>

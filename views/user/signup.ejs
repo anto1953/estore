@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Fashion Store Admin - Sign Up</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+      }
+      body {
+        background-image: url("/api/placeholder/1920/1080");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-blend-mode: overlay;
+      }
+      .overlay {
+        background-color: rgba(0, 0, 0, 0.7);
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .signup-container {
+        background-color: rgba(30, 30, 30, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 350px;
+      }
+      h2 {
+        color: #ffffff;
+        text-align: left;
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
+        font-weight: 300;
+      }
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #b0b0b0;
+        font-size: 0.9rem;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #2c2c2c;
+        border: 1px solid #444;
+        border-radius: 4px;
+        font-size: 1rem;
+        color: #e0e0e0;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+      }
+      .form-group input:focus {
+        outline: none;
+        border-color: #4285f4;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 1rem;
+      }
+      .btn:hover {
+        background-color: #357ae8;
+      }
+      .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #b0b0b0;
+        font-size: 0.9rem;
+      }
+      .login-link a {
+        color: #4285f4;
+        text-decoration: none;
+      }
+      .login-link a:hover {
+        text-decoration: underline;
+      }
+      .error-message {
+        color: red;
+      }
+      .input-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .input-wrapper input {
+        width: 100%;
+        padding-right: 40px;
+        box-sizing: border-box;
+      }
+
+      .input-wrapper .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        font-size: 18px;
+        color: #666;
+      }
+
+      .input-wrapper .toggle-password:hover {
+        color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="overlay">
+      <div class="signup-container">
+        <h2>Create an Account</h2>
+        <form id="signupForm">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="namee" name="name" />
+            <span class="error-message" id="nameError"></span>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="text" id="emaill" name="email" />
+            <span class="error-message" id="emailError"></span>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="text" id="phonee" name="phone" inputmode="numeric" />
+            <span class="error-message" id="phoneError"></span>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <input type="password" id="password" name="password" />
+              <span
+                class="toggle-password"
+                onclick="togglePasswordVisibility('password', this)"
+              >
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
+            <span class="error-message" id="passwordError"></span>
+          </div>
+          <div class="form-group">
+            <label for="confirmpassword">Confirm Password</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="confirmpassword"
+                name="confirmpassword"
+              />
+              <span
+                class="toggle-password"
+                onclick="togglePasswordVisibility('confirmpassword', this)"
+              >
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
+            <span class="error-message" id="confirmPasswordError"></span>
+          </div>
+
+          <button type="submit" class="btn">Sign Up</button>
+        </form>
+        <p class="login-link">
+          Already have an account? <a href="/login">Log in</a>
+        </p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+      // Function to prevent spaces in specific fields
+      function preventSpaces(event) {
+        if (event.key === " ") {
+          event.preventDefault();
+        }
+      }
+
+      function togglePasswordVisibility(fieldId, toggleElement) {
+        const passwordField = document.getElementById(fieldId);
+        const icon = toggleElement.querySelector("i");
+
+        if (passwordField.type === "password") {
+          passwordField.type = "text";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        } else {
+          passwordField.type = "password";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        }
+      }
+
+      document
+        .getElementById("emaill")
+        .addEventListener("keydown", preventSpaces);
+      document
+        .getElementById("phonee")
+        .addEventListener("keydown", preventSpaces);
+      document
+        .getElementById("password")
+        .addEventListener("keydown", preventSpaces);
+      document
+        .getElementById("confirmpassword")
+        .addEventListener("keydown", preventSpaces);
+
+      document
+        .getElementById("signupForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          let valid = true;
+
+          const name = document.getElementById("namee").value;
+          const nameError = document.getElementById("nameError");
+          if (
+            !name ||
+            /^\s/.test(name) ||
+            (name.match(/\s/g) || []).length > 2
+          ) {
+            nameError.textContent =
+              "enter a proper name";
+            valid = false;
+          } else {
+            nameError.textContent = "";
+          }
+
+          const email = document.getElementById("emaill").value;
+          const emailError = document.getElementById("emailError");
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!email) {
+            emailError.textContent = "Email is required.";
+            valid = false;
+          } else if (!emailRegex.test(email)) {
+            emailError.textContent =
+              "Please enter a valid email without spaces.";
+            valid = false;
+          } else {
+            emailError.textContent = "";
+          }
+
+          const phone = document.getElementById("phonee").value;
+          const phoneError = document.getElementById("phoneError");
+          if (!phone || /\D/.test(phone) || phone.length !== 10) {
+            phoneError.textContent =
+              "Please enter a valid 10-digit phone number.";
+            valid = false;
+          } else {
+            phoneError.textContent = "";
+          }
+
+          const password = document.getElementById("password").value;
+          const passwordError = document.getElementById("passwordError");
+          if (!password) {
+            passwordError.textContent = "Password is required.";
+            valid = false;
+          } else if (password.length < 6) {
+            passwordError.textContent =
+              "Password must be at least 6 characters.";
+            valid = false;
+          } else {
+            passwordError.textContent = "";
+          }
+
+          const confirmPassword =
+            document.getElementById("confirmpassword").value;
+          const confirmPasswordError = document.getElementById(
+            "confirmPasswordError"
+          );
+          if (confirmPassword !== password) {
+            confirmPasswordError.textContent = "Passwords do not match.";
+            valid = false;
+          } else {
+            confirmPasswordError.textContent = "";
+          }
+          if (!valid) {
+            event.preventDefault();
+            return;
+          }
+
+          const signupForm = document.getElementById("signupForm");
+
+          signupForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(signupForm);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch("/signup", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            })
+              .then((response) => response.json())
+              .then((result) => {
+                console.log(result);
+                if (result.status == "error") {
+                  Swal.fire({
+                    title: "oops!",
+                    icon: "error",
+                    text: result.message,
+                    confirmButtonText: "OK",
+                  });
+                } else if (result.status == "success") {
+                  Swal.fire({
+                    icon: "success",
+                    title: "succuss",
+                    text: result.message,
+                  }).then(() => {
+                    window.location.href = "/otp";
+                  });
+                  signupForm.reset();
+                } else {
+                  Swal.fire({
+                    icon: "error",
+                    title: "erro",
+                    text: result.message,
+                  });
+                }
+              });
+          });
+        });
+    </script>
+  </body>
+</html>

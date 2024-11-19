@@ -1,0 +1,227 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+<!-- Vendor CSS Files -->
+<link href="/userProfileAssets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="/userProfileAssets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+<link href="/userProfileAssets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+<link href="/userProfileAssets/vendor/quill/quill.snow.css" rel="stylesheet">
+<link href="/userProfileAssets/vendor/quill/quill.bubble.css" rel="stylesheet">
+<link href="/userProfileAssets/vendor/remixicon/remixicon.css" rel="stylesheet">
+<link href="/userProfileAssets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+<!-- Template Main CSS File -->
+<link href="/userProfileAssets/assets/css/style.css" rel="stylesheet">
+<%- include('../partials/_userhead') %>
+</head>
+<body>
+    <!-- Top Bar -->
+<div class="top-bar">
+    <%- include('../partials/_usertopbar') %>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="sidebar ">
+            <%- include('../partials/_userProfilesidebar') %>
+        </nav>
+
+
+<div class="tab-pane profile-edit pt-3" id="profile-edit">
+
+    <!-- Profile Edit Form -->
+    <form id="editUserProfileForm" enctype="multipart/form-data">
+        <div class="row mb-3">
+            <label for="profileImage" class="col-md-4 col-lg-3 col-form-label">Profile Image</label>
+            <div class="col-md-8 col-lg-9">
+                <img src="/uploads/<%= user.profileImage %>" alt="Profile" id="profile-img-display" class="rounded-circle" 
+                    style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
+                <div class="pt-2">
+                    <input type="file" id="profileImage" name="profileImage" style="display: none;" onchange="previewImage(event)">
+                    <a href="#" class=" btn-primary btn-sm" title="Upload new profile image" onclick="document.getElementById('profileImage').click();">
+                        <i class="bi bi-upload"></i>
+                    </a>
+                    <a href="#" class="btnn btn-danger btn-sm" title="Remove my profile image" onclick="removeProfileImage()">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="row mb-3">
+            <label for="name" class="col-md-4 col-lg-3 col-form-label"> Name</label>
+            <div class="col-md-8 col-lg-9">
+                <input name="name" type="text" class="form-control" id="name" value="<%= user.name %>">
+                <div id="name-error" class="text-danger"></div> <!-- Error message placeholder -->
+            </div>
+        </div>
+    
+        <div class="row mb-3">
+            <label for="country" class="col-md-4 col-lg-3 col-form-label">Country</label>
+            <div class="col-md-8 col-lg-9">
+                <input name="country" type="text" class="form-control" id="Country" value="<%= user.country %>">
+                <div id="country-error" class="text-danger"></div> <!-- Error message placeholder -->
+            </div>
+        </div>
+    
+        <div class="row mb-3">
+            <label for="address" class="col-md-4 col-lg-3 col-form-label">Address</label>
+            <div class="col-md-8 col-lg-9">
+                <% const defaultAddress = user.addresses.find(addr => addr.isDefault); %>
+                <input name="address" type="text" class="form-control" id="Address" 
+                    value="<%= defaultAddress ? `${defaultAddress.street}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.zipCode}, ${defaultAddress.country}` : '' %>">
+                <div id="address-error" class="text-danger"></div> <!-- Error message placeholder -->
+            </div>
+        </div>
+    
+        <div class="row mb-3">
+            <label for="phone" class="col-md-4 col-lg-3 col-form-label">Phone</label>
+            <div class="col-md-8 col-lg-9">
+                <input name="phone" type="text" class="form-control" id="Phone" value="<%= user.phone %>">
+                <div id="phone-error" class="text-danger"></div> <!-- Error message placeholder -->
+            </div>
+        </div>
+    
+        <div class="row mb-3">
+            <label for="email" class="col-md-4 col-lg-3 col-form-label">Email</label>
+            <div class="col-md-8 col-lg-9">
+                <input name="email" type="email" class="form-control" id="email" value="<%= user.email %>" readonly>
+            </div>
+        </div>
+    
+        <div class="text-center">
+            <button type="submit" class="btnn btn-primary" id="saveChangesBtn">Save Changes</button>
+        </div>
+    </form>
+
+  </div>
+  
+<script src="/userProfileAssets/vendor/apexcharts/apexcharts.min.js"></script>
+<script src="/userProfileAssets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/userProfileAssets/vendor/chart.js/chart.umd.js"></script>
+<script src="/userProfileAssets/vendor/echarts/echarts.min.js"></script>
+<script src="/userProfileAssets/vendor/quill/quill.js"></script>
+<script src="/userProfileAssets/vendor/simple-datatables/simple-datatables.js"></script>
+<script src="/userProfileAssets/vendor/tinymce/tinymce.min.js"></script>
+<script src="/userProfileAssets/vendor/php-email-form/validate.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+
+
+<!-- Template Main JS File -->
+<script src="/userProfileAssets/js/main.js"></script>
+
+<script>
+    function previewImage(event) {
+        const imageDisplay = document.getElementById('profile-img-display');
+        imageDisplay.src = URL.createObjectURL(event.target.files[0]);
+    }
+    
+    function removeProfileImage() {
+        document.getElementById('profile-img-display').src = 'assets/img/default-profile.jpg'; 
+        document.getElementById('profileImage').value = ''; 
+    }
+    
+    document.getElementById('editUserProfileForm').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+
+    document.querySelectorAll('.text-danger').forEach(function(errorElement) {
+        errorElement.textContent = '';
+    });
+
+    let isValid = validateForm();
+
+    if (isValid) {
+        Swal.fire({
+            title: "Are you sure?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, edit it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const formData = new FormData(editUserProfileForm);
+
+                fetch('/editUserProfile/<%= user._id %>', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: "Success!",
+                            text: data.message,
+                            icon: "success"
+                        }).then(() => {
+                            window.location.href = '/userProfile';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Something went wrong!'
+                    });
+                });
+            }
+        });
+    }
+});
+
+function validateForm() {
+    let isValid = true;
+
+    const name = document.getElementById('name').value.trim();
+    const country = document.getElementById('Country').value.trim();
+    const address = document.getElementById('Address').value.trim();
+    const phone = document.getElementById('Phone').value.trim();
+
+    // Validate Name
+    if (!name) {
+        isValid = false;
+        document.getElementById('name-error').textContent = 'Name is required.';
+    }
+
+    // Validate Country
+    if (!country) {
+        isValid = false;
+        document.getElementById('country-error').textContent = 'Country is required.';
+    }
+
+    // Validate Address
+    if (!address) {
+        isValid = false;
+        document.getElementById('address-error').textContent = 'Address is required.';
+    }
+
+    // Validate Phone (check if it's a valid number)
+    const phoneRegex = /^[+]?[0-9]{10,15}$/; // Updated to allow international formats
+    if (!phone || !phoneRegex.test(phone)) {
+        isValid = false;
+        document.getElementById('phone-error').textContent = 'Phone must be a valid number.';
+    }
+
+    return isValid;
+}
+
+    </script>
+    
+</body>
+</html>

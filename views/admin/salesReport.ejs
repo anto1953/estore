@@ -1,0 +1,106 @@
+<body>
+    <%- include('../partials/sidebar') %>
+    <%- include('../partials/topbar') %>
+    <div class="content p-4" id="main-content">
+        <div class="container-fluid mt-5 pt-5">
+            <div id="salesReport" class="section-details active">
+                <h2>Sales Report</h2>
+                <p>Generate and view the sales report</p>
+
+                <!-- Filter Form -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <form action="/admin/salesReport" method="GET" class="d-flex align-items-center" style="flex: 1;">
+                        <!-- Date Range Filter -->
+                        <div class="form-group me-3">
+                            <label for="reportType">Report Type</label>
+                            <select id="reportType" name="reportType" class="form-select" required>
+                                <option value="daily" <%= reportType === 'daily' ? 'selected' : '' %>>Daily</option>
+                                <option value="weekly" <%= reportType === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                                <option value="monthly" <%= reportType === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                                <option value="custom" <%= reportType === 'custom' ? 'selected' : '' %>>Custom Date Range</option>
+                            </select>
+                        </div>
+
+                        <!-- Custom Date Range -->
+                        <div class="form-group me-3" id="customDateRange" style="display: <%= reportType === 'custom' ? 'block' : 'none' %>;">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" id="startDate" name="startDate" class="form-control" value="<%= startDate %>">
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" name="endDate" class="form-control" value="<%= endDate %>">
+                        </div>
+
+                        <!-- Button to Generate Report -->
+                        <button type="submit" class="btn btn-primary ms-2">Generate Report</button>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <% if (salesReport) { %>
+                        <table class="table table-striped mt-4">
+                            <thead>
+                                <tr>
+                                    <th>Sales Count</th>
+                                    <th>Order Amount</th>
+                                    <th>Discount Deducted</th>
+                                    <th>Total Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><%= salesReport.salesCount %></td>
+                                    <td>₹<%= salesReport.totalOrderAmount.toFixed(2) %></td>
+                                    <td>₹<%= salesReport.totalDiscount.toFixed(2) %></td>
+                                    <td>₹<%= (salesReport.totalOrderAmount - salesReport.totalDiscount).toFixed(2) %></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <h3>No sales data found for the selected period</h3>
+                    <% } %>
+                </div>
+
+                <div class="pagination">
+                    <% if (pagination && pagination.totalPages > 1) { %>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                <% if (pagination.currentPage > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= pagination.currentPage - 1 %>" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                <% } %>
+                                <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+                                    <li class="page-item <%= pagination.currentPage === i ? 'active' : '' %>">
+                                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+                                <% if (pagination.currentPage < pagination.totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= pagination.currentPage + 1 %>" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show the custom date range fields based on the report type selection
+        const reportTypeSelect = document.getElementById('reportType');
+        const customDateRange = document.getElementById('customDateRange');
+
+        reportTypeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateRange.style.display = 'block';
+            } else {
+                customDateRange.style.display = 'none';
+            }
+        });
+    </script>
+</body>
