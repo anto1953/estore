@@ -17,8 +17,8 @@ const sharp = require("sharp");
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const admin = {
-  email: "admin@gmail.com",
-  password: "aaaa",
+  email: process.env.ADMIN_ID,
+  password: process.env.ADMIN_PASS
 };
 
 const checkSessionMiddleware = (req, res, next) => {
@@ -49,16 +49,7 @@ const blockCheckMiddleware = async (req, res, next) => {
   }
 };
 
-// const upload = multer({
-//   storage: multer.memoryStorage(),
-//   limits: { fileSize: 2 * 1024 * 1024 },
-//   fileFilter(req, file, cb) {
-//     if (!file.mimetype.startsWith('image/')) {
-//       return cb(new Error('Please upload an image file.'));
-//     }
-//     cb(null, true);
-//   }
-// });
+
 
 const processImage = async (file) => {
   try {

@@ -119,16 +119,15 @@
         const emailError = document.getElementById("emailError");
       
         emailForm.addEventListener("submit", function (e) {
-          e.preventDefault(); // Prevent default form submission
+          e.preventDefault(); 
       
           const email = emailInput.value.trim();
       
-          // Validate email format
           if (!validateEmail(email)) {
-            emailError.style.display = "block"; // Show error message
+            emailError.style.display = "block";
             emailError.textContent = "Please enter a valid email address.";
           } else {
-            emailError.style.display = "none"; // Hide error message
+            emailError.style.display = "none"; 
       
             const formData = new FormData(emailForm);
             const data = Object.fromEntries(formData.entries());

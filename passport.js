@@ -3,14 +3,6 @@ const User=require('../project1/model/userSchema')
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const bcrypt=require('bcrypt');
 
-// Serialize and deserialize user
-// passport.serializeUser((user, done) => {
-//     done(null, user);
-// });
-
-// passport.deserializeUser((user, done) => {
-//     done(null, user);
-// });
 
 // Google Strategy
 passport.use(new GoogleStrategy({
@@ -25,7 +17,6 @@ async (request, accessToken, refreshToken, profile, done) => {
         let user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
-            // Not storing a password for social users
             user = new User({
                 googleId: profile.id,
                 name: profile.displayName,
@@ -43,19 +34,15 @@ async (request, accessToken, refreshToken, profile, done) => {
 }));
 
 passport.serializeUser((user, done) => {
-    done(null, user.id); // Store only the user ID in the session
-    // console.log("User serialized:", user.id);
+    done(null, user.id); 
 });
 
 passport.deserializeUser(async (id, done) => {
     try {
-        // console.log("Deserializing user:", id);
         const user = await User.findById(id);
-        // console.log(user);
         
         done(null, user);
     } catch (err) {
-        // console.error("Error during user deserialization:", err);
         done(err, null);
     }
 });
