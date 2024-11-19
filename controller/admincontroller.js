@@ -58,7 +58,7 @@ const users = async (req, res) => {
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });
-      const count = await User.countDocuments(searchFilter); // Total number of matching users
+      const count = await User.countDocuments(searchFilter); 
 
       // Render view with pagination and search data
       res.render("admin/users", {
@@ -131,11 +131,11 @@ const _header = async (req, res) => {
 };
 const products = async (req, res) => {
   const query = req.query.search ? req.query.search.toLowerCase() : "";
-  const page = parseInt(req.query.page) || 1; // Corrected this line
+  const page = parseInt(req.query.page) || 1; 
   const limit = 10;
   const skip = (page - 1) * limit;
 
-  const searchQuery = req.query.search || ""; // Adjusted for consistent search handling
+  const searchQuery = req.query.search || ""; 
   const searchFilter = searchQuery
     ? { pname: { $regex: searchQuery, $options: "i" } }
     : {};
