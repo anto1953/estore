@@ -169,7 +169,7 @@ function validateForm() {
     }
 
     // Validate Phone (check if it's a valid number)
-    const phoneRegex = /^[+]?[0-9]{10,15}$/; // Updated to allow international formats
+    const phoneRegex = /^[+]?[0-9]{10}$/; // Updated to allow international formats
     if (!phone || !phoneRegex.test(phone)) {
         isValid = false;
         document.getElementById('phone-error').textContent = 'Phone must be a valid number.';

@@ -17,7 +17,7 @@ const cartSchema = new Schema({
         quantity: {
             type: Number,
             required: true,
-            min: 1 // Ensure the quantity is at least 1
+            min: 1
         },
         price: {
             type: Number,
@@ -27,12 +27,15 @@ const cartSchema = new Schema({
             type: Number,
             required: true,
             default: function() {
-                return this.price * this.quantity; // Automatically calculate total price for the product
+                return this.price * this.quantity; 
             }
         },
         image: {
-            type: String, // Store image path or URL
-            required: false // Optional, only if an image is provided
+            type: String, 
+            required: false 
+        },
+        category: {
+            type: String
         }
     }],
     totalPrice: {

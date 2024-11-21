@@ -167,6 +167,10 @@
         errorMessage.textContent = "Category name cannot have spaces at the beginning or end.";
         return;
     }
+    if (/[^a-zA-Z]/.test(categoryName)) {
+    errorMessage.textContent = "Category name can only contain alphabets.";
+    return;
+}
 
         const formData=new FormData(addcategoryForm);
         const data = Object.fromEntries(formData.entries());

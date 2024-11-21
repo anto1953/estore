@@ -33,7 +33,6 @@
             <%- include('../partials/_userProfilesidebar') %>
         </nav>
 
-
 <div class="tab-pane profile-edit pt-3" id="profile-edit">
 
     <!-- Profile Edit Form -->
@@ -45,6 +44,7 @@
                     style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
                 <div class="pt-2">
                     <input type="file" id="profileImage" name="profileImage" style="display: none;" onchange="previewImage(event)">
+                    <div id="profileImage-error" class="text-danger"></div> <br> 
                     <a href="#" class=" btn-primary btn-sm" title="Upload new profile image" onclick="document.getElementById('profileImage').click();">
                         <i class="bi bi-upload"></i>
                     </a>
@@ -59,7 +59,7 @@
             <label for="name" class="col-md-4 col-lg-3 col-form-label"> Name</label>
             <div class="col-md-8 col-lg-9">
                 <input name="name" type="text" class="form-control" id="name" value="<%= user.name %>">
-                <div id="name-error" class="text-danger"></div> <!-- Error message placeholder -->
+                <div id="name-error" class="text-danger"></div>  
             </div>
         </div>
     
@@ -67,7 +67,7 @@
             <label for="country" class="col-md-4 col-lg-3 col-form-label">Country</label>
             <div class="col-md-8 col-lg-9">
                 <input name="country" type="text" class="form-control" id="Country" value="<%= user.country %>">
-                <div id="country-error" class="text-danger"></div> <!-- Error message placeholder -->
+                <div id="country-error" class="text-danger"></div>  
             </div>
         </div>
     
@@ -76,8 +76,10 @@
             <div class="col-md-8 col-lg-9">
                 <% const defaultAddress = user.addresses.find(addr => addr.isDefault); %>
                 <input name="address" type="text" class="form-control" id="Address" 
-                    value="<%= defaultAddress ? `${defaultAddress.street}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.zipCode}, ${defaultAddress.country}` : '' %>">
-                <div id="address-error" class="text-danger"></div> <!-- Error message placeholder -->
+                value="<%= defaultAddress ? `${defaultAddress.street}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.zipCode}, ${defaultAddress.country}` : '' %>"
+                readonly>
+                           
+                <div id="address-error" class="text-danger"></div>  
             </div>
         </div>
     
@@ -85,7 +87,7 @@
             <label for="phone" class="col-md-4 col-lg-3 col-form-label">Phone</label>
             <div class="col-md-8 col-lg-9">
                 <input name="phone" type="text" class="form-control" id="Phone" value="<%= user.phone %>">
-                <div id="phone-error" class="text-danger"></div> <!-- Error message placeholder -->
+                <div id="phone-error" class="text-danger"></div>  
             </div>
         </div>
     
@@ -119,11 +121,24 @@
 <script src="/userProfileAssets/js/main.js"></script>
 
 <script>
-    function previewImage(event) {
-        const imageDisplay = document.getElementById('profile-img-display');
-        imageDisplay.src = URL.createObjectURL(event.target.files[0]);
-    }
+   function previewImage(event) {
+    const file = event.target.files[0];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
     
+    if (!file) {
+        return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+        document.getElementById('profileImage-error').textContent = 'only jpeg,png,jpg,avif types are allowed';
+        event.target.value = ''; 
+        return;
+    }
+
+    const imageDisplay = document.getElementById('profile-img-display');
+    imageDisplay.src = URL.createObjectURL(file);
+}
+
     function removeProfileImage() {
         document.getElementById('profile-img-display').src = 'assets/img/default-profile.jpg'; 
         document.getElementById('profileImage').value = ''; 
@@ -190,7 +205,6 @@ function validateForm() {
 
     const name = document.getElementById('name').value.trim();
     const country = document.getElementById('Country').value.trim();
-    const address = document.getElementById('Address').value.trim();
     const phone = document.getElementById('Phone').value.trim();
 
     // Validate Name
@@ -205,14 +219,9 @@ function validateForm() {
         document.getElementById('country-error').textContent = 'Country is required.';
     }
 
-    // Validate Address
-    if (!address) {
-        isValid = false;
-        document.getElementById('address-error').textContent = 'Address is required.';
-    }
 
-    // Validate Phone (check if it's a valid number)
-    const phoneRegex = /^[+]?[0-9]{10,15}$/; // Updated to allow international formats
+    // Validate Phone 
+    const phoneRegex = /^[+]?[0-9]{10}$/; 
     if (!phone || !phoneRegex.test(phone)) {
         isValid = false;
         document.getElementById('phone-error').textContent = 'Phone must be a valid number.';

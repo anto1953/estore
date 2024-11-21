@@ -15,7 +15,7 @@ const categorySchema=new mongoose.Schema({
     image: {
         String
     },
-    listed: {
+    isListed: {
         type: Boolean
     },
     createdAt: {

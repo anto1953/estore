@@ -83,13 +83,13 @@
                     <i class="bi bi-pencil"></i>
                   </a>
                   <a
-                    class="btn btn-sm <%= row.listed ? 'btn-danger' : 'btn-success' %>"
-                    onclick="confirmToggleList('<%= row._id %>', <%= row.listed %>)"
+                    class="btn btn-sm <%= row.isListed ? 'btn-danger' : 'btn-success' %>"
+                    onclick="confirmToggleList('<%= row._id %>', <%= row.isListed %>)"
                   >
                     <i
-                      class="bi <%= row.listed ? 'bi-toggle-on' : 'bi-toggle-off' %>"
+                      class="bi <%= row.isListed ? 'bi-toggle-on' : 'bi-toggle-off' %>"
                     ></i>
-                    <%= row.listed ? 'Unlist' : 'List' %>
+                    <%= row.isListed ? 'Unlist' : 'List' %>
                   </a>
                 </td>
               </tr>

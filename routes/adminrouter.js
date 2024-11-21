@@ -14,7 +14,7 @@ router.get("/_header", admincontroller._header);
 router.get("/addproduct", admincontroller.addproduct);
 router.post(
   "/addproduct",
-  upload.array("croppedImages"),
+  upload.array("images"),
   admincontroller.addproductpost
 );
 router.get("/toggleProductListed/:id", admincontroller.toggleProductListed);
@@ -22,7 +22,7 @@ router.post("/relistProduct", admincontroller.relistProduct);
 router.get("/editproduct/:id", admincontroller.editproduct);
 router.post(
   "/editproduct/:id",
-  upload.array("croppedImages"),
+  upload.array("images"),
   admincontroller.editproductpost
 );
 router.get("/categories", admincontroller.categories);
@@ -30,7 +30,7 @@ router.get("/editcategory/:id", admincontroller.editcategory);
 router.post("/editcategory/:id", admincontroller.editcategorypost);
 router.get("/addcategory", admincontroller.addcategory);
 router.post("/addcategory", admincontroller.addcategorypost);
-router.get("/deletecategory/:id", admincontroller.deletecategory);
+router.get("/listCategory/:id", admincontroller.listCategory);
 router.get("/processImages", admincontroller.processImages);
 router.get("/orders", admincontroller.orders);
 router.post("/updateOrderStatus", admincontroller.updateOrderStatus);
@@ -38,6 +38,7 @@ router.post("/cancelOrder", admincontroller.cancelOrder);
 router.get('/getReturnRequest/:id',admincontroller.getReturnRequest)
 router.post('/acceptReturnRequest/:id',admincontroller.acceptReturnRequest)
 router.post('/rejectReturnRequest/:id',admincontroller.rejectReturnRequst)
+router.get('/orderDetails/:id',admincontroller.orderDetails)
 router.get('/coupons',admincontroller.coupons)
 router.get('/addCoupon',admincontroller.addCoupon)
 router.post('/addCoupon',admincontroller.addCouponPost)

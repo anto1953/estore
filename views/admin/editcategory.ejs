@@ -160,6 +160,10 @@
                 errorMessage.textContent = "Category name cannot contain more than one space between words.";
                 return; 
             }
+            if (/[^a-zA-Z]/.test(categoryName)) {
+                errorMessage.textContent = "Category name can only contain alphabets.";
+                return;
+            }
 
         const editcategoryForm = document.getElementById('editcategoryForm');
         const formData = new FormData(editcategoryForm);

@@ -170,7 +170,7 @@
 
         <div class="form-group">
           <label for="image">Product Images:</label>
-          <input type="file" id="image" accept="image/*" multiple />
+          <input type="file" id="image" name="images" accept="image/*" multiple />
           <span class="error-message" id="imageError"></span>
         </div>
 
@@ -350,13 +350,19 @@
 
         if (valid) {
           const formData = new FormData(addProductForm);
+
           image.forEach((croppedImage) => {
             formData.append(
-              "croppedImages",
+              "images",
               croppedImage.blob,
               croppedImage.fileName
             );
           });
+          
+          // const uncroppedImages = filesArray.slice(image.length);
+          // uncroppedImages.forEach((file) => {
+          //   formData.append("images", file, file.name);
+          // });
 
           fetch("/admin/addproduct", {
             method: "POST",
@@ -387,8 +393,8 @@
                 location.reload();
               }
             })
-
             .catch((error) => {
+              console.log(error);
               Swal.fire({
                 title: "Error adding product",
                 text: "Please try again later.",

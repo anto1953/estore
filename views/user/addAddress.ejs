@@ -7,7 +7,6 @@
     <link href="https://fonts.gstatic.com" rel="preconnect">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
     
-    <!-- Vendor CSS Files -->
     <link href="/userProfileAssets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/userProfileAssets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
     <link href="/userProfileAssets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
@@ -16,19 +15,16 @@
     <link href="/userProfileAssets/vendor/remixicon/remixicon.css" rel="stylesheet">
     <link href="/userProfileAssets/vendor/simple-datatables/style.css" rel="stylesheet">
     
-    <!-- Template Main CSS File -->
     <link href="/userProfileAssets/assets/css/style.css" rel="stylesheet">
     <%- include('../partials/_userhead') %>
     </head>
     <body>
-        <!-- Top Bar -->
     <div class="top-bar">
         <%- include('../partials/_usertopbar') %>
     </div>
     
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
             <nav class="sidebar ">
                 <%- include('../partials/_userProfilesidebar') %>
             </nav>
@@ -88,16 +84,14 @@
     <script>
     const addressForm = document.getElementById('addressForm');
 addressForm.addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the form from submitting
+    event.preventDefault(); 
 
-    // Clear any previous error messages
     document.querySelectorAll('.text-danger').forEach(function(errorElement) {
         errorElement.textContent = '';
     });
 
-    // Validate the form before proceeding
     if (!validateForm()) {
-        return; // Stop form submission if validation fails
+        return; 
     }
 
     const formData = new FormData(addressForm);
@@ -168,8 +162,8 @@ function validateForm() {
         document.getElementById('name-error').textContent = 'Full Name is required.';
     }
 
-    // Validate Phone (check if it's a valid number)
-    const phoneRegex = /^[+]?[0-9]{10,15}$/; // Updated to allow international formats
+    // Validate Phone 
+    const phoneRegex = /^[+]?[0-9]{10}$/; 
     if (!phone || !phoneRegex.test(phone)) {
         isValid = false;
         document.getElementById('phone-error').textContent = 'Phone Number must be valid.';
@@ -199,8 +193,8 @@ function validateForm() {
         document.getElementById('country-error').textContent = 'Country is required.';
     }
 
-    // Validate ZIP Code (check if it's a valid number)
-    const zipCodeRegex = /^[0-9]{5,10}$/; // Example for ZIP Code format
+    // Validate ZIP Code 
+    const zipCodeRegex = /^[0-9]{5,10}$/; 
     if (!zipCode || !zipCodeRegex.test(zipCode)) {
         isValid = false;
         document.getElementById('zipcode-error').textContent = 'ZIP Code must be valid.';

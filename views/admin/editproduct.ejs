@@ -163,7 +163,7 @@
         
             <div class="form-group">
                 <label for="image">Product Images:</label>
-                <input type="file" id="image" accept="image/*" multiple>
+                <input type="file" id="image" name="images" accept="image/*" multiple>
                 <div id="imagePreviewContainer">
                     <% product.image.forEach(function (img, index) { %>
                         <div class="image-preview" data-image-index="<%= index %>" data-image="<%= img %>">
@@ -360,7 +360,7 @@ editProductForm.addEventListener('submit', function (event) {
         const formData = new FormData(editProductForm);
 
         image.forEach((croppedImage) => {
-            formData.append('croppedImages', croppedImage.blob, croppedImage.fileName);
+            formData.append("images", croppedImage.blob, croppedImage.fileName);
         });
 
         imagesToRemove.forEach((image) => {

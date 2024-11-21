@@ -18,7 +18,18 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const admin = {
   email: process.env.ADMIN_ID,
-  password: process.env.ADMIN_PASS
+  password: process.env.ADMIN_PASS,
+};
+
+const checkAnySessionMiddleware = (req, res, next) => {
+  if (req.session.user || req.session.admin) {
+    res.json({
+      status: "error",
+      message: "A user is already loggedin",
+    });
+  } else {
+    next();
+  }
 };
 
 const checkSessionMiddleware = (req, res, next) => {
@@ -39,9 +50,7 @@ const blockCheckMiddleware = async (req, res, next) => {
       next();
     } else {
       req.session.user.isBlocked = true;
-      res
-        .status(403)
-        .json({ status: "error", message: "Your account is blocked." });
+      res.redirect('/userBlockPage')
     }
   } catch (error) {
     console.error("Error:", error);
@@ -49,7 +58,39 @@ const blockCheckMiddleware = async (req, res, next) => {
   }
 };
 
+const checkCategoryisListed = async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(id).populate("category");
+    if (!product.category.isListed) {
+      return res.json({
+        status: "error",
+        message: "this products category is currntly unlisted.",
+      });
+    }
+    next();
+  } catch (error) {
+    console.log(error);
+    res.json({
+      status: "error",
+      message: "something error",
+    });
+  }
+};
 
+const userBlockPage=async (req,res) => {
+  try {
+    if(req.session.user.isBlocked==true){
+      res.render('user/userBlockPage')
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({
+      status:'error',
+      message:'something error'
+    })
+  }
+}
 
 const processImage = async (file) => {
   try {
@@ -101,8 +142,8 @@ const signup = async (req, res) => {
 
 const signuppost = async (req, res) => {
   try {
-    console.log('signup post');
-    
+    console.log("signup post");
+
     let userdata = {};
     userdata = req.body;
     console.log(userdata);
@@ -134,7 +175,7 @@ const signuppost = async (req, res) => {
       });
 
       const mailOptions = {
-        from:process.env.AUTH_ID,
+        from: process.env.AUTH_ID,
         to: email,
         subject: "otp verification",
         text: `your OTP is ${otp}.`,
@@ -176,8 +217,7 @@ const otpPost = async (req, res) => {
   try {
     console.log(req.body);
     console.log(req.session.otp);
-    
-    
+
     const otp = req.body.otp;
     const { name, email, phone, password } = req.session.userdata;
     if (otp === req.session.otp) {
@@ -213,69 +253,70 @@ const login = async (req, res) => {
 };
 
 const loginpost = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email: email });
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email: email });
 
-    if (email === admin.email && password === admin.password) {
-      const isAnyUserLoggedIn = await User.findOne({ isLoggedIn: true });
-      if (isAnyUserLoggedIn && req.session.user) {
-        return res.json({
-          status: "error",
-          message: "A user is already logged in from another session.",
-        });
-      } else {
-        req.session.admin = admin.email;
-        return res.json({
-          status: "success",
-          message: "Admin login successful",
-          redirectUrl: "/adminhome",
-        });
+      if (email === admin.email && password === admin.password) {
+        const isAnyUserLoggedIn = await User.findOne({ isLoggedIn: true });
+        if (isAnyUserLoggedIn && req.session.user) {
+          return res.json({
+            status: "error",
+            message: "A user is already logged in from another session.",
+          });
+        } else {
+          req.session.admin = admin.email;
+          return res.json({
+            status: "success",
+            message: "Admin login successful",
+            redirectUrl: "/adminhome",
+          });
+        }
       }
-    }
-    if (user) {
-      if (user.isBlocked) {
-        return res.json({
-          status: "error",
-          message: "User is blocked",
-        });
-      }
-      if (req.session.admin) {
-        return res.json({
-          status: "error",
-          message: "Admin is already logged in from another session.",
-          redirectUrl: "/login",
-        });
-      }
-      if (password === user.password) {
-        req.session.user = user;
-        req.session.id = user.id;
-        await User.updateOne({ _id: user._id }, { isLoggedIn: true });
+      if (user) {
+        if (user.isBlocked) {
+          return res.json({
+            status: "error",
+            message: "User is blocked",
+          });
+        }
+        if (req.session.admin) {
+          return res.json({
+            status: "error",
+            message: "Admin is already logged in from another session.",
+            redirectUrl: "/login",
+          });
+        }
+        if (password === user.password) {
+          req.session.user = user;
+          req.session.id = user.id;
+          await User.updateOne({ _id: user._id }, { isLoggedIn: true });
 
-        return res.json({
-          status: "success",
-          message: "User login successful",
-          redirectUrl: "/userhome",
-        });
+          return res.json({
+            status: "success",
+            message: "User login successful",
+            redirectUrl: "/userhome",
+          });
+        } else {
+          return res.json({
+            status: "error",
+            message: "Invalid username or password",
+          });
+        }
       } else {
         return res.json({
           status: "error",
           message: "Invalid username or password",
         });
       }
-    } else {
-      return res.json({
+    } catch (error) {
+      res.json({
         status: "error",
-        message: "Invalid username or password",
+        message: error.message,
       });
     }
-  } catch (error) {
-    res.json({
-      status: "error",
-      message: error.message,
-    });
   }
-};
+
 
 const loadAuth = async (req, res) => {
   try {
@@ -346,8 +387,8 @@ const profile = async (req, res) => {
 };
 const email = async (req, res) => {
   try {
-    const user=req.session.user
-    res.render("user/email",{ user });
+    const user = req.session.user || null;
+    res.render("user/email", { user:user || null });
   } catch (error) {
     res.send(error.message);
   }
@@ -370,7 +411,6 @@ const emailPost = async (req, res) => {
         auth: {
           user: process.env.AUTH_ID,
           pass: process.env.AUTH_PASS,
-          
         },
       });
 
@@ -408,6 +448,8 @@ const forgotOtp = async (req, res) => {
   try {
     res.render("user/forgotOtp");
   } catch (error) {
+    console.log(error);
+    
     res.send(error.message);
   }
 };
@@ -519,10 +561,10 @@ const viewProducts = async (req, res) => {
     }
 
     let products = await Product.find(
-      Object.assign({}, filterCriteria, { listed: true })
+      Object.assign({}, filterCriteria, { isListed: true })
     );
 
-    let categories = await Category.find({});
+    let categories = await Category.find({isListed:true});
 
     if (sortBy) {
       switch (sortBy) {
@@ -564,7 +606,7 @@ const viewProducts = async (req, res) => {
     const cartProductIds = cart
       ? cart.products.map((item) => item.product.toString())
       : [];
-    console.log(cartProductIds)
+    console.log(cartProductIds);
     res.render("user/product_list", {
       products,
       cart: cartProductIds,
@@ -628,7 +670,7 @@ const getSortedProducts = async (req, res) => {
 const viewProductDetails = async (req, res) => {
   try {
     const user = req.session.user;
-    const userid=req.session.user._id
+    const userid = user ? req.session.user._id : null;
     const email = user ? req.session.user.email : null;
     const productid = req.params.id;
     const product = await Product.findById(productid);
@@ -661,38 +703,34 @@ const viewProductDetails = async (req, res) => {
       relatedProduct,
       cart,
       user,
-      cartitems
+      cartitems,
     });
   } catch (error) {
     console.log(error);
     Swal.fire({
-      status:'error',
-      message:'something error'
-    })
+      status: "error",
+      message: "something error",
+    });
   }
 };
 
-const cart = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const cart = async (req, res) => {
     try {
       const userId = req.session.user._id;
-      const user=await User.findById({_id:userId})
+      const user = await User.findById({ _id: userId });
       const cart = await Cart.findOne({ user }).populate({
         path: "products.product",
-        select: "pname pprice image stock",
+        select: "pname pprice image stock isListed",
       });
 
       if (!cart) {
-          Swal.fire({
-            title: "cart is empty",
-            text: "Add a product to the cart",
-            confirmButtonColor: "#d33",
-          });
-          return;
-        }
-      
+        Swal.fire({
+          title: "cart is empty",
+          text: "Add a product to the cart",
+          confirmButtonColor: "#d33",
+        });
+        return;
+      }
 
       const subtotal = cart.products.reduce(
         (total, item) => total + item.product.pprice * item.quantity,
@@ -713,10 +751,14 @@ const cart = [
         };
       });
 
+      const listedProducts= cart.products.map((item)=>{
+        return isListed=true
+      })
+
       res.render("user/cart", {
         cart: { ...cart.toObject(), products: cartWithSingleImage },
         subtotal,
-        user: req.session.user,
+        user: user,
         shippingOptions: [
           {
             name: "Standard Shipping",
@@ -737,24 +779,25 @@ const cart = [
             selected: false,
           },
         ],
+        products:listedProducts
       });
     } catch (error) {
-      console.error("Error fetching cart:", error);
+      console.log("Error fetching cart:", error);
       res
         .status(500)
         .send(
           "Something went wrong while loading the cart. Please try again later."
         );
     }
-  },
-];
+  }
 
 const addToCart = async (req, res) => {
   try {
     if (!req.session.user) {
       return res.status(401).json({ message: "User not logged in" });
     }
-    const user = req.session.user;
+    const userId = req.session.user._id;
+    const user = await User.findById({ _id: userId });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -776,6 +819,7 @@ const addToCart = async (req, res) => {
             price: product.pprice,
             total: product.pprice,
             image: imagePath,
+            category: product.category,
           },
         ],
         totalPrice: product.pprice,
@@ -799,6 +843,7 @@ const addToCart = async (req, res) => {
           price: product.pprice,
           total: product.pprice,
           image: product.image[0],
+          category: product.category,
         });
       }
       cart.totalPrice = cart.products.reduce(
@@ -815,7 +860,7 @@ const addToCart = async (req, res) => {
       cart,
     });
   } catch (error) {
-    console.error("Error adding product to cart:", error);
+    console.log("Error adding product to cart:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -851,7 +896,7 @@ const updateQuantity = async (req, res) => {
 
     return res.json({ success: true, message: "Cart updated successfully" });
   } catch (error) {
-    console.error("Error updating cart:", error);
+    console.log("Error updating cart:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -888,16 +933,26 @@ const checkout = async (req, res) => {
       return res.redirect("/login");
     }
     const userid = req.session.user._id;
-    const user=await User.findById({_id:userid})
+    const user = await User.findById({ _id: userid });
     const imagePath = req.file ? req.file.path : null;
     const cart = await Cart.findOne({ user }).populate({
       path: "products.product",
-      select: "pname pprice image",
+      select: "pname pprice image category isListed",
     });
     const orderDetails = {
       products: cart.products,
       totalPrice: cart.totalPrice,
     };
+    // const unlistedCategory=orderDetails.products.some((product)=>{
+    //   return product.category.isListed===false;
+    // })
+    // if(unlistedCategory){
+    //   Swal.fire({
+    //     icon:'error',
+    //     text:"product's category is unlisted"
+    //   })
+    //   return;
+    // }
     res.render("user/checkout", {
       user,
       orderDetails,
@@ -905,7 +960,7 @@ const checkout = async (req, res) => {
       cart,
     });
   } catch (err) {
-    console.error("Error during checkout:", err);
+    console.log("Error during checkout:", err);
     res.status(500).send("Server error");
   }
 };
@@ -1020,7 +1075,7 @@ const cancelOrder = async (req, res) => {
       res.json({
         status: "success",
         message: "Order cancelled",
-      }); 
+      });
     } else {
       res.json({
         status: "error",
@@ -1040,7 +1095,9 @@ const cancelAProduct = async (req, res) => {
     const order = await Orders.findById(orderId);
 
     if (!order) {
-      return res.status(404).json({ status: "error", message: "Order not found" });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Order not found" });
     }
 
     const product = order.products.find(
@@ -1071,7 +1128,10 @@ const cancelAProduct = async (req, res) => {
     const cancelOrder = await order.save();
 
     if (cancelOrder) {
-      return res.json({ status: "success", message: "Product cancelled successfully" });
+      return res.json({
+        status: "success",
+        message: "Product cancelled successfully",
+      });
     } else {
       return res.status(500).json({
         status: "error",
@@ -1083,8 +1143,6 @@ const cancelAProduct = async (req, res) => {
     res.status(500).json({ status: "error", message: "Something went wrong" });
   }
 };
-
-
 
 const returnAProduct = async (req, res) => {
   console.log(req.body);
@@ -1126,13 +1184,10 @@ const returnAProduct = async (req, res) => {
   }
 };
 
-const userProfile = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const userProfile = async (req, res) => {
     try {
       const userid = req.session.user._id;
-      const user=await User.findById(userid)
+      const user = await User.findById(userid);
       console.log("user", user);
 
       if (!user) {
@@ -1145,19 +1200,16 @@ const userProfile = [
     } catch (error) {
       console.log(error);
       res.json({
-        status:'error',
-        message:'something error'
-      })    }
-  },
-];
+        status: "error",
+        message: "something error",
+      });
+    }
+  }
 
-const editUserProfile = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const editUserProfile = async (req, res) => {
     try {
       const userid = req.session.user._id;
-      const user=await User.findById(userid)
+      const user = await User.findById(userid);
       if (!user) {
         return res.json({
           status: "error",
@@ -1172,13 +1224,12 @@ const editUserProfile = [
         message: "something error",
       });
     }
-  },
-];
+  }
 
 const editUserProfilePost = async (req, res) => {
   try {
     const userId = req.params.id;
-    console.log('body',req.body); 
+    console.log("body", req.body);
 
     const { name, country, address, phone, email } = req.body;
     const profileImage = req.file ? await processImage(req.file) : null;
@@ -1218,10 +1269,7 @@ const editUserProfilePost = async (req, res) => {
   }
 };
 
-const userProfileOrders = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const userProfileOrders = async (req, res) => {
     try {
       const user = req.session.user;
       if (!user) {
@@ -1231,7 +1279,7 @@ const userProfileOrders = [
           text: "The specified user does not exist in the system. Please check and try again.",
           confirmButtonColor: "#d33",
         });
-        return; // Stop further execution
+        return; 
       }
 
       const getStatusClass = (status) => {
@@ -1266,13 +1314,9 @@ const userProfileOrders = [
         message: "soething error",
       });
     }
-  },
-];
+  }
 
-const returnOrderRequest = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const returnOrderRequest = async (req, res) => {
     try {
       console.log("params", req.params);
 
@@ -1302,18 +1346,19 @@ const returnOrderRequest = [
         message: "something error",
       });
     }
-  },
-];
+  }
 
 const returnAProductRequest = async (req, res) => {
   console.log("return request body", req.body);
-  const { productId, message,orderId } = req.body;
+  const { productId, message, orderId } = req.body;
 
   try {
     const order = await Orders.findById(orderId);
 
     if (!order) {
-      return res.status(404).json({ status: "error", message: "Order not found" });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Order not found" });
     }
 
     const product = order.products.find(
@@ -1330,7 +1375,7 @@ const returnAProductRequest = async (req, res) => {
     product.isReturned = false;
     product.returnRequestStatus = "Request Pending";
 
-    const updatedOrder = await order.save();    
+    const updatedOrder = await order.save();
     if (updatedOrder) {
       res.json({
         status: "success",
@@ -1346,11 +1391,7 @@ const returnAProductRequest = async (req, res) => {
   }
 };
 
-
-const addressbook = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const addressbook = async (req, res) => {
     const email = req.session.user.email;
     const user = await User.findOne({ email });
     const addresses = user.addresses || [];
@@ -1359,21 +1400,16 @@ const addressbook = [
     } catch (error) {
       res.send(error.message);
     }
-  },
-];
+  }
 
-const addAddress = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const addAddress = async (req, res) => {
     try {
       const user = req.session.user;
       res.render("user/addAddress", { user });
     } catch (error) {
       res.send(error.message);
     }
-  },
-];
+  }
 const addAddressPost = async (req, res) => {
   try {
     const { name, phone, street, city, state, country, zipcode } = req.body;
@@ -1423,23 +1459,16 @@ const addAddressPost = async (req, res) => {
   }
 };
 
-const changePassword = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
-  try {
-    const user=req.session.user
-    res.render("user/changePassword", { user });
-  } catch (error) {
-    res.send(error.message);
+const changePassword = async (req, res) => {
+    try {
+      const user = req.session.user;
+      res.render("user/changePassword", { user });
+    } catch (error) {
+      res.send(error.message);
+    }
   }
-}]
 
-
-const editAddress = [
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  async (req, res) => {
+const editAddress = async (req, res) => {
     try {
       const id = req.params.id;
       console.log(id);
@@ -1452,8 +1481,7 @@ const editAddress = [
     } catch (error) {
       res.send(error.message);
     }
-  },
-];
+  }
 
 const editAddressPost = async (req, res) => {
   console.log(req.body);
@@ -1554,6 +1582,9 @@ const deleteAddress = async (req, res) => {
 module.exports = {
   checkSessionMiddleware,
   blockCheckMiddleware,
+  checkCategoryisListed,
+  checkAnySessionMiddleware,
+  userBlockPage,
   processImage,
   logout,
   login,

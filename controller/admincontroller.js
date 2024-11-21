@@ -101,7 +101,9 @@ const unblockUser = async (req, res) => {
   }
 };
 
-const topbar = async (req, res) => {
+const topbar =[
+  checkSessionMiddleware,
+ async (req, res) => {
   try {
     if (req.session.admin) {
       res.render("topbar");
@@ -109,17 +111,17 @@ const topbar = async (req, res) => {
   } catch (error) {
     res.send(error.message);
   }
-};
+}];
 
-const sidebar = async (req, res) => {
+const sidebar =[
+  checkSessionMiddleware,
+ async (req, res) => {
   try {
-    if (req.session.admin) {
       res.render("sidebar");
-    }
   } catch (error) {
     res.send(error.message);
   }
-};
+}];
 const _header = async (req, res) => {
   try {
     if (req.session.admin) {
@@ -142,12 +144,11 @@ const products = async (req, res) => {
 
   try {
     if (req.session.admin) {
-      // Fetch paginated products based on search filter
       let products = await Product.find(searchFilter)
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });
-      const count = await Product.countDocuments(searchFilter); // Total number of matching products
+      const count = await Product.countDocuments(searchFilter);
       products = products.map((product) => {
         let image = product.image[0];
         product.image = image;
@@ -172,7 +173,7 @@ const relistProduct = async (req, res) => {
       const productid = req.params.id;
       const result = await Product.findByIdAndUpdate(
         productid,
-        { listed: true },
+        { isListed: true },
         { new: true }
       );
 
@@ -204,7 +205,7 @@ const upload = multer({
     }
     cb(null, true);
   },
-});
+}).array("images",6)
 
 //image processing helper
 const processImages = async (files) => {
@@ -234,6 +235,8 @@ const addproduct = async (req, res) => {
 
 const addproductpost = async (req, res) => {
   console.log('add product',req.body);
+  console.log('image',req.files);
+  
   
   try {
     const { pname, description, pprice, category, stock } = req.body;
@@ -379,7 +382,7 @@ const toggleProductListed = async (req, res) => {
       }
       const updatedProduct = await Product.findByIdAndUpdate(
         productid,
-        { listed: !product.listed },
+        { isListed: !product.isListed },
         { new: true }
       );
 
@@ -538,29 +541,67 @@ const addcategorypost = async (req, res) => {
   }
 };
 
-const deletecategory = async (req, res) => {
+const   listCategory = async (req, res) => {
   try {
     if (req.session.admin) {
-      const categoryid = req.params.id;
-      const category = await Category.find({});
-      const categorydata = await Category.findByIdAndDelete(categoryid, {
-        deleted: true,
-      });
-      if (categorydata) {
-        res.status(400).json({
-          status: "success",
-          message: "category deleted successfully",
-        });
-      } else
-        res.status(404).json({
+      const categoryId = req.params.id;      
+
+      const category = await Category.findById({_id:categoryId});
+      if (!category) {
+        return res.status(404).json({
           status: "error",
-          message: "category not found",
+          message: "Category not found",
         });
+      }
+      
+      const updatedCategory = await Category.findByIdAndUpdate(
+        categoryId,
+        { isListed: !category.isListed },
+        { new: true }
+      );
+            
+      if (updatedCategory) {
+        const updatedStatus=updatedCategory.isListed;
+        const categoryName=category.value;        
+        const updateProducts=await Product.updateMany(
+          {category : categoryName},
+          {isListed:updatedStatus}
+        )
+        console.log('updatedproducts',updatedStatus);
+        
+        if(updateProducts.modifiedCount > 0){
+        return res.status(200).json({
+          status: "success",
+          message: updatedStatus
+            ? "Category listed successfully"
+            : "Category unlisted successfully",
+        });
+      } 
+      else{
+        return res.json({
+          status:'error',
+          message:'No products found to update'
+        })
+      }
+      }
+        else {
+        return res.status(400).json({
+          status: "error",
+          message: "Failed to update category listing",
+        });
+      }
     }
   } catch (error) {
-    res.send(error.message);
+    console.log(error);
+    res.status(500).json({
+      status: "error",
+      message: "something error"
+    });
   }
 };
+
+
+
 const orders = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
@@ -704,6 +745,22 @@ const rejectReturnRequst = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ status: "error", message: "An error occurred." });
+  }
+};
+
+const orderDetails=async (req, res) => {  
+  try {
+      const orderId = req.params.id;
+      const order = await Orders.findById({_id:orderId}).populate('userId').populate('products.productId');
+    
+      if (!order) {
+          return res.status(404).json({status:'error', message: 'Order not found' });
+      }
+
+      res.json(order);
+  } catch (error) {
+      console.log('Error fetching order details:', error);
+      res.status(500).json({status:'error', message: 'something error' });
   }
 };
 
@@ -1118,7 +1175,7 @@ module.exports = {
   editcategorypost,
   addcategory,
   addcategorypost,
-  deletecategory,
+  listCategory,
   processImages,
   orders,
   updateOrderStatus,
@@ -1126,6 +1183,7 @@ module.exports = {
   getReturnRequest,
   acceptReturnRequest,
   rejectReturnRequst,
+  orderDetails,
   coupons,
   addCoupon,
   addCouponPost,
