@@ -35,9 +35,14 @@
                     <div class="select_option_list">Category <i class="right fas fa-caret-down"></i></div>
                     <div class="select_option_dropdown">
                         <% categories.forEach(category => { %>
-                            <p><a href="#" class="category-option" data-category="<%= category %>"><%= category.value %></a></p>
+                            <p>
+                                <a href="/viewProducts?Search=<%= searchQuery || '' %>&category=<%= category.value %>" class="category-option">
+                                    <%= category.value %>
+                                </a>
+                            </p>
                         <% }) %>
                     </div>
+                    
                 </div>
                 
                 <div class="select_option">
@@ -76,7 +81,12 @@
                                         <%= cart.includes(product._id.toString()) ? 'Added to Cart' : 'Add to Cart' %>
                                     </button>
     
-                                    <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-heart"></span>Wishlist</button>
+                                    <button class="btn btn-default btn-sm" 
+                                            onclick="addToWishlist('<%= product._id %>')" 
+                                            <%= user.wishlist.includes(product._id.toString()) ? 'disabled' : '' %>>
+                                        <i class="fas fa-heart"></i> 
+                                        <%= user.wishlist.includes(product._id.toString()) ? 'Added to Wishlist' : 'Wishlist' %>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -321,6 +331,26 @@ document.addEventListener("DOMContentLoaded", function() {
             `;
         });
     }
+
+    async function addToWishlist(productId) {
+  try {
+    const response = await fetch(`/addToWishlist/${productId}`, {
+      method: 'POST',
+    });
+
+    if (response.ok) {
+      // Reload the page to update the button state or show a notification
+      location.reload();
+    } else {
+      const result = await response.json();
+      alert(result.message || 'Failed to add product to wishlist.');
+    }
+  } catch (error) {
+    console.error('Error adding product to wishlist:', error);
+    alert('An error occurred. Please try again later.');
+  }
+}
+
 
 </script>
 </html>

@@ -705,7 +705,10 @@ const acceptReturnRequest = async (req, res) => {
   const orderid = req.params.id;
 
   try {
-    const order = await Orders.findByIdAndUpdate(
+    const order=await Orders.findById({_id:orderid})
+    const user=await User.findById(order.userId)
+
+    const updatedOrder = await Orders.findByIdAndUpdate(
       orderid,
       {
         returnRequestStatus: "Return accepted",
@@ -716,7 +719,16 @@ const acceptReturnRequest = async (req, res) => {
       },
       { new: true }
     );
-    if (order) {
+
+    user.wallet.balance += order.totalPrice;
+    user.wallet.transactions.push({
+      orderId:orderid,
+      amount:order.totalPrice,
+      date:new Date(),
+    })
+    await user.save();
+
+    if (updatedOrder) {
       res.json({ status: "success", message: "Return request accepted." });
     } else {
       res.json({ status: "error", message: "Order not found." });
@@ -752,12 +764,16 @@ const orderDetails=async (req, res) => {
   try {
       const orderId = req.params.id;
       const order = await Orders.findById({_id:orderId}).populate('userId').populate('products.productId');
+      const user=await User.findById(order.userId);
+      const address = user.addresses.find(
+        (addr) => addr._id.toString() === order.address.toString()
+      );      
     
       if (!order) {
           return res.status(404).json({status:'error', message: 'Order not found' });
       }
 
-      res.json(order);
+      res.json({order,address,});
   } catch (error) {
       console.log('Error fetching order details:', error);
       res.status(500).json({status:'error', message: 'something error' });

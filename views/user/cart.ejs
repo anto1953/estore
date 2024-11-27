@@ -104,8 +104,12 @@
           <!-- Checkout Buttons -->
           <div class="checkout_btn_inner float-right">
             <a class="btn_1" href="/viewProducts">Continue Shopping</a>
-            <a class="btn_1 checkout_btn_1" href="/checkout">Proceed to Checkout</a>
-          </div>
+            <button 
+            class="btn_1 checkout_btn_1" 
+            onclick="window.location.href='/checkout/<%= cart._id %>'">
+            Proceed to Checkout
+          </button>
+                    </div>
         </div>
       </div>
     </div>
@@ -249,7 +253,7 @@ function deleteProductFromCart(productId) {
     }
   });
 }
-
+  
   </script>
 </body>
 </html>

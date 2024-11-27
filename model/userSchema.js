@@ -37,6 +37,18 @@ const addressSchema = new mongoose.Schema({
   },
 });
 
+const wishlistSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId, // Reference to the Product model
+    ref: 'products',
+    // required: true,
+  },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  image: { type: String, required: true },
+});
+
+
 const userSchema = new mongoose.Schema({
   isLoggedIn: {
     type: Boolean,
@@ -85,7 +97,20 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-}
+},
+wishlist: { type: [wishlistSchema], default: [] }, // Embedding the wishlist schema
+
+wallet: {
+  balance: { type: Number, default: 0 },  // User's wallet balance
+  transactions: [
+    {
+      orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Orders' },  // Link to the order
+      amount: { type: Number },  // Transaction amount
+      date: { type: Date, default: Date.now }  // Date of the transaction
+    }
+  ]
+},
+
 });
 
 module.exports = mongoose.model("User", userSchema);

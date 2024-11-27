@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zxx">
+<%- include('../partials/_userhead') %>
+<body>
+  <%- include('../partials/_usertopbar') %>
+  <div class="slider-area">
+    <div class="single-slider slider-height2 d-flex align-items-center" data-background="assets/img/hero/category.jpg">
+      <div class="container">
+        <div class="row">
+          <div class="col-xl-12">
+            <div class="hero-cap text-center">
+              <h2>Wishlist</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Slider Area End -->
+
+  <!-- Wishlist Area Start -->
+  <section class="wishlist_area" style="position: relative;">
+    <div class="container">
+      <div class="wishlist_inner">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Product</th>
+                <th scope="col">Image</th>
+                <th scope="col">Price</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (wishlist.length === 0) { %>
+                <tr>
+                  <td colspan="4" class="text-center">
+                    <h4>Your wishlist is empty!</h4>
+                  </td>
+                </tr>
+              <% } else { %>
+                <% wishlist.forEach((item) => { %>
+                  <tr>
+                    <td>
+                      <div class="media-body">
+                        <p><%= item.name %></p>
+                      </div>
+                    </td>
+                    <td>
+                      <img src="uploads/<%= item.image %>" alt="Product Image" style="width: 100px; height: auto;" />
+                    </td>
+                    <td>
+                      <h5>₹<%= item.price.toFixed(2) %></h5>
+                    </td>
+                    <td>
+                      <div>
+                        <!-- Add to Cart Button -->
+                        <button class="btnn btn-primary" onclick="addToCart('<%= item.productId %>')">
+                          <i class="fas fa-cart-plus"></i> Add to Cart
+                        </button>
+                        <!-- Remove from Wishlist Button -->
+                        <button class="btnn btn-danger" onclick="removeFromWishlist('<%= item.productId %>')">
+                          <i class="fas fa-times"></i> 
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+          <div class="text-right">
+            <a class="btn_1" href="/viewProducts">Continue Shopping</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Wishlist Area End -->
+
+  <%- include('../partials/_footer') %>
+  <%- include('../partials/_js') %>
+
+  <script>
+    // Add to Cart Function
+    function addToCart(productId) {
+    fetch(`/addToCart/${productId }`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId, quantity: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message === "Product added to cart") {
+            Swal.fire({
+                icon: 'success',
+                title: 'Product Added to Cart',
+                text: data.message,
+                confirmButtonText: 'OK'
+            }).then(()=>{
+                window.location.href="/viewProducts"
+            })
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                confirmButtonText: 'Try Again'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while adding the product to the cart.',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+    // Remove from Wishlist Function
+    function removeFromWishlist(productId) {
+      fetch(`/removeFromWishlist/${productId}`, {
+        method: 'DELETE',
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload(); 
+        } else {
+          Swal.fire({
+            title: "Error!",
+            text: "Failed to remove the product from your wishlist.",
+            icon: "error",
+            confirmButtonText: "OK"
+          });
+        }
+      })
+      .catch(error => {
+        console.error("Error removing from wishlist:", error);
+        Swal.fire({
+          title: "Error!",
+          text: "Something went wrong.",
+          icon: "error",
+          confirmButtonText: "OK"
+        });
+      });
+    }
+  </script>
+  </body>
+  </html>

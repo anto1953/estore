@@ -10,6 +10,7 @@ const {
   blockCheckMiddleware,
   checkCategoryisListed,
 } = require("../controller/usercontroller");
+const { route } = require("./adminrouter");
 
 router.get("/", usercontroller.userhome);
 router.get("/login", usercontroller.login);
@@ -50,6 +51,10 @@ router.post("/newPassword", usercontroller.newPasswordPost);
 router.get("/viewProducts", usercontroller.viewProducts);
 router.get("/getSortedProducts", usercontroller.getSortedProducts);
 router.get("/viewProductDetails/:id", usercontroller.viewProductDetails);
+router.get('/wishlist',checkSessionMiddleware,blockCheckMiddleware, usercontroller.wishlist)
+router.post("/addToWishlist/:id",checkSessionMiddleware,blockCheckMiddleware,usercontroller.addToWishlist)
+router.delete('/removeFromWishlist/:id',usercontroller.removeFromWishlist)
+router.get('/wallet',checkSessionMiddleware,blockCheckMiddleware,usercontroller.wallet)
 router.get(
   "/cart",
   checkSessionMiddleware,
@@ -61,13 +66,15 @@ router.post("/addToCart/:id", upload.single("image"),blockCheckMiddleware, userc
 router.post("/updateQuantity", usercontroller.updateQuantity);
 router.delete("/deleteFromCart", blockCheckMiddleware, usercontroller.deleteFromCart);
 router.get(
-  "/checkout",
+  "/checkout/:id",
   checkSessionMiddleware,
   blockCheckMiddleware,
   upload.single("image"),
   usercontroller.checkout
 );
+router.post('/validateCoupon',usercontroller.validateCoupon)
 router.post("/placeOrder",blockCheckMiddleware, usercontroller.placeOrder);
+router.post('/verifyPayment',usercontroller.verifyPayment)
 router.post("/cancelOrder",blockCheckMiddleware, usercontroller.cancelOrder);
 router.post("/cancelAProduct",blockCheckMiddleware, usercontroller.cancelAProduct);
 router.post("/returnAProduct", blockCheckMiddleware, usercontroller.returnAProduct);

@@ -262,117 +262,135 @@
     </div>
     <!-- Checkout Area -->
 <!-- Checkout Area -->
-<section class="checkout_area section_padding">
-    <div class="checkoutContainer" style="width: 99%;">
-        <div class="row">
-            <!-- Billing Details and Address Selection -->
-            <div class="col-lg-6">                
-                <!-- Address Selection -->
-                <div class="address_selection">
-                    <h3>Choose Delivery Address</h3><a class="btn-secondary" style="color: white;margin-left:80%;" href="/addAddress">Add address</a>
-                    <div class="address_cards">
-                            <% user.addresses.forEach(address => { %>
-                            <label class="address_card">
-                                <input type="radio" name="address" value="<%= address._id %>" />
-                                <span class="address_type"><%= address.type || 'Home' %></span>
-                                <div class="address_details">
-                                    <p class="name"><%= address.name %> <%= address .lastName %></p>
-                                    <p class="street"><%= address.street %></p>
-                                    <p class="location">
-                                        <%= address.city %>, <%= address.state %> <%= address.zipCode %><br>
-                                        <%= address.country %>
-                                    </p>
-                                    <% if(address.phone) { %>
-                                        <p class="phone">📞 <%= address.phone %></p>
-                                    <% } %>
-                                </div>
-                            </label>
-                        <% }) %>
-                    </div>
-                </div>
-
-                <!-- Payment Method Selection -->
-                <div class="payment_method">
-                    <h3>Select Payment Method</h3>
-                    <div class="payment_options">
-                        <label class="payment_option ">
-                            <input disabled type="radio" name="payment_method" value="credit_card" />
-                            <i class="fas fa-credit-card"></i>
-                            Credit Card
-                        </label>
-                        <label class="payment_option">
-                            <input type="radio" name="payment_method" value="cash_on_delivery" />
-                            <i class="fa fa-money"></i> 
-                            Cash on Delivery
-                        </label>
-                        
-                        <label class="payment_option">
-                            <input type="radio" disabled name="payment_method" value="bank_transfer" />
-                            <i class="fas fa-university"></i>
-                            Bank Transfer
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="order_summary">
-                    <h3>Order Summary</h3>
-                    <ul class="order_list">
-                        <% orderDetails.products.forEach(product => { %>
-                            <li>
-                                <div class="product_details">
-                                    <img src="  /uploads/<%= product.product.image[0] %>" alt="<%= product.product.pname %>" class="product_image" />
-                                    <div class="product_info">
-                                        <span class="product_name"><%= product.product.pname %></span> 
-                                        <span class="product_quantity"><%= product.quantity %> x <%= product.price %></span>
-                                        <span class="product_total">₹<%= product.total %></span>
+    <section class="checkout_area section_padding">
+        <div class="checkoutContainer" style="width: 99%;">
+            <div class="row">
+                <!-- Billing Details and Address Selection -->
+                <div class="col-lg-6">                
+                    <!-- Address Selection -->
+                    <div class="address_selection">
+                        <h3>Choose Delivery Address</h3><a class="btn-secondary" style="color: white;margin-left:80%;" href="/addAddress">Add address</a>
+                        <div class="address_cards">
+                                <% user.addresses.forEach(address => { %>
+                                <label class="address_card">
+                                    <input type="radio" name="address" value="<%= address._id %>" />
+                                    <span class="address_type"><%= address.type || 'Home' %></span>
+                                    <div class="address_details">
+                                        <p class="name"><%= address.name %> <%= address .lastName %></p>
+                                        <p class="street"><%= address.street %></p>
+                                        <p class="location">
+                                            <%= address.city %>, <%= address.state %> <%= address.zipCode %><br>
+                                            <%= address.country %>
+                                        </p>
+                                        <% if(address.phone) { %>
+                                            <p class="phone">📞 <%= address.phone %></p>
+                                        <% } %>
                                     </div>
-                                </div>
-                            </li>
-                        <% }) %>
-                    </ul>
-                    <div class="cupon_area ">
-                        <div class="check_title">
-                            <h2>Have a coupon? <a href="#"></a></h2>
-                        </div>
-                        <input style="margin-left: auto;" type="text" id="coupon_code" placeholder="Enter coupon code" />
-                        <button class="tp_btn" id="apply_coupon">Apply Coupon</button>
-                        <div id="discount_section" style="display: none;">
-                            <p>Discount Applied: <span id="discount_amount">0</span></p>
-                            <p>Discounted Total: <span id="discounted_total"></span></p>
+                                </label>
+                            <% }) %>
                         </div>
                     </div>
-                    <div class="total_amount">
-                        <h5>Total</h5>
-                        <span id="total_price">₹<%= orderDetails.totalPrice %></span>
+
+                    <!-- Payment Method Selection -->
+                    <div class="payment_method">
+                        <h3>Select Payment Method</h3>
+                        <div class="payment_options">
+                            <label class="payment_option ">
+                                <input disabled type="radio" name="payment_method" value="credit_card" />
+                                <i class="fas fa-credit-card"></i>
+                                Credit Card
+                            </label>
+                            <label class="payment_option">
+                                <input type="radio" name="payment_method" value="cash_on_delivery" />
+                                <i class="fas fa-money"></i> 
+                                Cash on Delivery
+                            </label>
+                            
+                            <label class="payment_option">
+                                <input type="radio" name="payment_method" value="razorpay" id="razorpay_payment_option" />
+                                <i class="fas fa-university"></i>
+                                Online Payment
+                            </label>
+                            
+                        </div>
                     </div>
-                    <button type="submit" class="place_order_btn" id="place_order_btn" disabled>Place Order</button>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="order_summary">
+                        <h3>Order Summary</h3>
+                        <ul class="order_list">
+                            <% orderDetails.products.forEach(product => { %>
+                                <li>
+                                    <div class="product_details">
+                                        <img src="  /uploads/<%= product.product.image[0] %>" alt="<%= product.product.pname %>" class="product_image" />
+                                        <div class="product_info">
+                                            <span class="product_name"><%= product.product.pname %></span> 
+                                            <span class="product_quantity"><%= product.quantity %> x <%= product.price %></span>
+                                            <span class="product_total">₹<%= product.total %></span>
+                                        </div>
+                                    </div>
+                                </li>
+                            <% }) %>
+                        </ul>
+                        <div class="cupon_area ">
+                            <div class="check_title">
+                                <h2>Have a coupon? <a href="#"></a></h2>
+                            </div>
+                            <input style="margin-left: auto;" type="text" id="coupon_code" placeholder="Enter coupon code" />
+                            <button class="tp_btn" id="apply_coupon">Apply Coupon</button>
+                            <div id="discount_section" style="display: none;">
+                                <p>Discount Applied: <span id="discount_amount"> </span></p>
+                                <!-- <p>Discounted Total: <span id="discounted_total"></span></p> -->
+                            </div>
+                        </div>
+                        <div class="total_amount">
+                            <h5>Total</h5>
+                            <span id="total_price"> ₹ <%= orderDetails.totalPrice %></span>
+                        </div>
+                        <button type="submit" class="place_order_btn" id="place_order_btn" disabled>Place Order</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
 
-    <%- include('../partials/_footer') %>
-    <%- include('../partials/_js') %>
+        <%- include('../partials/_footer') %>
+        <%- include('../partials/_js') %>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    
-        // Add interactivity to payment options
-        document.querySelectorAll('.payment_option').forEach(option => {
-            option.addEventListener('click', function() {
-                // Remove selected class from all options
-                document.querySelectorAll('.payment_option').forEach(opt => {
-                    opt.classList.remove('selected');
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+            // Add interactivity to payment options
+            document.querySelectorAll('.payment_option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    document.querySelectorAll('.payment_option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
                 });
-                // Add selected class to clicked option
-                this.classList.add('selected');
             });
-        });
-         document.querySelectorAll('.address_card').forEach(card => {
+
+            // Track selection of address and payment method
+        let addressSelected = false;
+        let paymentMethodSelected = false;
+
+        // Enable/disable the Place Order button
+        function togglePlaceOrderButton() {
+            const placeOrderBtn = document.getElementById('place_order_btn');
+            if (addressSelected && paymentMethodSelected) {
+                placeOrderBtn.disabled = false;
+            } else {
+                placeOrderBtn.disabled = true;
+            }
+        }
+
+        // Handle address selection
+        document.querySelectorAll('.address_card').forEach(card => {
             card.addEventListener('click', function() {
                 // Remove selected class from all cards
                 document.querySelectorAll('.address_card').forEach(c => {
@@ -382,94 +400,207 @@
                 this.classList.add('selected');
                 // Check the radio input
                 this.querySelector('input[type="radio"]').checked = true;
+                addressSelected = this.querySelector('input[type="radio"]').value;
+                togglePlaceOrderButton();
             });
         });
 
-        // Track selection of address and payment method
-    let addressSelected = false;
-    let paymentMethodSelected = false;
-
-    // Enable/disable the Place Order button
-    function togglePlaceOrderButton() {
-        const placeOrderBtn = document.getElementById('place_order_btn');
-        if (addressSelected && paymentMethodSelected) {
-            placeOrderBtn.disabled = false;
-        } else {
-            placeOrderBtn.disabled = true;
-        }
-    }
-
-    // Handle address selection
-    document.querySelectorAll('.address_card').forEach(card => {
-        card.addEventListener('click', function() {
-            // Remove selected class from all cards
-            document.querySelectorAll('.address_card').forEach(c => {
-                c.classList.remove('selected');
+        // Handle payment method selection
+        document.querySelectorAll('.payment_option input[type="radio"]').forEach(option => {
+            option.addEventListener('click', function() {
+                paymentMethodSelected = true;
+                togglePlaceOrderButton();
             });
-            // Add selected class to clicked card
-            this.classList.add('selected');
-            // Check the radio input
-            this.querySelector('input[type="radio"]').checked = true;
-            addressSelected = true;
-            togglePlaceOrderButton();
         });
-    });
 
-    // Handle payment method selection
-    document.querySelectorAll('.payment_option input[type="radio"]').forEach(option => {
-        option.addEventListener('click', function() {
-            paymentMethodSelected = true;
-            togglePlaceOrderButton();
-        });
-    });
 
     // Coupon code 
-    document.getElementById('apply_coupon').addEventListener('click', function() {
-        const couponCode = document.getElementById('coupon_code').value;
-        let discount = 0;
-        
-        // Example coupon logic (you can replace this with actual logic)
-        if (couponCode === 'DISCOUNT10') {
-            discount = 10; // 10% discount
-        }
-        
-        if (discount > 0) {
-            const totalPriceElement = document.getElementById('total_price');
-            let totalPrice = parseFloat(totalPriceElement.innerText);
+    document.getElementById('apply_coupon').addEventListener('click', async function () {
+    const couponButton = document.getElementById('apply_coupon');
+    const couponCodeInput = document.getElementById('coupon_code');
+    const discountSection = document.getElementById('discount_section');
+    const totalPriceElement = document.getElementById('total_price');
+    let originalTotalPrice = parseFloat(`<%= orderDetails.totalPrice %>`.replace(/[^\d.]/g, '')); 
+
+    // If "Remove Coupon" is clicked
+    if (couponButton.innerText === "Remove Coupon") {
+        discountSection.style.display = 'none'; // Hide discount details
+        couponCodeInput.value = ''; // Clear coupon code input
+        couponButton.innerText = "Apply Coupon"; // Change button back to "Apply Coupon"
+        totalPriceElement.innerText = `₹${originalTotalPrice.toFixed(2)}`; // Reset total price
+        Swal.fire({
+            icon: 'success',
+            title: 'Coupon Removed',
+            text: 'The coupon has been removed successfully.',
+        });
+        return;
+    }
+
+    // If "Apply Coupon" is clicked
+    const couponCode = couponCodeInput.value.trim();
+
+    if (!couponCode) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Please enter a coupon code.',
+        });
+        return;
+    }
+
+    try {
+        const response = await fetch('/validateCoupon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ couponCode }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            const discount = data.discount; // Discount percentage from the server
+            let totalPrice = parseFloat(totalPriceElement.innerText.replace(/[^\d.]/g, '')); 
             const discountAmount = (totalPrice * discount) / 100;
             const discountedTotal = totalPrice - discountAmount;
 
-            // Display the discount and updated total
-            document.getElementById('discount_section').style.display = 'block';
+            // Update UI with the applied discount
+            discountSection.style.display = 'block';
             document.getElementById('discount_amount').innerText = discountAmount.toFixed(2);
-            document.getElementById('discounted_total').innerText = discountedTotal.toFixed(2);
-            
-            // Update the total price
-            totalPriceElement.innerText = discountedTotal.toFixed(2);
-        } else {
-            document.getElementById('discount_section').style.display = 'none';
-        }
-    });
+            totalPriceElement.innerText = `₹${discountedTotal.toFixed(2)}`;
 
-    // Add interactivity to payment options
-    document.querySelectorAll('.payment_option').forEach(option => {
-        option.addEventListener('click', function() {
-            // Remove selected class from all options
-            document.querySelectorAll('.payment_option').forEach(opt => {
-                opt.classList.remove('selected');
+            // Change button to "Remove Coupon"
+            couponButton.innerText = "Remove Coupon";
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Coupon Applied',
+                text: `You have received a discount of ₹${discountAmount.toFixed(2)}.`,
             });
-            // Add selected class to clicked option
-            this.classList.add('selected');
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Coupon',
+                text: data.message || 'The coupon code is not valid.',
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Something went wrong. Please try again later.',
         });
-    });
+    }
+});
 
     document.getElementById('place_order_btn').addEventListener('click', async function() {
-        if (!addressSelected || !paymentMethodSelected) {
+        let paymentMethod=document.querySelector('input[name="payment_method"]:checked').value;
+        // let addressSelected=document.getElementById('')
+        const totalPriceElement = document.getElementById('total_price');
+        let totalPrice = parseFloat(totalPriceElement.innerText.replace(/[^\d.]/g, '')); 
+        console.log(addressSelected);
+        
+        if (!addressSelected || !paymentMethod) {
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
                 text: 'Please select both an address and a payment method!',
             });
+        } else {
+
+        if (paymentMethod == 'razorpay') {
+            try {
+                // Create Razorpay order on the server
+                const response = await fetch('/placeOrder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        address: document.querySelector('input[name="address"]:checked').value,
+                        totalPrice: totalPrice * 100, // Razorpay expects amount in paise
+                        payment_method: document.querySelector('input[name="payment_method"]:checked').value,
+
+
+                    }),                    
+                });
+
+                const data = await response.json();                
+                 console.log('data',data);
+                 
+                if (!response.ok) {                    
+                    throw new Error(data.message || 'Failed to create Razorpay order.');
+                }
+                const razorpayKeyId="<%= razorpayKeyId %>";
+                
+                // Razorpay payment options
+                const options = {
+                    key: razorpayKeyId,
+                    amount: totalPrice * 100,
+                    currency: "INR",
+                    name: 'E-store',
+                    description: 'Order Payment',
+                    order_id: data.order._id,
+                    handler: async function (razorpayResponse) {
+                        console.log('responce',razorpayResponse);
+                        
+                        // Verify payment on the server
+                        const verifyResponse = await fetch('/verifyPayment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                                razorpay_signature: razorpayResponse.razorpay_signature,
+                                address: addressSelected,
+                            }),
+                        });
+
+                        const verifyData = await verifyResponse.json();
+                        console.log('verification ',verifyResponse);
+                        
+                        
+                        if (verifyData.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Payment Successful!',
+                                text: 'Your order has been placed successfully!',
+                            }).then(() => {
+                                window.location.href = '/cart'; // Redirect after successful order
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Payment Verification Failed',
+                                text: verifyData.message || 'Please contact support.',
+                            });
+                        }
+                    },
+                    prefill: {
+                        name: '<%= user.name %>', // Prefill user data (update dynamically)
+                        email: '<%= user.email %>',
+                        contact: '<%= user.phone %>',
+                    },
+                    theme: {
+                        color: '#3399cc', // Customize Razorpay modal theme color
+                    },
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (error) {
+                console.log(error);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: error.message,
+                });
+            }
         } else {
             try {
                 const response = await fetch('/placeOrder', {
@@ -480,8 +611,13 @@
                     body: JSON.stringify({
                         address: document.querySelector('input[name="address"]:checked').value,
                         payment_method: document.querySelector('input[name="payment_method"]:checked').value,
+                        totalPrice
+
+                        
                     }),
                 });
+                console.log('responce',response);
+                
 
                 const data = await response.json();
 
@@ -501,14 +637,15 @@
                     });
                 }
             } catch (error) {
+                console.log(error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: error.message
+                    text: 'something error'
                 });
             }
         }
-    });
+    }});
     
 
     </script>

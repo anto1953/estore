@@ -12,7 +12,7 @@ const nocache = require("nocache");
 const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
 const passport = require("passport");
-const swal = require("sweetalert");
+const Razorpay = require('razorpay');
 
 mongoose.connect("mongodb://localhost:27017/project1");
 

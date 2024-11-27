@@ -204,6 +204,14 @@
                                                             </div>
                                                         </div>
                                         
+                                                        <!-- Address Details -->
+                                                        <div class="address-details mb-4">
+                                                            <h6 class="text-primary">Address Details</h6>
+                                                            <p style="color: black;" id="addressDetails">
+                                                                <!-- Address information will be dynamically added here -->
+                                                            </p>
+                                                        </div>
+                                        
                                                         <!-- Order Details -->
                                                         <div class="order-details mb-4">
                                                             <h6 class="text-primary">Order Details</h6>
@@ -218,6 +226,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
                                         
 
 
@@ -487,6 +496,12 @@ function viewOrderDetails(orderId) {
                 </div>
             `).join('');
             document.getElementById('productDetails').innerHTML = productDetails;
+
+             // Populate address details
+             document.getElementById('addressDetails').textContent = `
+                ${data.address.street}, ${data.address.city}, 
+                ${data.address.state} - ${data.address.zipCode}
+            `;
 
             // Populate order details
             const orderDetails = `
