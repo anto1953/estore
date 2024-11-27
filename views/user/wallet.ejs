@@ -47,28 +47,29 @@
             <div class="row">
               <div class="col-xl-12">
                 <div class="card shadow-sm p-4">
-                  <h4 class="mb-3">Transaction History</h4>
                   <div class="row">
-                    <div class="col-md-6">
+                    <!-- <div class="col-md-6">
                       <div class="card text-center shadow-sm">
                         <div class="card-body">
-                          <h5 class="card-title">Total Orders</h5>
+                          <h5 class="card-title">Total Transactions</h5>
                           <p class="card-text"><strong><%= transactions.length %></strong></p>
                         </div>
                       </div>
-                    </div>
-                    <div class="col-md-6">
+                    </div> -->
+                    <!-- <div class="col-md-6">
                       <div class="card text-center shadow-sm">
                         <div class="card-body">
                           <h5 class="card-title">Total Transactions</h5>
                           <p class="card-text"><strong>₹<%= transactions.reduce((total, trans) => total + trans.amount, 0).toFixed(2) %></strong></p>
                         </div>
                       </div>
-                    </div>
+                    </div> -->
                   </div>
       
                   <!-- Transaction Table -->
                   <div class="table-responsive mt-4">
+                    <h4 class="mb-3">Transaction History</h4>
+
                     <table class="table">
                       <thead>
                         <tr>

@@ -720,11 +720,17 @@ const acceptReturnRequest = async (req, res) => {
       { new: true }
     );
 
+    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+
     user.wallet.balance += order.totalPrice;
     user.wallet.transactions.push({
+      transactionId: transactionId,
       orderId:orderid,
       amount:order.totalPrice,
       date:new Date(),
+      description: `Refund for returned order #${order._id.toString().substring(0, 6)}`,
+      type: "credit"
     })
     await user.save();
 
@@ -760,14 +766,14 @@ const rejectReturnRequst = async (req, res) => {
   }
 };
 
-const orderDetails=async (req, res) => {  
+const orderDetails=async (req, res) => {    
   try {
       const orderId = req.params.id;
       const order = await Orders.findById({_id:orderId}).populate('userId').populate('products.productId');
       const user=await User.findById(order.userId);
       const address = user.addresses.find(
         (addr) => addr._id.toString() === order.address.toString()
-      );      
+      );        
     
       if (!order) {
           return res.status(404).json({status:'error', message: 'Order not found' });
@@ -984,7 +990,8 @@ const offers = [
         { expiryDate: { $lt: now }, isListed: true },
         { $set: { isListed: false } }
       );
-
+      const category=await Category.find({})
+      const products=await Product.find({})
       const offers = await Offers.find(searchFilter).skip(skip).limit(limit);
       const count = await Offers.countDocuments(searchFilter);
 
@@ -994,6 +1001,8 @@ const offers = [
         currentPage: page,
         totalPages: Math.ceil(count / limit),
         searchQuery,
+        products,
+        category
       });
     } catch (error) {
       console.log(error);
@@ -1155,6 +1164,77 @@ const listOffer = async (req, res) => {
   }
 };
 
+
+const applyOfferToProducts=async (req,res)=>{
+  console.log('applyOfferToProducts',req.body,req.params);
+  
+try {
+  const { productIds } = req.body; 
+  const { id } = req.params; 
+
+  const offer = await Offers.findById({_id:id});
+  if (!offer) {
+    return res.status(400).json({ status: 'error', message: 'Offer not found' });
+  }
+
+  const products = await Product.updateMany(
+    { _id: { $in: productIds } },
+    {
+      $addToSet: {
+        offers: {
+          offerId: offer._id,
+          offerName: offer.offerName,
+          offerCode: offer.offerCode,
+          discount: offer.discount,
+          offerType: offer.offerType,
+          expiryDate: offer.expiryDate
+        }
+      }
+    }
+  );
+
+  return res.status(200).json({ status: 'success', message: 'Offer applied to selected products' });
+} catch (error) {
+  console.error(error);
+  return res.status(500).json({ status: 'error', message: 'Something went wrong' });
+}
+}
+
+const applyOfferToCategories=async (req, res)=>{
+  console.log('applyOfferToCategories',req.body,req.params);
+  
+  try {
+    const { categoryIds } = req.body; 
+    const { id } = req.params; 
+
+    const offer = await Offers.findById(id);
+    if (!offer) {
+      return res.status(400).json({ status: 'error', message: 'Offer not found' });
+    }
+
+    const categories = await Category.updateMany(
+      { _id: { $in: categoryIds } },
+      {
+        $addToSet: {
+          offers: {
+            offerId: offer._id,
+            offerName: offer.offerName,
+            offerCode: offer.offerCode,
+            discount: offer.discount,
+            offerType: offer.offerType,
+            expiryDate: offer.expiryDate
+          }
+        }
+      }
+    );
+
+    return res.status(200).json({ status: 'success', message: 'Offer applied to selected categories' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 'error', message: 'Something went wrong' });
+  }
+}
+
 const salesReport = [
   checkSessionMiddleware,
   async (req, res) => {
@@ -1212,5 +1292,7 @@ module.exports = {
   editOffer,
   editOfferPost,
   listOffer,
+  applyOfferToProducts,
+  applyOfferToCategories,
   salesReport,
 };

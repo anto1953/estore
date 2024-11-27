@@ -1,11 +1,9 @@
-<%- include('../partials/_header') %> 
-<%- include('../partials/style') %>
+<%- include('../partials/_header') %> <%- include('../partials/style') %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <body>
-  <%- include('../partials/sidebar') %> 
-  <%- include('../partials/topbar') %>
-  
+  <%- include('../partials/sidebar') %> <%- include('../partials/topbar') %>
+
   <div class="content p-4" id="main-content">
     <div class="container-fluid mt-5 pt-5">
       <div id="offers" class="section-details active">
@@ -49,50 +47,105 @@
 
         <div class="table-responsive">
           <% if (offers.length > 0) { %>
-          <table class="table table-striped mt-4">
-            <thead>
-              <tr>
-                <th>s.no</th>
-                <th>Offer ID</th>
-                <th>Offer Name</th>
-                <th>Code</th>
-                <th>Discount (%)</th>
-                <th>Offer Type</th>
-                <th>Expiry Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% offers.forEach((offer, index) => { %>
-              <tr>
-                <td><%= (currentPage - 1) * 10 + index + 1 %></td>
-                <td><%= offer._id.toString().substring(0, 8) %>...</td>
-                <td><%= offer.offerName %></td>
-                <td><%= offer.offerCode %></td>
-                <td><%= offer.discount %>%</td>
-                <td><%= offer.offerType %></td>
-                <td><%= offer.expiryDate.toISOString().substring(0, 10) %></td>
-                <td>
-                  <a
-                    class="btn btn-sm btn-primary"
-                    href="/admin/editOffer/<%= offer._id %>"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </a>
-                  <a
-                    class="btn btn-sm <%= offer.isListed ? 'btn-danger' : 'btn-success' %>"
-                    onclick="confirmToggleList('<%= offer._id %>', <%= offer.isListed %>)"
-                  >
-                    <i
-                      class="bi <%= offer.isListed ? 'bi-toggle-on' : 'bi-toggle-off' %>"
-                    ></i>
-                    <%= offer.isListed ? 'Unlist' : 'List' %>
-                  </a>
-                </td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
+            <table class="table table-striped mt-4">
+              <thead>
+                <tr>
+                  <th>s.no</th>
+                  <th>Offer ID</th>
+                  <th>Offer Name</th>
+                  <th>Code</th>
+                  <th>Discount (%)</th>
+                  <th>Offer Type</th>
+                  <th>Expiry Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% offers.forEach((offer, index) => { %>
+                <tr>
+                  <td><%= (currentPage - 1) * 10 + index + 1 %></td>
+                  <td><%= offer._id.toString().substring(0, 8) %>...</td>
+                  <td><%= offer.offerName %></td>
+                  <td><%= offer.offerCode %></td>
+                  <td><%= offer.discount %>%</td>
+                  <td><%= offer.offerType %></td>
+                  <td><%= offer.expiryDate.toISOString().substring(0, 10) %></td>
+                  <td>
+                    <div class="btn-group">
+                      <a class="btn btn-sm btn-primary" href="/admin/editOffer/<%= offer._id %>">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a class="btn btn-sm <%= offer.isListed ? 'btn-danger' : 'btn-success' %>"
+                         onclick="confirmToggleList('<%= offer._id %>', <%= offer.isListed %>)">
+                        <i class="bi <%= offer.isListed ? 'bi-toggle-on' : 'bi-toggle-off' %>"></i>
+                        <%= offer.isListed ? 'Unlist' : 'List' %>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="8">
+                    <% if (offer.offerType === 'Product Offer') { %>
+                    <div>
+                      <label>Select products:</label>
+                      <button class="btn btn-sm btn-info mt-2" onclick="toggleProductList('<%= offer._id %>')">
+                        <i class="bi bi-chevron-down"></i> view Products
+                      </button>
+                      
+                      <!-- Checkboxes for selecting multiple products, initially hidden -->
+                      <div class="form-check mt-2" id="productList<%= offer._id %>" style="display: none;">
+                        <% products.forEach((product) => { %>
+                        <div>
+                          <input type="checkbox" class="form-check-input"
+                                 id="productCheckbox<%= offer._id %>_<%= product._id %>"
+                                 value="<%= product._id %>" />
+                          <label class="form-check-label"
+                                 for="productCheckbox<%= offer._id %>_<%= product._id %>">
+                            <%= product.pname %>
+                          </label>
+                        </div>
+                        <% }) %>
+                      </div>
+            
+                      <button class="btn btn-sm btn-success mt-2"
+                              onclick="applyOfferToSelectedProducts('<%= offer._id %>')">
+                        Apply to Selected Products
+                      </button>
+                    </div>
+                    <% } else if (offer.offerType === 'Category Offer') { %>
+                    <div>
+                      <label>Select Categories:</label>
+                      <button class="btn btn-sm btn-info mt-2" onclick="toggleCategoryList('<%= offer._id %>')">
+                        <i class="bi bi-chevron-down"></i> View Categories
+                      </button>
+                      
+                      <!-- Checkboxes for selecting multiple categories, initially hidden -->
+                      <div class="form-check mt-2" id="categoryList<%= offer._id %>" style="display: none;">
+                        <% category.forEach((category) => { %>
+                        <div>
+                          <input type="checkbox" class="form-check-input"
+                                 id="categoryCheckbox<%= offer._id %>_<%= category._id %>"
+                                 value="<%= category._id %>" />
+                          <label class="form-check-label"
+                                 for="categoryCheckbox<%= offer._id %>_<%= category._id %>">
+                            <%= category.label %>
+                          </label>
+                        </div>
+                        <% }) %>
+                      </div>
+            
+                      <button class="btn btn-sm btn-success mt-2"
+                              onclick="applyOfferToSelectedCategories('<%= offer._id %>')">
+                        Apply to Selected Categories
+                      </button>
+                    </div>
+                    <% } %>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            
 
           <!-- Pagination Controls -->
           <nav aria-label="Page navigation">
@@ -107,13 +160,11 @@
                   <span aria-hidden="true">&laquo;</span>
                 </a>
               </li>
-              <% } %> 
-              <% for (let i = 1; i <= totalPages; i++) { %>
+              <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
               <li class="page-item <%= currentPage === i ? 'active' : '' %>">
                 <a class="page-link" href="?page=<%= i %>"><%= i %></a>
               </li>
-              <% } %> 
-              <% if (currentPage < totalPages) { %>
+              <% } %> <% if (currentPage < totalPages) { %>
               <li class="page-item">
                 <a
                   class="page-link"
@@ -126,7 +177,6 @@
               <% } %>
             </ul>
           </nav>
-
           <% } else { %>
           <h1>NO OFFERS FOUND</h1>
           <% } %>
@@ -175,15 +225,147 @@
               }
             })
             .catch((error) => {
-                console.log(error);
+              console.log(error);
               Swal.fire({
                 icon: "error",
                 title: "Oops...",
-                text:data.message,
+                text: data.message,
               });
             });
         }
       });
     }
+
+    function toggleProductList(offerId) {
+  const productList = document.getElementById(`productList${offerId}`);
+  const icon = productList.previousElementSibling.querySelector('i');
+  
+  if (productList.style.display === 'none') {
+    productList.style.display = 'block';
+    icon.classList.remove('bi-chevron-down');
+    icon.classList.add('bi-chevron-up');
+  } else {
+    productList.style.display = 'none';
+    icon.classList.remove('bi-chevron-up');
+    icon.classList.add('bi-chevron-down');
+  }
+}
+
+function toggleCategoryList(offerId) {
+  const categoryList = document.getElementById(`categoryList${offerId}`);
+  const icon = categoryList.previousElementSibling.querySelector('i');
+  
+  if (categoryList.style.display === 'none') {
+    categoryList.style.display = 'block';
+    icon.classList.remove('bi-chevron-down');
+    icon.classList.add('bi-chevron-up');
+  } else {
+    categoryList.style.display = 'none';
+    icon.classList.remove('bi-chevron-up');
+    icon.classList.add('bi-chevron-down');
+  }
+}
+
+
+// Apply the offer to selected products
+function applyOfferToSelectedProducts(offerId) {
+  const selectedProducts = [];
+  const checkboxes = document.querySelectorAll(`#productList${offerId} .form-check-input:checked`);
+
+  checkboxes.forEach((checkbox) => {
+    selectedProducts.push(checkbox.value);
+  });
+
+  if (selectedProducts.length > 0) {
+    fetch(`/admin/applyOfferToProducts/${offerId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productIds: selectedProducts }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === 'success') {
+          Swal.fire({
+            title: 'Success!',
+            text: data.message,
+            icon: 'success',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: data.message,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Something went wrong!',
+        });
+      });
+  } else {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Products Selected!',
+      text: 'Please select at least one product to apply the offer.',
+    });
+  }
+}
+
+// Apply the offer to selected categories
+function applyOfferToSelectedCategories(offerId) {
+  const selectedCategories = [];
+  const checkboxes = document.querySelectorAll(`#categoryList${offerId} .form-check-input:checked`);
+
+  checkboxes.forEach((checkbox) => {
+    selectedCategories.push(checkbox.value);
+  });
+
+  if (selectedCategories.length > 0) {
+    fetch(`/admin/applyOfferToCategories/${offerId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ categoryIds: selectedCategories }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === 'success') {
+          Swal.fire({
+            title: 'Success!',
+            text: data.message,
+            icon: 'success',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: data.message,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Something went wrong!',
+        });
+      });
+  } else {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Categories Selected!',
+      text: 'Please select at least one category to apply the offer.',
+    });
+  }
+}
+
   </script>
 </body>

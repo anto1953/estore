@@ -283,6 +283,28 @@
     display: flex;
     text-align: left;
 }
+
+.original-price {
+    font-size: 0.9em;
+    color: #999;
+}
+
+.discounted-price {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #e63946;
+}
+
+.discount-percentage {
+    font-size: 0.9em;
+    color: #38b000;
+}
+
+.no-discount {
+    font-size: 0.9em;
+    color: #555;
+}
+
     </style>
 </head>
 <body>
@@ -323,37 +345,55 @@
                 </div>
             </div>
     
-            <!-- Product Info -->
-            <div class="product-info">
-                <h1><%= product.pname %></h1>
-                <div class="ratings">
-                    ⭐ <%= product.rating %>/5 (<%= product.reviews.length %> reviews)
-                </div>
-                <p class="price">
-                    ₹<%= product.pprice %> 
-                    <% if (product.discount) { %>
-                        (Discount: <%= product.discount %>%)
-                    <% } else { %>
-                        <span class="no-discount">(No discounts available)</span>
-                    <% } %>
-                </p>
-                <p class="<%= product.stock > 0 ? (product.stock < 20 ? 'low-stock' : 'stock-status') : 'out-of-stock' %>">
-                    <%= product.stock > 0 ? (product.stock < 20 ? product.stock + ' left in stock' : 'In Stock') : 'Out of Stock' %>
-                </p>
-                
-                <!-- Description -->
-                <div class="description-container">
-                    <h5>DESCRIPTION</h5>
-                    <p class="description"><%= product.description %></p>
-                </div>
+           <!-- Product Info -->
+<div class="product-info">
+    <h1><%= product.pname %></h1>
+    <div class="ratings">
+        ⭐ <%= product.rating %>/5 (<%= product.reviews.length %> reviews)
+    </div>
+    <p class="price">
+        <% if (product.offers && product.offers.length > 0) { %>
+            <% const activeOffer = product.offers.find(offer => new Date(offer.expiryDate) > new Date()); %>
+            <% if (activeOffer) { 
+                const discountedPrice = (product.pprice * (1 - activeOffer.discount / 100)).toFixed(2); %>
+                <span class="original-price" style="text-decoration: line-through; color: gray;">₹<%= product.pprice %></span>
+                <span class="discounted-price"> ₹<%= discountedPrice %></span>
+                <span class="discount-percentage">(Discount: <%= activeOffer.discount %>%)</span>
+            <% } else { %>
+                ₹<%= product.pprice %>
+                <span class="no-discount">(No discounts available)</span>
+            <% } %>
+        <% } else { %>
+            ₹<%= product.pprice %>
+            <span class="no-discount">(No discounts available)</span>
+        <% } %>
+    </p>
+    <p class="<%= product.stock > 0 ? (product.stock < 20 ? 'low-stock' : 'stock-status') : 'out-of-stock' %>">
+        <%= product.stock > 0 ? (product.stock < 20 ? product.stock + ' left in stock' : 'In Stock') : 'Out of Stock' %>
+    </p>
+
+    <!-- Description -->
+    <div class="description-container">
+        <h5>DESCRIPTION</h5>
+        <p class="description"><%= product.description %></p>
+    </div>
+
+
+
+
                 <button class="btnn btn_cart" onclick="addToCart('<%= product._id %>')" 
                     <%= product.stock > 0 && !cartitems.includes(String(product._id)) ? '' : 'disabled' %>
                     <i class="fas fa-shopping-cart"></i> 
                     <%= cartitems.includes(product._id.toString()) ? 'Added to Cart' : 'Add to Cart' %>
                 </button>
                 
-                <button class="btnn btn_wishlist"><i class="fas fa-heart"></i> Add to Wishlist</button>
-            </div>
+                <button 
+                class="btn btn_cart" 
+                onclick="addToWishlist('<%= product._id %>')" 
+                <%= user && wishlist.includes(product._id.toString()) ? 'disabled' : '' %>>
+                <i class="<%= user && wishlist.includes(product._id.toString()) ? 'fas fa-heart' : 'far fa-heart' %>"></i>
+            </button>            
+        </div>
         </div>
     </div>
     
@@ -480,6 +520,24 @@ function nextSlide() {
 function changeMainImage(imageSrc) {
     const productImage = document.getElementById('productImage');
     productImage.src = imageSrc;
+}
+
+async function addToWishlist(productId) {
+  try {
+    const response = await fetch(`/addToWishlist/${productId}`, {
+      method: 'POST',
+    });
+
+    if (response.ok) {
+      location.reload();
+    } else {
+      const result = await response.json();
+      alert(result.message || 'Failed to add product to wishlist.');
+    }
+  } catch (error) {
+    console.error('Error adding product to wishlist:', error);
+    alert('An error occurred. Please try again later.');
+  }
 }
     </script>
 </body>

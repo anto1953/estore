@@ -51,6 +51,8 @@ router.post('/addOffer',admincontroller.addOfferPost)
 router.get('/editOffer/:id',admincontroller.editOffer)
 router.post('/editOffer/:id',admincontroller.editOfferPost)
 router.get('/listOffer/:id',admincontroller.listOffer)
+router.post('/applyOfferToProducts/:id',admincontroller.applyOfferToProducts)
+router.post('/applyOfferToCategories/:id',admincontroller.applyOfferToCategories)
 router.get("/adminLogout", admincontroller.adminLogout);
 router.get('/salesReport',admincontroller.salesReport)
 

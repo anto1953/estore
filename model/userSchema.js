@@ -105,8 +105,11 @@ wallet: {
   transactions: [
     {
       orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Orders' },  // Link to the order
+      transactionId:{type :String},
       amount: { type: Number },  // Transaction amount
-      date: { type: Date, default: Date.now }  // Date of the transaction
+      date: { type: Date, default: Date.now },  // Date of the transaction
+      description: {type: String},
+      type: {type: String,enum: ['credit', 'debit'] }
     }
   ]
 },

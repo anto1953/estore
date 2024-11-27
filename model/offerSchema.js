@@ -19,6 +19,7 @@ const offerSchema = new Schema(
     },
     offerType: {
         type: String,
+        enum: ['Product Offer', 'Category Offer','Referral Offer'],
         required: true
     },
     expiryDate: {

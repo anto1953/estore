@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const { type } = require("os");
-const { array } = require("../services/admin/productServices");
 
 const productsSchema = new mongoose.Schema({
   pname: {
@@ -49,6 +47,33 @@ const productsSchema = new mongoose.Schema({
   popularity: Number,
   ratings: Number,
   featured: Boolean,
+  offers: [{
+    offerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Offer',
+      required: true
+    },
+    offerName: {
+      type: String,
+      required: true
+    },
+    offerCode: {
+      type: String,
+      required: true
+    },
+    discount: {
+      type: Number,
+      required: true
+    },
+    offerType: {
+      type: String,
+      required: true
+    },
+    expiryDate: {
+      type: Date,
+      required: true
+    }
+  }]
 });
 
 module.exports = mongoose.model("products", productsSchema);

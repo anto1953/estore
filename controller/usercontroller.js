@@ -543,18 +543,20 @@ const adminhome = async (req, res) => {
     res.send(error.message);
   }
 };
-const viewProducts = async (req, res) => {
+
+const viewProducts = async (req, res) => {  
   try {
     const query = req.query.Search ? req.query.Search.toLowerCase() : "";
     const sortBy = req.query.sortBy || "";
     const category = req.query.category || "";
     let authenticated = false;
-    let userid;
-    if (req.session.user) {
-      userid = req.session.user._id;
+    const user=req.session.user 
+    const userid = user ? req.session.user._id : null;
+
+    if (userid) {
       authenticated = true;
     }
-    const user=await User.findById({_id:userid})
+
 
     // let filterCriteria = query
     //   ? { pname: { $regex: query, $options: "i" } }
@@ -613,7 +615,9 @@ const viewProducts = async (req, res) => {
     const cartProductIds = cart
       ? cart.products.map((item) => item.product.toString())
       : [];
-    console.log(cartProductIds);
+
+    const wishlist=user?.wishlist || null;    
+
     res.render("user/product_list", {
       products,
       cart: cartProductIds,
@@ -622,6 +626,8 @@ const viewProducts = async (req, res) => {
       category: category,
       categories,
       user,
+      wishlist
+
     });
   } catch (error) {
     console.log(error);
@@ -676,11 +682,12 @@ const getSortedProducts = async (req, res) => {
 
 const viewProductDetails = async (req, res) => {
   try {
-    const user = req.session.user;
+    const user = req.session.user || null;
     const userid = user ? req.session.user._id : null;
-    const email = user ? req.session.user.email : null;
     const productid = req.params.id;
     const product = await Product.findById(productid);
+    console.log('offer',product.offers.discount);
+    
 
     const carts = await Cart.findOne(userid ? { user: userid } : {});
     const cartitems = carts
@@ -698,13 +705,14 @@ const viewProductDetails = async (req, res) => {
       product.image = image;
       return product;
     });
-
+    const wishlist=user?.wishlist || []
     res.render("user/viewProductDetails", {
       product,
       relatedProduct,
       cart,
       user,
       cartitems,
+      wishlist
     });
   } catch (error) {
     console.log(error);
@@ -789,9 +797,6 @@ const removeFromWishlist = async (req, res) => {
 const wallet = async (req, res) => {
   try {
     const userId = req.session.user._id;  // Assuming the user ID is stored in the session
-    if (!userId) {
-      return res.redirect('/login');  // Redirect if the user is not logged in
-    }
 
     // Find the user and their wallet data
     const user = await User.findById(userId);
@@ -799,10 +804,8 @@ const wallet = async (req, res) => {
       return res.status(404).send('User not found');
     }
 
-    const orders=await Orders.find({userId})
-
     // Send wallet data to the view
-    res.render('user/wallet', { wallet: user.wallet, transactions: user.wallet.transactions,user });
+    res.render('user/wallet', { wallet: user.wallet, transactions: user.wallet.transactions.sort((a, b) => b.date - a.date),user });
   } catch (error) {
     console.log(error);
     res.status(500).send('Server error');
@@ -1300,13 +1303,19 @@ const cancelOrder = async (req, res) => {
         );
       }
 
+      const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+
       if(order.paymentMethod==='razorpay'){
         user.wallet.balance += order.totalPrice;
 
         user.wallet.transactions.push({
+          transactionId: transactionId,
           orderId: order._id,
           amount: order.totalPrice,
           date: new Date(),
+          description: `Refund for cancelled  order #${order._id.toString().substring(0, 6)}`,
+          type: "credit",
         });
 
         await user.save();
@@ -1369,13 +1378,19 @@ const cancelAProduct = async (req, res) => {
       order.totalPrice = 0; // Ensure non-negative total price
     }
 
+    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+
     const cancelOrder = await order.save();
     if(cancelOrder&&order.paymentMethod==='razorpay'){
       user.wallet.balance += refundAmount;
       user.wallet.transactions.push({
+        transactionId: transactionId,
         orderId:order._id,
         amount:refundAmount,
-        date:new Date()
+        date:new Date(),
+        description: `Refund for cancelled product (${productId.substring(0, 6)}) in order #${order._id.toString().substring(0, 6)}`,
+        type: "credit"
     })
       await user.save();
     }

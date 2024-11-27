@@ -62,7 +62,7 @@ router.get(
   upload.single("image"),
   usercontroller.cart
 );
-router.post("/addToCart/:id", upload.single("image"),blockCheckMiddleware, usercontroller.addToCart);
+router.post("/addToCart/:id", upload.single("image"),checkSessionMiddleware,blockCheckMiddleware, usercontroller.addToCart);
 router.post("/updateQuantity", usercontroller.updateQuantity);
 router.delete("/deleteFromCart", blockCheckMiddleware, usercontroller.deleteFromCart);
 router.get(

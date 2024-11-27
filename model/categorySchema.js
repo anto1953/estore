@@ -1,27 +1,51 @@
-const { strict } = require('assert');
-const mongoose=require('mongoose');
-const { type } = require('os');
+const mongoose = require('mongoose');
 
-const categorySchema=new mongoose.Schema({
-    
-    value:{
-        type:String,
-        required:true
+const categorySchema = new mongoose.Schema({
+  value: {
+    type: String,
+    required: true
+  },
+  label: {
+    type: String,
+    required: true
+  },
+  image: {
+    type: String
+  },
+  isListed: {
+    type: Boolean
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  offers: [{
+    offerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Offer',
+      required: true
     },
-    label:{
-        type:String,
-        required:true
+    offerName: {
+      type: String,
+      required: true
     },
-    image: {
-        String
+    offerCode: {
+      type: String,
+      required: true
     },
-    isListed: {
-        type: Boolean
+    discount: {
+      type: Number,
+      required: true
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
+    offerType: {
+      type: String,
+      required: true
+    },
+    expiryDate: {
+      type: Date,
+      required: true
     }
+  }]
 });
 
-module.exports=mongoose.model('categories',categorySchema)
+module.exports = mongoose.model('categories', categorySchema);
