@@ -906,6 +906,17 @@ const addToCart = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
+
+    let finalPrice = product.pprice;
+    if ( product.offers.length > 0) {
+      const activeOffer = product.offers.find(
+        (offer) => new Date(offer.expiryDate) > new Date()
+      );
+      if (activeOffer) {
+        finalPrice = (product.pprice * (1 - activeOffer.discount / 100)).toFixed(2);
+      }
+    }
+
     const imagePath = req.file ? req.file.path : null;
     let cart = await Cart.findOne({ user: user._id });
     if (!cart) {
@@ -916,13 +927,13 @@ const addToCart = async (req, res) => {
           {
             product: product._id,
             quantity: 1,
-            price: product.pprice,
-            total: product.pprice,
+            price: finalPrice,
+            total: finalPrice,
             image: imagePath,
             category: product.category,
           },
         ],
-        totalPrice: product.pprice,
+        totalPrice: finalPrice,
       });
     } else {
       const existingProductIndex = cart.products.findIndex(
@@ -940,11 +951,11 @@ const addToCart = async (req, res) => {
         cart.products.push({
           product: product._id,
           quantity: 1,
-          price: product.pprice,
-          total: product.pprice,
+          price: finalPrice,
+          total: finalPrice,
           image: product.image[0],
           category: product.category,
-        });
+        }); 
       }
       cart.totalPrice = cart.products.reduce(
         (total, item) => total + item.total,
@@ -1071,7 +1082,7 @@ const checkout = async (req, res) => {
 
     const orderDetails = {
       products: cart.products,
-      totalPrice: cart.totalPrice,
+      totalPrice: cart.totalPrice.toFixed(2),
     };
 
     const razorpayKeyId=process.env.RAZORPAY_KEY_ID
@@ -1138,7 +1149,7 @@ const placeOrder = async (req, res) => {
   console.log('placeOrder', req.body);
   const { address, payment_method, totalPrice } = req.body;
   const userid = req.session.user._id;
-  const user=await User.findById({_id:userid})  
+  const user = await User.findById({ _id: userid });
 
   if (!address) {
     return res.status(400).json({
@@ -1183,29 +1194,12 @@ const placeOrder = async (req, res) => {
 
     let finalTotalPrice = cart.totalPrice;
 
-    // Handle Razorpay payment method
-    if (payment_method === "razorpay") {      
-      const options = {
-        amount: totalPrice * 100,
-        currency: "INR",
-        receipt: `order_rcptid_${Date.now()}`,
-      };
-
-      // Create a Razorpay order
-      const razorpayOrder = await razorpay.orders.create(options);            
-      // Return Razorpay order details to the client for payment
-      return res.status(200).json({
-        success: true,
-        order: razorpayOrder,
-        message: "Order created successfully, please proceed with payment.",
-      });
-    }
-
     // Create new order in the Order model
     const newOrder = new Orders({
       userId: userid,
-      address:address,
+      address: address,
       paymentMethod: payment_method,
+      razorpayOrderId:null,
       products: cart.products.map((product) => ({
         productId: product.product,
         quantity: product.quantity,
@@ -1213,12 +1207,30 @@ const placeOrder = async (req, res) => {
         total: product.total,
         image: product.image,
       })),
-      totalPrice: totalPrice,
+      totalPrice: totalPrice.toFixed(2),
       orderStatus: "Pending",
     });
     await newOrder.save();
-    console.log('neworder',newOrder);
-    
+    console.log('neworder', newOrder);
+
+    // Handle Razorpay payment method
+    let razorpayOrder = null;
+    if (payment_method === "razorpay") {
+      const options = {
+        amount: totalPrice * 100,
+        currency: "INR",
+        receipt: `order_rcptid_${Date.now()}`,
+       };
+
+      // Create a Razorpay order
+      razorpayOrder = await razorpay.orders.create(options);
+      console.log('razorpayOrder',razorpayOrder);
+      
+
+      // Save the Razorpay order ID to the order for tracking
+      newOrder.razorpayOrderId = razorpayOrder.id;
+      await newOrder.save();
+    }
 
     // Update product stock
     for (const item of cart.products) {
@@ -1240,18 +1252,20 @@ const placeOrder = async (req, res) => {
 
     return res.status(200).json({
       newOrder,
-      // razorpayOrder,
+      razorpayOrder, // Send Razorpay order details if payment method is Razorpay
       icon: "success",
       title: "Order placed successfully!",
       message: "Your order will be delivered within 7 days.",
     });
   } catch (error) {
-    console.log(error); 
-    return res.status(500).json({status:'error',
+    console.log(error);
+    return res.status(500).json({
+      status: "error",
       message: "There was an error placing your order. Please try again.",
     });
   }
 };
+
 
  
 const verifyPayment= async (req, res) => {
@@ -1297,13 +1311,26 @@ const cancelOrder = async (req, res) => {
       for (const item of order.products) {
         const product = item.productId;
         const quantityOrdered = item.quantity;
+        await Orders.updateOne(
+          { _id: orderId },
+          { 
+            $set: { 
+              "products.$[elem].isCancelled": true,
+              "products.$[elem].orderStatus": "Cancelled"
+
+            }
+          },  
+          { 
+            arrayFilters: [{ "elem.productId": product._id }] // Using correct path for array filter
+          }
+        );
         await Product.updateOne(
           { _id: product._id },
           { $inc: { stock: quantityOrdered } }
         );
       }
 
-      const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
 
       if(order.paymentMethod==='razorpay'){
@@ -1332,7 +1359,7 @@ const cancelOrder = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error cancelling order:", error);
+    console.log("Error cancelling order:", error);
     res.json({ success: false, message: "Error cancelling order" });
   }
 };
@@ -1371,8 +1398,8 @@ const cancelAProduct = async (req, res) => {
 
     product.isCancelled = true;
     order.totalPrice -= product.price * product.quantity;
-    const refundAmount=product.price * product.quantity
-    order.totalPrice-=refundAmount
+    const refundAmount=product.price * product.quantity.toFixed(2)
+    // order.totalPrice-=refundAmount
 
     if (order.totalPrice < 0) {
       order.totalPrice = 0; // Ensure non-negative total price

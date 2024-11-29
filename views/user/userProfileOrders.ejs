@@ -123,11 +123,11 @@
                                 <div class="order-items">
                                     <% order.products.forEach(product => { %>
                                         <div class="item" data-product-id="<%= product.productId %>">
-                                            <span><%= product.quantity %>x <%= product.productId.pname.slice(0,40) %></span>
+                                            <span><%= product.quantity %>x <%= product.productId.pname.slice(0, 40) %></span>
                                             <span class="product-price">
                                                 <%= (product.price * product.quantity).toLocaleString('en-US', { style: 'currency', currency: 'INR' }) %>
                                             </span>
-                                            <% if (order.orderStatus === 'Delivered' && !product.isCancelled && !order.returnRequest && order.products.length > 1) { %>
+                                            <% if (product.orderStatus === 'Delivered' && !product.isCancelled && !product.returnRequestStatus && order.products.length > 1) { %>
                                                 <button 
                                                     class="btnn btn-warning return-product-btn" 
                                                     onclick="openReturnAProductModal('<%= order._id %>', '<%= product.productId._id %>')">
@@ -135,9 +135,9 @@
                                                 </button>
                                             <% } else if (
                                                 order.products.length > 1 && 
-                                                order.orderStatus !== 'Cancelled' && 
+                                                product.orderStatus !== 'Cancelled' && 
                                                 !product.isCancelled && 
-                                                !order.returnRequest
+                                                !product.returnRequestStatus
                                             ) { %>
                                                 <button 
                                                     class="btnn btn-danger cancel-product-btn" 
@@ -146,15 +146,18 @@
                                                 </button>
                                             <% } else if (product.isCancelled) { %>
                                                 <span class="cancelled-text">Cancelled</span>
+                                            <% } else if (product.returnRequestStatus) { %>
+                                                <span class="return-status-text"><%= product.returnRequestStatus %></span>
                                             <% } %>
                                         </div>
                                     <% }) %>
-                                </div>
+                                </div>                                
 
                                 <div class="order-total">
                                     <span>Total</span>
                                     <span><%= order.totalPrice.toLocaleString('en-US', { style: 'currency', currency: 'INR' }) %></span>
                                 </div>
+
                                 <div class="order-actions">
                                     <% const hasCancelableProducts = order.products.some(product => !product.isCancelled); %>
                                     <button 
@@ -165,16 +168,22 @@
                                         Cancel Order
                                     </button>
 
-                                    
+                                    <%
+                                    // Check if all products are either cancelled or returned
+                                    const allCancelledOrReturned = order.products.every(
+                                        (product) => product.isCancelled || product.returnStatus
+                                    );
+                                    %>
                                     <button id="returnButton"
-                                        class="btnn btn-primary" 
-                                        data-order-id="<%= order._id %>"
-                                        <%= order.orderStatus === 'Delivered' ? '' : 'disabled' %> 
-                                        onclick="openReturnModal('<%= order._id %>')">
-                                        Return Order
+                                            class="btnn btn-primary" 
+                                            data-order-id="<%= order._id %>"
+                                            <%= (order.orderStatus === 'Delivered' && !allCancelledOrReturned) ? '' : 'disabled' %> 
+                                            onclick="openReturnModal('<%= order._id %>')">
+                                            Return Order
                                     </button>
 
                                 </div>
+                                
                                 <div id="returnModal" class="modal">
                                     <div class="modal-content">
                                         <span class="close" onclick="closeReturnModal()">&times;</span>

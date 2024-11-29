@@ -44,6 +44,21 @@ const productsSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  returnRequest: {
+    type:String
+  },
+  returnRequestStatus: {
+    type: String,
+    enum: ['Request Pending','Return Accepted','Return Rejected']
+  },
+  orderStatus: {
+    type: String,
+    default: 'Pending',  
+    enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled','returned','Return Request Accepted','Return Request Rejected'],  
+  },
+  isReturned: {
+    type:Boolean,
+  },
   popularity: Number,
   ratings: Number,
   featured: Boolean,

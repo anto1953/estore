@@ -98,7 +98,8 @@
                         <div>
                           <input type="checkbox" class="form-check-input"
                                  id="productCheckbox<%= offer._id %>_<%= product._id %>"
-                                 value="<%= product._id %>" />
+                                 value="<%= product._id %>" 
+                                 <%= product.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString()) ? 'checked' : '' %> />
                           <label class="form-check-label"
                                  for="productCheckbox<%= offer._id %>_<%= product._id %>">
                             <%= product.pname %>
@@ -125,7 +126,8 @@
                         <div>
                           <input type="checkbox" class="form-check-input"
                                  id="categoryCheckbox<%= offer._id %>_<%= category._id %>"
-                                 value="<%= category._id %>" />
+                                 value="<%= category._id %>" 
+                                 <%= category.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString()) ? 'checked' : '' %> />
                           <label class="form-check-label"
                                  for="categoryCheckbox<%= offer._id %>_<%= category._id %>">
                             <%= category.label %>
@@ -213,8 +215,7 @@
                   text: data.message,
                   icon: "success",
                 }).then(() => {
-                  // Reload or redirect to refresh the offer list
-                  window.location.href = "/admin/offers";
+                  location.reload();
                 });
               } else {
                 Swal.fire({

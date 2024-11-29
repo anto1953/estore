@@ -601,7 +601,6 @@ const   listCategory = async (req, res) => {
 };
 
 
-
 const orders = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
@@ -623,8 +622,8 @@ const orders = async (req, res) => {
     const count = await Orders.countDocuments(searchFilter);
 
     res.render("admin/orders", {
-      orders: orders,
-      query: searchQuery,
+        orders: orders,
+        query: searchQuery,
       currentPage: page,
       totalPages: Math.ceil(count / limit),
       searchQuery: searchQuery,
@@ -637,7 +636,7 @@ const orders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   const { orderId, status } = req.body;
   try {
-    await Orders.updateOne({ _id: orderId }, { orderStatus: status });
+    await Orders.updateOne({ _id: orderId }, { orderStatus: status ,$set: { "products.$[].orderStatus": status },});
     res.json({ success: true });
   } catch (error) {
     console.error("Error updating order status:", error);
@@ -700,8 +699,6 @@ const getReturnRequest = [
 ];
 
 const acceptReturnRequest = async (req, res) => {
-  console.log("params", req.params);
-  console.log("body", req.body);
   const orderid = req.params.id;
 
   try {
@@ -715,13 +712,14 @@ const acceptReturnRequest = async (req, res) => {
         orderStatus: "Return Request Accepted",
         $set: {
           "products.$[].isReturned": true, // Update 'isReturned' for all products
+          "products.$[].returnRequestStatus": "Return accepted",
         },
       },
       { new: true }
     );
 
-    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
+    if (order.paymentMethod === "Razorpay") {
+    const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
     user.wallet.balance += order.totalPrice;
     user.wallet.transactions.push({
@@ -733,6 +731,7 @@ const acceptReturnRequest = async (req, res) => {
       type: "credit"
     })
     await user.save();
+  }
 
     if (updatedOrder) {
       res.json({ status: "success", message: "Return request accepted." });
@@ -753,6 +752,9 @@ const rejectReturnRequst = async (req, res) => {
       {
         returnRequestStatus: "Return Rejected",
         orderStatus: "Return Request Rejected ",
+        $set: {
+          "products.$[].returnRequestStatus": "Return Rejected", // Update each product's return status
+        },
       },
       { new: true }
     );
@@ -765,6 +767,123 @@ const rejectReturnRequst = async (req, res) => {
     res.status(500).json({ status: "error", message: "An error occurred." });
   }
 };
+
+const getReturnAProductRequest = [
+  checkSessionMiddleware,
+  async (req, res) => {
+    console.log('retuenaproduct',req.params);
+    
+    const { orderid, productId } = req.params; 
+    try {
+      const order = await Orders.findById(orderid);
+      if (order) {
+        const product = order.products.find(
+          (item) => item.productId.toString() === productId
+        );
+        if (product) {
+          res.json({
+            status: "success",
+            returnRequest: product.returnRequest || false, 
+          });
+        } else {
+          res.json({
+            status: "error",
+            message: "Product not found in the order.",
+          });
+        }
+      } else {
+        res.json({ status: "error", message: "Order not found." });
+      }
+    } catch (error) {
+      res.status(500).json({ status: "error", message: "An error occurred." });
+    }
+  },
+];
+
+const acceptAProductReturnRequest = async (req, res) => {
+  console.log("params", req.params);
+  const { orderId, productId } = req.params;
+
+  try {
+    const order = await Orders.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ status: "error", message: "Order not found." });
+    }
+
+    const user = await User.findById(order.userId);
+    if (!user) {
+      return res.status(404).json({ status: "error", message: "User not found." });
+    }
+
+    const product = order.products.find(p => p.productId.toString() === productId);
+    if (!product) {
+      return res.status(404).json({ status: "error", message: "Product not found in order." });
+    }
+
+    // Update the specific product's return request status
+    product.returnRequestStatus = "Return Accepted";
+    product.isReturned = true;
+
+    const productTotal = product.price * product.quantity;
+    order.totalPrice -= productTotal;
+    // Save the updated order
+    await order.save();
+
+    if (order.paymentMethod === "Razorpay") {
+    const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    user.wallet.balance += product.total;
+    user.wallet.transactions.push({
+      transactionId,
+      orderId,
+      amount: product.total,
+      date: new Date(),
+      description: `Refund for returned product #${productId.substring(0, 6)} in order #${orderId.substring(0, 6)}`,
+      type: "credit",
+    });
+
+    // Save the updated user
+    await user.save();
+  }
+
+    res.json({ status: "success", message: "Product return request accepted." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", message: "An error occurred." });
+  }
+};
+
+const rejectAProductReturnRequest = async (req, res) => {
+  console.log('rejectAProductReturnRequest',req.params);
+  
+  const { orderId, productId } = req.params;
+  try {
+    const order = await Orders.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ status: "error", message: "Order not found." });
+    }
+
+    const product = order.products.find(p => p.productId.toString() === productId);
+    if (!product) {
+      return res.status(404).json({ status: "error", message: "Product not found in order." });
+    }
+
+    // Update the specific product's return request status
+    product.returnRequestStatus = "Return Rejected";
+
+    const productTotal = product.price * product.quantity;
+    order.totalPrice -= productTotal;
+
+    // Save the updated order
+    await order.save();
+
+    res.json({ status: "success", message: "Product return request rejected." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", message: "An error occurred." });
+  }
+};
+
+
 
 const orderDetails=async (req, res) => {    
   try {
@@ -1077,13 +1196,16 @@ const editOffer = [
       const offerid = req.params.id;
       const offer = await Offers.findById({ _id: offerid });
       if (offer) {
+        if (offer.expiryDate) {
+          offer.expiryDate = offer.expiryDate.toISOString().split('T')[0];
+        }
         res.render("admin/editOffer", { offer });
       } else {
         res.json({
           status: "error",
           message: "offer not found",
         });
-      }
+      } 
     } catch (error) {
       console.log(error);
       res.json({
@@ -1165,55 +1287,37 @@ const listOffer = async (req, res) => {
 };
 
 
-const applyOfferToProducts=async (req,res)=>{
-  console.log('applyOfferToProducts',req.body,req.params);
-  
-try {
-  const { productIds } = req.body; 
-  const { id } = req.params; 
+const applyOfferToProducts = async (req, res) => {
+  console.log('applyOfferToProducts', req.body, req.params);
 
-  const offer = await Offers.findById({_id:id});
-  if (!offer) {
-    return res.status(400).json({ status: 'error', message: 'Offer not found' });
-  }
-
-  const products = await Product.updateMany(
-    { _id: { $in: productIds } },
-    {
-      $addToSet: {
-        offers: {
-          offerId: offer._id,
-          offerName: offer.offerName,
-          offerCode: offer.offerCode,
-          discount: offer.discount,
-          offerType: offer.offerType,
-          expiryDate: offer.expiryDate
-        }
-      }
-    }
-  );
-
-  return res.status(200).json({ status: 'success', message: 'Offer applied to selected products' });
-} catch (error) {
-  console.error(error);
-  return res.status(500).json({ status: 'error', message: 'Something went wrong' });
-}
-}
-
-const applyOfferToCategories=async (req, res)=>{
-  console.log('applyOfferToCategories',req.body,req.params);
-  
   try {
-    const { categoryIds } = req.body; 
+    const { productIds } = req.body; 
     const { id } = req.params; 
 
+    // Find the offer by ID
     const offer = await Offers.findById(id);
     if (!offer) {
       return res.status(400).json({ status: 'error', message: 'Offer not found' });
     }
 
-    const categories = await Category.updateMany(
-      { _id: { $in: categoryIds } },
+    // Fetch products to check for existing offers
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    // Filter out products that already have the offer applied
+    const productsToUpdate = products.filter(product => 
+      !product.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString())
+    ).map(product => product._id);
+
+    if (productsToUpdate.length === 0) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Offer is already applied to the selected products' 
+      });
+    }
+
+    // Apply the offer to the filtered products
+    await Product.updateMany(
+      { _id: { $in: productsToUpdate } },
       {
         $addToSet: {
           offers: {
@@ -1228,28 +1332,131 @@ const applyOfferToCategories=async (req, res)=>{
       }
     );
 
-    return res.status(200).json({ status: 'success', message: 'Offer applied to selected categories' });
+    return res.status(200).json({ 
+      status: 'success', 
+      message: `Offer applied to ${productsToUpdate.length} products` 
+    });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ status: 'error', message: 'Something went wrong' });
   }
-}
+};
 
-const salesReport = [
-  checkSessionMiddleware,
-  async (req, res) => {
-    try {
-      const reportType = [];
-      res.render("admin/salesReport");
-    } catch (error) {
-      console.log(error);
-      res.json({
-        status: "error",
-        message: "something error",
+
+const applyOfferToCategories = async (req, res) => {
+  console.log('applyOfferToCategories', req.body, req.params);
+
+  try {
+    const { categoryIds } = req.body; 
+    const { id } = req.params; 
+
+    // Find the offer by ID
+    const offer = await Offers.findById(id);
+    if (!offer) {
+      return res.status(400).json({ status: 'error', message: 'Offer not found' });
+    }
+
+    // Fetch categories based on IDs and extract their labels
+    const categories = await Category.find({ _id: { $in: categoryIds } });
+
+    // Filter categories that already have the offer applied
+    const categoriesToUpdate = categories.filter(category =>
+      !category.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString())
+    );
+
+    const categoryLabelsToUpdate = categoriesToUpdate.map(category => category.label);
+
+    if (categoriesToUpdate.length === 0) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Offer is already applied to the selected categories' 
       });
     }
-  },
-];
+
+    // Apply the offer to the filtered categories
+    await Category.updateMany(
+      { _id: { $in: categoriesToUpdate.map(category => category._id) } },
+      {
+        $addToSet: {
+          offers: {
+            offerId: offer._id,
+            offerName: offer.offerName,
+            offerCode: offer.offerCode,
+            discount: offer.discount,
+            offerType: offer.offerType,
+            expiryDate: offer.expiryDate
+          }
+        }
+      }
+    );
+
+    // Fetch products belonging to the selected category labels
+    const products = await Product.find({ category: { $in: categoryLabelsToUpdate } });
+
+    // Filter out products that already have the offer applied
+    const productsToUpdate = products.filter(product =>
+      !product.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString())
+    ).map(product => product._id);
+
+    // Apply the offer to the filtered products
+    if (productsToUpdate.length > 0) {
+      await Product.updateMany(
+        { _id: { $in: productsToUpdate } },
+        {
+          $addToSet: {
+            offers: {
+              offerId: offer._id,
+              offerName: offer.offerName,
+              offerCode: offer.offerCode,
+              discount: offer.discount,
+              offerType: offer.offerType,
+              expiryDate: offer.expiryDate
+            }
+          }
+        }
+      );
+    }
+
+    return res.status(200).json({ 
+      status: 'success', 
+      message: `Offer applied to ${categoriesToUpdate.length} categories and ${productsToUpdate.length} products` 
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 'error', message: 'Something went wrong' });
+  }
+};
+
+const salesReport = async (req, res) => {
+    try {      
+        // Fetch sales data
+        const salesData = await Orders.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    salesCount: { $sum: 1 },
+                    totalOrderAmount: { $sum: '$totalPrice' },
+                    totalDiscount: { $sum: '$totalDiscount' },  
+                    totalCoupons: { $sum: '$totalCouponDiscount' }
+                }
+            }
+        ]);        
+
+        const totalSales = await Orders.countDocuments();
+
+        // Render sales report view
+        res.render('admin/salesReport', {
+            totalSales,
+            totalSalesAmount:salesData[0].totalOrderAmount,
+            salesReport: salesData[0] || null,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error generating sales report');
+    }
+};
+
 module.exports = {
   checkSessionMiddleware,
   adminLogout,
@@ -1277,8 +1484,11 @@ module.exports = {
   updateOrderStatus,
   cancelOrder,
   getReturnRequest,
+  getReturnAProductRequest,
   acceptReturnRequest,
   rejectReturnRequst,
+  acceptAProductReturnRequest,
+  rejectAProductReturnRequest,
   orderDetails,
   coupons,
   addCoupon,

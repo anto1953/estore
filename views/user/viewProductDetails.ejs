@@ -292,12 +292,12 @@
 .discounted-price {
     font-size: 1.2em;
     font-weight: bold;
-    color: #e63946;
+    color: #0aba39;
 }
 
 .discount-percentage {
-    font-size: 0.9em;
-    color: #38b000;
+    font-size: 0.6em;
+    color: #5e615d;
 }
 
 .no-discount {
@@ -352,7 +352,7 @@
         ⭐ <%= product.rating %>/5 (<%= product.reviews.length %> reviews)
     </div>
     <p class="price">
-        <% if (product.offers && product.offers.length > 0) { %>
+        <% if (product.offers.length > 0) { %>
             <% const activeOffer = product.offers.find(offer => new Date(offer.expiryDate) > new Date()); %>
             <% if (activeOffer) { 
                 const discountedPrice = (product.pprice * (1 - activeOffer.discount / 100)).toFixed(2); %>

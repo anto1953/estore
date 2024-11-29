@@ -38,6 +38,9 @@ router.post("/cancelOrder", admincontroller.cancelOrder);
 router.get('/getReturnRequest/:id',admincontroller.getReturnRequest)
 router.post('/acceptReturnRequest/:id',admincontroller.acceptReturnRequest)
 router.post('/rejectReturnRequest/:id',admincontroller.rejectReturnRequst)
+router.get('/getReturnAProductRequest/:orderid/:productId',admincontroller.getReturnAProductRequest)
+router.post('/acceptAProductReturnRequest/:orderId/:productId',admincontroller.acceptAProductReturnRequest),
+router.post('/rejectAProductReturnRequest/:orderId/:productId',admincontroller.rejectAProductReturnRequest)
 router.get('/orderDetails/:id',admincontroller.orderDetails)
 router.get('/coupons',admincontroller.coupons)
 router.get('/addCoupon',admincontroller.addCoupon)

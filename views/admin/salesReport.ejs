@@ -1,39 +1,132 @@
-<body>
-    <%- include('../partials/sidebar') %>
-    <%- include('../partials/topbar') %>
-    <div class="content p-4" id="main-content">
-        <div class="container-fluid mt-5 pt-5">
-            <div id="salesReport" class="section-details active">
-                <h2>Sales Report</h2>
-                <p>Generate and view the sales report</p>
+<%- include('../partials/_header') %>
+<%- include('../partials/style') %>
+    <body>
+        <style>
+            .chart-container {
+                height: 400px; /* Set an equal height */
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .chart-container .card-body {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            
+            .chart-container canvas {
+                max-height: 300px; /* Ensure canvas doesn't exceed container height */
+                height: 100%;      /* Fill available height */
+                width: 100%;       /* Maintain responsiveness */
+            }
+            </style>
+   <%- include('../partials/sidebar') %>
+   <%- include('../partials/topbar') %>
+   <div class="content p-4" id="main-content">
+       <div class="container-fluid mt-5 pt-5">
+           <div id="salesReport" class="section-details active">
+               <h2>Sales Report</h2>
+               <p>Generate and view the sales report</p>
+   
+               
+   
+               <!-- Summary Section -->
+               <div class="row mb-4">
+                   
+                   <div class="col-md-3">
+                       <div class="card shadow-sm text-center h-100">
+                           <div class="card-body">
+                               <h5 class="card-title">Total Sales</h5>
+                               <p class="card-text"><%= totalSales %></p>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="col-md-3">
+                       <div class="card shadow-sm text-center h-100">
+                           <div class="card-body">
+                               <h5 class="card-title">Total order Amount</h5>
+                               <p class="card-text">₹<%= totalSalesAmount %></p>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="col-md-3">
+                       <div class="card shadow-sm text-center h-100">
+                           <div class="card-body">
+                               <h5 class="card-title">Most Ordered Product</h5>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="col-md-3">
+                       <div class="card shadow-sm text-center h-100">
+                           <div class="card-body">
+                               <h5 class="card-title">Total Offered Amount</h5>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+   
+               <!-- Graph Section -->
+               <div class="row mt-4">
+                   <div class="col-md-6">
+                       <div class="card shadow-sm mb-4 chart-container">
+                           <div class="card-body">
+                               <h5 class="card-title">Sales</h5>
+                               <canvas id="salesChart"></canvas>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="col-md-6">
+                       <div class="card shadow-sm mb-4 chart-container">
+                           <div class="card-body">
+                               <h5 class="card-title">Orders</h5>
+                               <canvas id="ordersChart"></canvas>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
 
-                <!-- Filter Form -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <form action="/admin/salesReport" method="GET" class="d-flex align-items-center" style="flex: 1;">
-                        <!-- Date Range Filter -->
-                        <div class="form-group me-3">
-                            <label for="reportType">Report Type</label>
-                            <select id="reportType" name="reportType" class="form-select" required>
-                                <option value="daily" <%= reportType === 'daily' ? 'selected' : '' %>>Daily</option>
-                                <option value="weekly" <%= reportType === 'weekly' ? 'selected' : '' %>>Weekly</option>
-                                <option value="monthly" <%= reportType === 'monthly' ? 'selected' : '' %>>Monthly</option>
-                                <option value="custom" <%= reportType === 'custom' ? 'selected' : '' %>>Custom Date Range</option>
-                            </select>
-                        </div>
+   <!-- Filter Form -->
+   <div class="d-flex justify-content-between align-items-center mb-3" style="position: relative; left: 33%;">
+    <form action="/admin/salesReport" method="GET" class="d-flex align-items-center" style="flex: 1;">
+        <!-- Date Range Filter -->
+        <div class="form-group me-3">
+            <label for="reportType">Report Type</label>
+            <select id="reportType" name="reportType" class="form-select" required>
+                <option value="daily" >Daily</option>
+                <option value="weekly" >Weekly</option>
+                <option value="monthly" >Monthly</option>
+                <option value="custom" >Custom Date Range</option>
+            </select>
+        </div>
 
-                        <!-- Custom Date Range -->
-                        <div class="form-group me-3" id="customDateRange" style="display: <%= reportType === 'custom' ? 'block' : 'none' %>;">
-                            <label for="startDate">Start Date</label>
-                            <input type="date" id="startDate" name="startDate" class="form-control" value="<%= startDate %>">
-                            <label for="endDate">End Date</label>
-                            <input type="date" id="endDate" name="endDate" class="form-control" value="<%= endDate %>">
-                        </div>
+        <!-- Custom Date Range -->
+        <div class="form-group me-3" id="customDateRange" >
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate" name="startDate" class="form-control" value="">
+            <label for="endDate">End Date</label>
+            <input type="date" id="endDate" name="endDate" class="form-control" value="">
+        </div>
 
-                        <!-- Button to Generate Report -->
-                        <button type="submit" class="btn btn-primary ms-2">Generate Report</button>
-                    </form>
-                </div>
-
+        <!-- Button to Generate Report -->
+        <button type="submit" class="btn btn-primary ms-2">Generate Report</button>
+    </form>
+</div>
+   
+    
+                <!-- Summary Section -->
+                <!-- <div class="mt-4">
+                    <h3>Sales Summary</h3> -->
+                    <!-- <div>
+                        <p><strong>Total Sales Count:</strong> <%= salesReport.salesCount %></p>
+                        <p><strong>Total Sales Amount:</strong> ₹<%= (salesReport.totalOrderAmount - salesReport.totalDiscount).toFixed(2) %></p>
+                    </div> -->
+                <!-- </div> -->
+    
+                <!-- Sales Table
                 <div class="table-responsive">
                     <% if (salesReport) { %>
                         <table class="table table-striped mt-4">
@@ -57,38 +150,13 @@
                     <% } else { %>
                         <h3>No sales data found for the selected period</h3>
                     <% } %>
-                </div>
-
-                <div class="pagination">
-                    <% if (pagination && pagination.totalPages > 1) { %>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination justify-content-center">
-                                <% if (pagination.currentPage > 1) { %>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<%= pagination.currentPage - 1 %>" aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                <% } %>
-                                <% for (let i = 1; i <= pagination.totalPages; i++) { %>
-                                    <li class="page-item <%= pagination.currentPage === i ? 'active' : '' %>">
-                                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                                    </li>
-                                <% } %>
-                                <% if (pagination.currentPage < pagination.totalPages) { %>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<%= pagination.currentPage + 1 %>" aria-label="Next">
-                                            <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                <% } %>
-                            </ul>
-                        </nav>
-                    <% } %>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
     <script>
         // Show the custom date range fields based on the report type selection
@@ -100,6 +168,65 @@
                 customDateRange.style.display = 'block';
             } else {
                 customDateRange.style.display = 'none';
+            }
+        });
+
+        const ctxSales = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctxSales, {
+            type: 'line',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [65, 59, 80, 81, 56, 55, 40],
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'white' //  y-axis text color
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'white' //  x-axis text color
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white' // legend text color
+                        }
+                    }
+                }
+            }
+        });
+        const ctxOrders = document.getElementById('ordersChart').getContext('2d');
+        const ordersChart = new Chart(ctxOrders, {
+            type: 'doughnut',
+            data: {
+                labels: ['Delivered', 'Pending', 'Cancelled'],
+                datasets: [{
+                    label: 'Orders',
+                    data: [10, 5, 2],
+                    backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white' 
+                        }
+                    }
+                }
             }
         });
     </script>

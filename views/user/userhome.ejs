@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html class="no-js" lang="zxx">
   <%- include('../partials/_userhead') %>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
   <body>
     <header>
       <div class="header-area">
@@ -31,22 +33,6 @@
                             <li><a href="single-blog.html">Blog Details</a></li>
                           </ul>
                         </li>
-                        <li>
-                          <a href="#">Pages</a>
-                          <ul class="submenu">
-                            <li><a href="login.html">Login</a></li>
-                            <li><a href="">Card</a></li>
-                            <li><a href="elements.html">Element</a></li>
-                            <li><a href="about.html">About</a></li>
-                            <li>
-                              <a href="confirmation.html">Confirmation</a>
-                            </li>
-                            <li><a href="user/cart">Shopping Cart</a></li>
-                            <li>
-                              <a href="checkout.html">Product Checkout</a>
-                            </li>
-                          </ul>
-                        </li>
                         <li><a href="contact.html">Contact</a></li>
                       </ul>
                     </nav>
@@ -56,21 +42,19 @@
                   <ul
                     class="header-right f-right d-none d-lg-block d-flex justify-content-between"
                   >
-                    <li class="d-none d-xl-block">
-                      <div class="form-box f-right">
-                        <input
-                          type="text"
-                          name="Search"
-                          placeholder="Search products"
-                        />
-                        <div class="search-icon">
-                          <i class="fas fa-search special-tag"></i>
-                        </div>
+                    <li>
+                      <div class="wallet-items">
+                        <a href="/wallet">
+                          <i class="fas fa-wallet"></i>
+                        </a>
                       </div>
                     </li>
+
                     <li class="d-none d-xl-block">
                       <div class="favorit-items">
-                        <i class="far fa-heart"></i>
+                        <a href="/wishlist">
+                          <i class="far fa-heart"></i>
+                        </a>
                       </div>
                     </li>
                     <li>
@@ -363,12 +347,24 @@
                         >
                       </h4>
                       <div class="price">
-                        <ul>
-                          <li>₹<%= product.pprice %></li>
-                          <% if (product.discount) { %>
-                          <li class="discount">₹<%= product.discount %></li>
+                        <p>
+                          <% if (product.offers.length > 0) { %>
+                              <% 
+                                  const activeOffer = product.offers.find(offer => new Date(offer.expiryDate) > new Date()); 
+                              %>
+                              <% if (activeOffer) { 
+                                  const discountedPrice = (product.pprice * (1 - activeOffer.discount / 100)).toFixed(2); 
+                              %>
+                                  <span style="text-decoration: line-through; color: grey;">₹<%= product.pprice %></span>
+                                  <span style="color: rgb(16, 5, 5); font-weight: bold;"> ₹<%= discountedPrice %></span><br>  
+                                  <span class="discount-percentage">(Discount: <%= activeOffer.discount %>%)</span>
+                              <% } else { %>
+                                  ₹<%= product.pprice %>
+                              <% } %>
+                          <% } else { %>
+                              ₹<%= product.pprice %>
                           <% } %>
-                        </ul>
+                      </p>
                       </div>
                     </div>
                   </div>
@@ -547,7 +543,7 @@
       </div>
       <!-- Shop Method End-->
       <!-- Gallery Start-->
-      <div class="gallery-wrapper lf-padding">
+      <div class="gallery-wrapper" style="width: 95.5%;">
         <div class="gallery-area">
           <div class="container-fluid">
             <div class="row">

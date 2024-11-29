@@ -28,7 +28,7 @@ const offerSchema = new Schema(
     },
     isListed: {
       type: Boolean,
-      default: true,
+      // default: true,
     },
     status: {
       type: String,

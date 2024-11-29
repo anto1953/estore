@@ -41,7 +41,7 @@ const orderSchema = new mongoose.Schema({
     },
     returnRequestStatus: {
       type: String,
-      enum: ['Request Pending','Return accepted','Return rejected']
+      enum: ['Request Pending','Return Accepted','Return Rejected']
     },
     orderStatus: {
       type: String,
@@ -80,7 +80,7 @@ const orderSchema = new mongoose.Schema({
   },
   returnRequestStatus: {
     type: String,
-    enum: ['Request Pending','Return accepted','Return rejected']
+    enum: ['Request Pending','Return Accepted','Return Rejected']
   }
 });
 

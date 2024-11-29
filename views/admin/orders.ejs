@@ -86,13 +86,11 @@
                                         <td><%= order.userId ? order.userId.name : 'N/A' %></td> 
                                         <td>
                                             <% order.products.forEach(p => { %>
-                                                <% if (!p.isCancelled) { %>
                                                     <%= p.productId ? (p.productId.pname.length > 20 ? p.productId.pname.slice(0, 20) + '...' : p.productId.pname) : 'Unknown Product' %><br>
-                                                <% } %>
                                             <% }) %>
                                         </td>
                                         
-                                        <td>₹<%= order.totalPrice %></td>
+                                        <td>₹<%= order.totalPrice.toFixed(2) %></td>
 
                                         <td>
                                             <% if (order.returnRequestStatus) { %>
@@ -114,18 +112,28 @@
                                         
                                         
                                         <td>
-                                            <% if (order.products.some(product => product.returnRequestStatus=='Request Pending')) { %>
-                                                <button class="btn btn-sm btn-info" onclick="viewReturnAProductRequest('<%= order._id %>')">
-                                                    View Request
-                                                </button>
-                                            <% } else { %>
+                                            <% let viewRequestButtonDisplayed = false; %> 
+                                            <% order.products.forEach(product => { %>
+                                                <% if (product.returnRequestStatus == 'Request Pending' && !viewRequestButtonDisplayed) { %>
+                                                    <button class="btn btn-sm btn-info" onclick="viewReturnAProductRequest('<%= order._id %>', '<%= product.productId._id%>')">
+                                                        View Request
+                                                    </button>
+                                                    <% viewRequestButtonDisplayed = true; %>
+                                                <% } %>
+                                            <% }); %>
+                                        
+                                            <% if (!order.products.some(product => product.returnRequestStatus === 'Request Pending')) { %>
                                                 <% if (order.returnRequestStatus === "Request Pending") { %>
                                                     <button class="btn btn-sm btn-info" onclick="viewReturnRequest('<%= order._id %>')">View Request</button>
                                                 <% } else { %>
-                                                    <button class="btn btn-sm btn-danger" onclick="cancelOrder('<%= order._id %>')" <%= order.returnRequestStatus || order.orderStatus == 'Delivered' || order.orderStatus=='Cancelled' ? 'disabled' : '' %>>Cancel</button>
+                                                    <button class="btn btn-sm btn-danger" onclick="cancelOrder('<%= order._id %>')" 
+                                                            <%= order.returnRequestStatus || order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled' ? 'disabled' : '' %>>
+                                                        Cancel
+                                                    </button>
                                                 <% } %>
                                             <% } %>
                                         </td>
+                                        
                                         <td>
                                             <button class="btn btn-sm btn-primary" onclick="viewOrderDetails('<%= order._id %>')">View Details</button>
                                         </td>
@@ -165,11 +173,11 @@
                                             </button>
                                             </div>
                                             <div class="modal-body">
-                                            <p style="color: black;" id="returnRequestMessage"><%= order.products.returnRequest %></p>
+                                            <p style="color: black;" id="returnAProductRequestMessage"></p>
                                             </div>
                                             <div class="modal-footer">
-                                            <button type="button" class="btn btn-success" data-id="<%= order._id %>"  onclick="acceptReturnRequest()">Accept</button>
-                                            <button type="button" class="btn btn-danger" onclick="rejectReturnRequest('<%= order._id %>')">Reject</button>
+                                            <button type="button" class="btn btn-success" data-id="<%= order._id %>"  onclick="acceptAProductReturnRequest('<%= order._id %>','<%= order.products.productId %>')">Accept</button>
+                                            <button type="button" class="btn btn-danger" onclick="rejectAProductReturnRequest('<%= order._id %>','<%= order.products.productId %>')">Reject</button>
                                             <button type="button" class="btn btn-secondary" onclick="closeReturnRequestModal()">Close</button>
                                             </div>
                                         </div>
@@ -227,13 +235,8 @@
                                             </div>
                                         </div>
                                         
-                                        
-
-
-
                                 <% }) %>
                             </tbody>
-                            
                             
                         </table>
 
@@ -380,14 +383,18 @@ function viewReturnRequest(orderId) {
         });
 }
 
-function viewReturnAProductRequest(orderId,productId) {
+function viewReturnAProductRequest(orderId,productId) {    
     window.sessionStorage.setItem('order-id',orderId)
-    fetch(`/admin/getReturnAProductRequest/${orderId}`,{
-        method:'get'
+    window.sessionStorage.setItem('product-item',productId)
+    fetch(`/admin/getReturnAProductRequest/${orderId}/${productId}`,{
+        method:'get',
+        headers: {
+            'Content-Type': 'application/json', 
+        }
     })
         .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
+        .then(data => {            
+            if (data.status == 'success') {                
                 document.getElementById('returnAProductRequestMessage').textContent = data.returnRequest;
                 document.getElementById('returnAProductRequestModal').style.display = 'block';
             } else {
@@ -405,7 +412,8 @@ function viewReturnAProductRequest(orderId,productId) {
 }
 
 function closeReturnRequestModal() {
-    document.getElementById('returnRequestModal || returnAProductRequestModal').style.display = 'none';
+    document.getElementById('returnRequestModal').style.display = 'none';
+    document.getElementById('returnAProductRequestModal').style.display= 'none';
 }
 
 function acceptReturnRequest() {
@@ -472,6 +480,73 @@ function rejectReturnRequest() {
 }
 
 
+function acceptAProductReturnRequest() {
+    let orderId = window.sessionStorage.getItem('order-id');
+    let productId = window.sessionStorage.getItem('product-item');
+    
+    fetch(`/admin/acceptAProductReturnRequest/${orderId}/${productId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({
+                icon: 'success',
+                text: data.message
+            }).then(() => {
+                window.location.href = "/admin/orders";
+            });
+            closeReturnRequestModal();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                text: data.message
+            });
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            text: 'An error occurred. Please try again.'
+        });
+    });
+}
+
+function rejectAProductReturnRequest() {
+    let orderId = window.sessionStorage.getItem('order-id');
+    let productId = window.sessionStorage.getItem('product-item');
+    
+    fetch(`/admin/rejectAProductReturnRequest/${orderId}/${productId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({
+                icon: 'success',
+                text: data.message
+            }).then(() => {
+                window.location.href = "/admin/orders";
+            });
+            closeReturnRequestModal();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                text: data.message
+            });
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            text: 'An error occurred. Please try again.'
+        });
+    });
+}
+
+
 
 function viewOrderDetails(orderId) {
     fetch(`/admin/orderDetails/${orderId}`)
@@ -496,6 +571,8 @@ function viewOrderDetails(orderId) {
                         <h6>${product.productId ? product.productId.pname : 'Unknown Product'}</h6>
                         <p><strong>Quantity:</strong> ${product.quantity}</p>
                         <p><strong>Price:</strong> ₹${product.price}</p>
+                        <p><strong>status:</strong> ${product.orderStatus}</p>
+
                     </div>
                 </div>
             `).join('');

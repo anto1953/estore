@@ -3656,6 +3656,9 @@ input:focus {
   color: #6c6a6a;
   cursor: pointer;
 }
+.header-bottom .header-right .wallet-items {
+  position: relative;
+}
 .header-bottom .header-right .wallet-items::before {
   position: absolute;
   /* content: "02"; */ /* If you want to add a badge number, uncomment and set the number */
