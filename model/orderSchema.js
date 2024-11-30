@@ -81,6 +81,9 @@ const orderSchema = new mongoose.Schema({
   returnRequestStatus: {
     type: String,
     enum: ['Request Pending','Return Accepted','Return Rejected']
+  },
+  discount: {
+    type:Number
   }
 });
 

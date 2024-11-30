@@ -571,7 +571,10 @@ const viewProducts = async (req, res) => {
     );
     let products = await Product.find(
       Object.assign({}, filterCriteria, { isListed: true })
-    );
+    ).populate({
+      path: 'offers.offerId',
+      model: 'Offers',
+    });    
 
     let categories = await Category.find({ isListed: true });
 
@@ -616,8 +619,8 @@ const viewProducts = async (req, res) => {
       ? cart.products.map((item) => item.product.toString())
       : [];
 
-    const wishlist=user?.wishlist || null;    
-
+    const wishlist=user?.wishlist || null;  
+    
     res.render("user/product_list", {
       products,
       cart: cartProductIds,
@@ -685,8 +688,11 @@ const viewProductDetails = async (req, res) => {
     const user = req.session.user || null;
     const userid = user ? req.session.user._id : null;
     const productid = req.params.id;
-    const product = await Product.findById(productid);
-    console.log('offer',product.offers.discount);
+    const product = await Product.findById(productid).populate({
+      path: 'offers.offerId',
+      model: 'Offers',
+    });
+    console.log('offer',product.offers);
     
 
     const carts = await Cart.findOne(userid ? { user: userid } : {});
@@ -821,6 +827,8 @@ const cart = async (req, res) => {
       select: "pname pprice image stock isListed",
     });
 
+    console.log("cart", cart.products);
+
     if (!cart) {
       Swal.fire({
         title: "cart is empty",
@@ -893,21 +901,19 @@ const addToCart = async (req, res) => {
   console.log('addtocart',req.body);
   
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ message: "User not logged in" });
-    }
     const userId = req.session.user._id;
     const user = await User.findById({ _id: userId });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    const price=req.body.DisPrice;
     const productId = req.body.productId;
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    let finalPrice = product.pprice;
+    let finalPrice = price? price: product.pprice;
     if ( product.offers.length > 0) {
       const activeOffer = product.offers.find(
         (offer) => new Date(offer.expiryDate) > new Date()
@@ -1147,7 +1153,7 @@ const razorpay = new Razorpay({
 
 const placeOrder = async (req, res) => {
   console.log('placeOrder', req.body);
-  const { address, payment_method, totalPrice } = req.body;
+  const { address, payment_method, totalPrice,discountAmount } = req.body;
   const userid = req.session.user._id;
   const user = await User.findById({ _id: userid });
 
@@ -1199,6 +1205,7 @@ const placeOrder = async (req, res) => {
       userId: userid,
       address: address,
       paymentMethod: payment_method,
+      discount:discountAmount,
       razorpayOrderId:null,
       products: cart.products.map((product) => ({
         productId: product.product,

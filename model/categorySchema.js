@@ -19,33 +19,38 @@ const categorySchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  offers: [{
+  offers: [{   
     offerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Offer',
-      required: true
-    },
-    offerName: {
-      type: String,
-      required: true
-    },
-    offerCode: {
-      type: String,
-      required: true
-    },
-    discount: {
-      type: Number,
-      required: true
-    },
-    offerType: {
-      type: String,
-      required: true
-    },
-    expiryDate: {
-      type: Date,
-      required: true
-    }
-  }]
+  type: mongoose.Schema.Types.ObjectId, 
+  ref: 'Offers',
+ }}]
+  // offers: [{
+  //   offerId: {
+  //     type: mongoose.Schema.Types.ObjectId,
+  //     ref: 'Offer',
+  //     required: true
+  //   },
+  //   offerName: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   offerCode: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   discount: {
+  //     type: Number,
+  //     required: true
+  //   },
+  //   offerType: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   expiryDate: {
+  //     type: Date,
+  //     required: true
+  //   }
+  // }]
 });
 
 module.exports = mongoose.model('categories', categorySchema);

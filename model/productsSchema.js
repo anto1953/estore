@@ -62,33 +62,40 @@ const productsSchema = new mongoose.Schema({
   popularity: Number,
   ratings: Number,
   featured: Boolean,
-  offers: [{
-    offerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Offer',
-      required: true
-    },
-    offerName: {
-      type: String,
-      required: true
-    },
-    offerCode: {
-      type: String,
-      required: true
-    },
-    discount: {
-      type: Number,
-      required: true
-    },
-    offerType: {
-      type: String,
-      required: true
-    },
-    expiryDate: {
-      type: Date,
-      required: true
-    }
-  }]
+  offers: [{   
+      offerId: {
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Offers',
+   }}]
+
 });
 
 module.exports = mongoose.model("products", productsSchema);
+
+  // offers: [{
+  //   offerId: {
+      // type: mongoose.Schema.Types.ObjectId,
+  //     ref: 'Offer',
+  //     required: true
+  //   },
+  //   offerName: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   offerCode: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   discount: {
+  //     type: Number,
+  //     required: true
+  //   },
+  //   offerType: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   expiryDate: {
+  //     type: Date,
+  //     required: true
+  //   }
+  // }]

@@ -29,8 +29,38 @@
                <h2>Sales Report</h2>
                <p>Generate and view the sales report</p>
    
-               
-   
+               <!-- Filter Form -->
+               <form action="/admin/salesReport" method="GET" class="d-flex align-items-center" style="flex: 1; margin-left: 33%;">
+                <!-- Report Type Dropdown -->
+                <div class="form-group me-3">
+                    <label for="reportType">Report Type</label>
+                    <select id="reportType" name="reportType" class="form-select" required>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="custom">Custom Date Range</option>
+                    </select>
+                </div>
+            
+                <!-- Custom Date Range -->
+                <div class="form-group me-3" id="customDateRange" style="display: none;">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control">
+                </div>
+            
+                <!-- Format Selector -->
+                <div class="form-group me-3">
+                    <label for="format">Download Format</label>
+                    <select id="format" name="format" class="form-select" required>
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                </div>
+            
+                <button type="submit" class="btn btn-primary ms-2">Generate Report</button>
+            </form>
                <!-- Summary Section -->
                <div class="row mb-4">
                    
@@ -54,13 +84,15 @@
                        <div class="card shadow-sm text-center h-100">
                            <div class="card-body">
                                <h5 class="card-title">Most Ordered Product</h5>
+                               <p class="card-text">    <%= mostOrderedProduct %></p>
                            </div>
                        </div>
                    </div>
                    <div class="col-md-3">
                        <div class="card shadow-sm text-center h-100">
                            <div class="card-body">
-                               <h5 class="card-title">Total Offered Amount</h5>
+                               <h5 class="card-title">Total Discount Amount</h5>
+                               <p class="card-text">₹<%= totalDiscountAmount %></p>
                            </div>
                        </div>
                    </div>
@@ -89,32 +121,7 @@
        </div>
    </div>
 
-   <!-- Filter Form -->
-   <div class="d-flex justify-content-between align-items-center mb-3" style="position: relative; left: 33%;">
-    <form action="/admin/salesReport" method="GET" class="d-flex align-items-center" style="flex: 1;">
-        <!-- Date Range Filter -->
-        <div class="form-group me-3">
-            <label for="reportType">Report Type</label>
-            <select id="reportType" name="reportType" class="form-select" required>
-                <option value="daily" >Daily</option>
-                <option value="weekly" >Weekly</option>
-                <option value="monthly" >Monthly</option>
-                <option value="custom" >Custom Date Range</option>
-            </select>
-        </div>
-
-        <!-- Custom Date Range -->
-        <div class="form-group me-3" id="customDateRange" >
-            <label for="startDate">Start Date</label>
-            <input type="date" id="startDate" name="startDate" class="form-control" value="">
-            <label for="endDate">End Date</label>
-            <input type="date" id="endDate" name="endDate" class="form-control" value="">
-        </div>
-
-        <!-- Button to Generate Report -->
-        <button type="submit" class="btn btn-primary ms-2">Generate Report</button>
-    </form>
-</div>
+   
    
     
                 <!-- Summary Section -->
@@ -159,17 +166,17 @@
 
 
     <script>
-        // Show the custom date range fields based on the report type selection
-        const reportTypeSelect = document.getElementById('reportType');
-        const customDateRange = document.getElementById('customDateRange');
+        const reportTypeSelect = document.getElementById("reportType");
+    const customDateRangeDiv = document.getElementById("customDateRange");
 
-        reportTypeSelect.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customDateRange.style.display = 'block';
-            } else {
-                customDateRange.style.display = 'none';
-            }
-        });
+    // Event listener for dropdown change
+    reportTypeSelect.addEventListener("change", function () {
+        if (this.value === "custom") {
+            customDateRangeDiv.style.display = "block";
+        } else {
+            customDateRangeDiv.style.display = "none";
+        }
+    });
 
         const ctxSales = document.getElementById('salesChart').getContext('2d');
         const salesChart = new Chart(ctxSales, {

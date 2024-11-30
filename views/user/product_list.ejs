@@ -75,14 +75,22 @@
                                 </a>
                                 <p>
                                     <% if (product.offers.length > 0) { %>
-                                        <% 
-                                            const activeOffer = product.offers.find(offer => new Date(offer.expiryDate) > new Date()); 
+                                        <%               
+                                            const activeOffers = product.offers
+                                                .filter(offer => 
+                                                    offer.offerId &&
+                                                    new Date(offer.offerId.expiryDate) > new Date() && 
+                                                    offer.offerId.isListed
+                                                )
+                                                .sort((a, b) => b.offerId.discount - a.offerId.discount); 
+                                            
+                                            const activeOffer = activeOffers.length > 0 ? activeOffers[0] : null;
+                                
+                                            if (activeOffer) {
+                                                let disPrice = (product.pprice * (1 - activeOffer.offerId.discount / 100)).toFixed(2);
                                         %>
-                                        <% if (activeOffer) { 
-                                            const discountedPrice = (product.pprice * (1 - activeOffer.discount / 100)).toFixed(2); 
-                                        %>
-                                            <span style="text-decoration: line-through; color: grey;">₹<%= product.pprice %></span>
-                                            <span style="color: rgb(16, 5, 5); font-weight: bold;"> ₹<%= discountedPrice %></span>
+                                            <span  style="text-decoration: line-through; color: grey;">₹<%= product.pprice %></span>
+                                            <span class="discounted-price" id="Disprice-<%= product._id %>" style="color: rgb(16, 5, 5); font-weight: bold;"> ₹<%= disPrice %></span>
                                         <% } else { %>
                                             ₹<%= product.pprice %>
                                         <% } %>
@@ -90,12 +98,15 @@
                                         ₹<%= product.pprice %>
                                     <% } %>
                                 </p>
+                                
+                                
+                                
                                                                
                                 <p class="<%= product.stock > 0 ? (product.stock < 20 ? 'low-stock' : 'stock-status') : 'out-of-stock' %>">
                                     <%= product.stock > 0 ? (product.stock < 20 ? product.stock + ' left in stock' : 'In Stock') : 'Out of Stock' %>
                                 </p>
                                 <div class="buttons" style="left: 20%;">
-                                    <button class="btn btn-default btn-sm" onclick="addToCart('<%= product._id %>')" 
+                                    <button class="btn btn-default btn-sm" onclick="addProductToCart('<%= product._id %>')" 
                                         <%= product.stock > 0 && !cart.includes(product._id.toString()) ? '' : 'disabled' %>>
                                         <i class="fas fa-shopping-cart"></i> 
                                         <%= cart.includes(product._id.toString()) ? 'Added to Cart' : 'Add to Cart' %>
@@ -206,13 +217,19 @@
 
 <script>
   
-        function addToCart(productId) {
+        function addProductToCart(productId) {
+            console.log('log',document.getElementById(`Disprice-${productId}`))
+            let DisPriceElement = document.getElementById(`Disprice-${productId}`);
+            let DisPrice = parseFloat(DisPriceElement.innerText.replace(/[^\d.]/g, ''));
+            console.log('discoundedprice',DisPrice);
+            
+            
     fetch(`/addToCart/${productId }`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ productId, quantity: 1 })
+        body: JSON.stringify({ productId, quantity: 1 ,DisPrice })
     })
     .then(response => response.json())
     .then(data => {

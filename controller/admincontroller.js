@@ -12,6 +12,8 @@ const sharp = require("sharp");
 const { log, error } = require("console");
 const { query } = require("express");
 const { disconnect } = require("process");
+const PDFDocument = require("pdfkit");
+const ExcelJS = require("exceljs");
 
 const checkSessionMiddleware = (req, res, next) => {
   if (req.session.admin) {
@@ -58,7 +60,7 @@ const users = async (req, res) => {
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });
-      const count = await User.countDocuments(searchFilter); 
+      const count = await User.countDocuments(searchFilter);
 
       // Render view with pagination and search data
       res.render("admin/users", {
@@ -101,27 +103,29 @@ const unblockUser = async (req, res) => {
   }
 };
 
-const topbar =[
+const topbar = [
   checkSessionMiddleware,
- async (req, res) => {
-  try {
-    if (req.session.admin) {
-      res.render("topbar");
+  async (req, res) => {
+    try {
+      if (req.session.admin) {
+        res.render("topbar");
+      }
+    } catch (error) {
+      res.send(error.message);
     }
-  } catch (error) {
-    res.send(error.message);
-  }
-}];
+  },
+];
 
-const sidebar =[
+const sidebar = [
   checkSessionMiddleware,
- async (req, res) => {
-  try {
+  async (req, res) => {
+    try {
       res.render("sidebar");
-  } catch (error) {
-    res.send(error.message);
-  }
-}];
+    } catch (error) {
+      res.send(error.message);
+    }
+  },
+];
 const _header = async (req, res) => {
   try {
     if (req.session.admin) {
@@ -133,11 +137,11 @@ const _header = async (req, res) => {
 };
 const products = async (req, res) => {
   const query = req.query.search ? req.query.search.toLowerCase() : "";
-  const page = parseInt(req.query.page) || 1; 
+  const page = parseInt(req.query.page) || 1;
   const limit = 10;
   const skip = (page - 1) * limit;
 
-  const searchQuery = req.query.search || ""; 
+  const searchQuery = req.query.search || "";
   const searchFilter = searchQuery
     ? { pname: { $regex: searchQuery, $options: "i" } }
     : {};
@@ -205,7 +209,7 @@ const upload = multer({
     }
     cb(null, true);
   },
-}).array("images",6)
+}).array("images", 6);
 
 //image processing helper
 const processImages = async (files) => {
@@ -234,13 +238,12 @@ const addproduct = async (req, res) => {
 };
 
 const addproductpost = async (req, res) => {
-  console.log('add product',req.body);
-  console.log('image',req.files);
-  
-  
+  console.log("add product", req.body);
+  console.log("image", req.files);
+
   try {
     const { pname, description, pprice, category, stock } = req.body;
-    const normalizedPname = pname.trim().replace(/\s+/g, ' ');
+    const normalizedPname = pname.trim().replace(/\s+/g, " ");
 
     const existproduct = await Product.findOne({
       pname: { $regex: new RegExp(`^${normalizedPname}$`, "i") },
@@ -299,10 +302,11 @@ const editproduct = async (req, res) => {
 };
 
 const editproductpost = async (req, res) => {
-  console.log(req.body, 'image', req.files);
+  console.log(req.body, "image", req.files);
   try {
     const productid = req.params.id;
-    const { pname, pprice, imagesToRemove, description, category, stock } = req.body;
+    const { pname, pprice, imagesToRemove, description, category, stock } =
+      req.body;
 
     const existproduct = await Product.findOne({
       pname: { $regex: new RegExp(`^${pname}$`, "i") },
@@ -327,11 +331,11 @@ const editproductpost = async (req, res) => {
     let image = existingProduct.image;
 
     if (imagesToRemove && Array.isArray(imagesToRemove)) {
-      const fs = require('fs');
+      const fs = require("fs");
       imagesToRemove.forEach((img) => {
         const imagePath = `uploads/${img}`;
         if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath); 
+          fs.unlinkSync(imagePath);
         }
         image = image.filter((existingImg) => existingImg !== img);
       });
@@ -366,7 +370,6 @@ const editproductpost = async (req, res) => {
     });
   }
 };
-
 
 const toggleProductListed = async (req, res) => {
   try {
@@ -457,7 +460,7 @@ const editcategorypost = async (req, res) => {
   try {
     const categoryid = req.params.id;
     let { value } = req.body;
-    const trimvalue=value.trim(); 
+    const trimvalue = value.trim();
     const existcategory = await Category.findOne({
       value: { $regex: new RegExp(`^${trimvalue}$`, "i") },
       _id: { $ne: categoryid },
@@ -470,7 +473,7 @@ const editcategorypost = async (req, res) => {
     } else {
       const updatedcategory = await Category.findByIdAndUpdate(
         categoryid,
-        { value:trimvalue, label: trimvalue },
+        { value: trimvalue, label: trimvalue },
         { new: true }
       );
       console.log("edit");
@@ -508,7 +511,7 @@ const addcategorypost = async (req, res) => {
   try {
     const { value } = req.body;
     console.log(value);
-    const trimvalue=value.trim()
+    const trimvalue = value.trim();
     const existcategory = await Category.findOne({
       value: { $regex: new RegExp(`^${trimvalue}$`, "i") },
     });
@@ -541,50 +544,48 @@ const addcategorypost = async (req, res) => {
   }
 };
 
-const   listCategory = async (req, res) => {
+const listCategory = async (req, res) => {
   try {
     if (req.session.admin) {
-      const categoryId = req.params.id;      
+      const categoryId = req.params.id;
 
-      const category = await Category.findById({_id:categoryId});
+      const category = await Category.findById({ _id: categoryId });
       if (!category) {
         return res.status(404).json({
           status: "error",
           message: "Category not found",
         });
       }
-      
+
       const updatedCategory = await Category.findByIdAndUpdate(
         categoryId,
         { isListed: !category.isListed },
         { new: true }
       );
-            
+
       if (updatedCategory) {
-        const updatedStatus=updatedCategory.isListed;
-        const categoryName=category.value;        
-        const updateProducts=await Product.updateMany(
-          {category : categoryName},
-          {isListed:updatedStatus}
-        )
-        console.log('updatedproducts',updatedStatus);
-        
-        if(updateProducts.modifiedCount > 0){
-        return res.status(200).json({
-          status: "success",
-          message: updatedStatus
-            ? "Category listed successfully"
-            : "Category unlisted successfully",
-        });
-      } 
-      else{
-        return res.json({
-          status:'error',
-          message:'No products found to update'
-        })
-      }
-      }
-        else {
+        const updatedStatus = updatedCategory.isListed;
+        const categoryName = category.value;
+        const updateProducts = await Product.updateMany(
+          { category: categoryName },
+          { isListed: updatedStatus }
+        );
+        console.log("updatedproducts", updatedStatus);
+
+        if (updateProducts.modifiedCount > 0) {
+          return res.status(200).json({
+            status: "success",
+            message: updatedStatus
+              ? "Category listed successfully"
+              : "Category unlisted successfully",
+          });
+        } else {
+          return res.json({
+            status: "error",
+            message: "No products found to update",
+          });
+        }
+      } else {
         return res.status(400).json({
           status: "error",
           message: "Failed to update category listing",
@@ -595,11 +596,10 @@ const   listCategory = async (req, res) => {
     console.log(error);
     res.status(500).json({
       status: "error",
-      message: "something error"
+      message: "something error",
     });
   }
 };
-
 
 const orders = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -622,8 +622,8 @@ const orders = async (req, res) => {
     const count = await Orders.countDocuments(searchFilter);
 
     res.render("admin/orders", {
-        orders: orders,
-        query: searchQuery,
+      orders: orders,
+      query: searchQuery,
       currentPage: page,
       totalPages: Math.ceil(count / limit),
       searchQuery: searchQuery,
@@ -636,7 +636,10 @@ const orders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   const { orderId, status } = req.body;
   try {
-    await Orders.updateOne({ _id: orderId }, { orderStatus: status ,$set: { "products.$[].orderStatus": status },});
+    await Orders.updateOne(
+      { _id: orderId },
+      { orderStatus: status, $set: { "products.$[].orderStatus": status } }
+    );
     res.json({ success: true });
   } catch (error) {
     console.error("Error updating order status:", error);
@@ -663,7 +666,7 @@ const cancelOrder = async (req, res) => {
         await Product.updateOne(
           { _id: product._id },
           { $inc: { stock: quantityOrdered } }
-        );  
+        );
       }
       res.json({
         status: "success",
@@ -702,8 +705,8 @@ const acceptReturnRequest = async (req, res) => {
   const orderid = req.params.id;
 
   try {
-    const order=await Orders.findById({_id:orderid})
-    const user=await User.findById(order.userId)
+    const order = await Orders.findById({ _id: orderid });
+    const user = await User.findById(order.userId);
 
     const updatedOrder = await Orders.findByIdAndUpdate(
       orderid,
@@ -719,19 +722,24 @@ const acceptReturnRequest = async (req, res) => {
     );
 
     if (order.paymentMethod === "Razorpay") {
-    const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      const transactionId = `TID-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 6)
+        .toUpperCase()}`;
 
-    user.wallet.balance += order.totalPrice;
-    user.wallet.transactions.push({
-      transactionId: transactionId,
-      orderId:orderid,
-      amount:order.totalPrice,
-      date:new Date(),
-      description: `Refund for returned order #${order._id.toString().substring(0, 6)}`,
-      type: "credit"
-    })
-    await user.save();
-  }
+      user.wallet.balance += order.totalPrice;
+      user.wallet.transactions.push({
+        transactionId: transactionId,
+        orderId: orderid,
+        amount: order.totalPrice,
+        date: new Date(),
+        description: `Refund for returned order #${order._id
+          .toString()
+          .substring(0, 6)}`,
+        type: "credit",
+      });
+      await user.save();
+    }
 
     if (updatedOrder) {
       res.json({ status: "success", message: "Return request accepted." });
@@ -771,9 +779,9 @@ const rejectReturnRequst = async (req, res) => {
 const getReturnAProductRequest = [
   checkSessionMiddleware,
   async (req, res) => {
-    console.log('retuenaproduct',req.params);
-    
-    const { orderid, productId } = req.params; 
+    console.log("retuenaproduct", req.params);
+
+    const { orderid, productId } = req.params;
     try {
       const order = await Orders.findById(orderid);
       if (order) {
@@ -783,7 +791,7 @@ const getReturnAProductRequest = [
         if (product) {
           res.json({
             status: "success",
-            returnRequest: product.returnRequest || false, 
+            returnRequest: product.returnRequest || false,
           });
         } else {
           res.json({
@@ -807,17 +815,25 @@ const acceptAProductReturnRequest = async (req, res) => {
   try {
     const order = await Orders.findById(orderId);
     if (!order) {
-      return res.status(404).json({ status: "error", message: "Order not found." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Order not found." });
     }
 
     const user = await User.findById(order.userId);
     if (!user) {
-      return res.status(404).json({ status: "error", message: "User not found." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "User not found." });
     }
 
-    const product = order.products.find(p => p.productId.toString() === productId);
+    const product = order.products.find(
+      (p) => p.productId.toString() === productId
+    );
     if (!product) {
-      return res.status(404).json({ status: "error", message: "Product not found in order." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Product not found in order." });
     }
 
     // Update the specific product's return request status
@@ -830,22 +846,31 @@ const acceptAProductReturnRequest = async (req, res) => {
     await order.save();
 
     if (order.paymentMethod === "Razorpay") {
-    const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    user.wallet.balance += product.total;
-    user.wallet.transactions.push({
-      transactionId,
-      orderId,
-      amount: product.total,
-      date: new Date(),
-      description: `Refund for returned product #${productId.substring(0, 6)} in order #${orderId.substring(0, 6)}`,
-      type: "credit",
+      const transactionId = `TID-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 6)
+        .toUpperCase()}`;
+      user.wallet.balance += product.total;
+      user.wallet.transactions.push({
+        transactionId,
+        orderId,
+        amount: product.total,
+        date: new Date(),
+        description: `Refund for returned product #${productId.substring(
+          0,
+          6
+        )} in order #${orderId.substring(0, 6)}`,
+        type: "credit",
+      });
+
+      // Save the updated user
+      await user.save();
+    }
+
+    res.json({
+      status: "success",
+      message: "Product return request accepted.",
     });
-
-    // Save the updated user
-    await user.save();
-  }
-
-    res.json({ status: "success", message: "Product return request accepted." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: "error", message: "An error occurred." });
@@ -853,18 +878,24 @@ const acceptAProductReturnRequest = async (req, res) => {
 };
 
 const rejectAProductReturnRequest = async (req, res) => {
-  console.log('rejectAProductReturnRequest',req.params);
-  
+  console.log("rejectAProductReturnRequest", req.params);
+
   const { orderId, productId } = req.params;
   try {
     const order = await Orders.findById(orderId);
     if (!order) {
-      return res.status(404).json({ status: "error", message: "Order not found." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Order not found." });
     }
 
-    const product = order.products.find(p => p.productId.toString() === productId);
+    const product = order.products.find(
+      (p) => p.productId.toString() === productId
+    );
     if (!product) {
-      return res.status(404).json({ status: "error", message: "Product not found in order." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Product not found in order." });
     }
 
     // Update the specific product's return request status
@@ -876,32 +907,37 @@ const rejectAProductReturnRequest = async (req, res) => {
     // Save the updated order
     await order.save();
 
-    res.json({ status: "success", message: "Product return request rejected." });
+    res.json({
+      status: "success",
+      message: "Product return request rejected.",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: "error", message: "An error occurred." });
   }
 };
 
-
-
-const orderDetails=async (req, res) => {    
+const orderDetails = async (req, res) => {
   try {
-      const orderId = req.params.id;
-      const order = await Orders.findById({_id:orderId}).populate('userId').populate('products.productId');
-      const user=await User.findById(order.userId);
-      const address = user.addresses.find(
-        (addr) => addr._id.toString() === order.address.toString()
-      );        
-    
-      if (!order) {
-          return res.status(404).json({status:'error', message: 'Order not found' });
-      }
+    const orderId = req.params.id;
+    const order = await Orders.findById({ _id: orderId })
+      .populate("userId")
+      .populate("products.productId");
+    const user = await User.findById(order.userId);
+    const address = user.addresses.find(
+      (addr) => addr._id.toString() === order.address.toString()
+    );
 
-      res.json({order,address,});
+    if (!order) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Order not found" });
+    }
+
+    res.json({ order, address });
   } catch (error) {
-      console.log('Error fetching order details:', error);
-      res.status(500).json({status:'error', message: 'something error' });
+    console.log("Error fetching order details:", error);
+    res.status(500).json({ status: "error", message: "something error" });
   }
 };
 
@@ -1109,8 +1145,8 @@ const offers = [
         { expiryDate: { $lt: now }, isListed: true },
         { $set: { isListed: false } }
       );
-      const category=await Category.find({})
-      const products=await Product.find({})
+      const category = await Category.find({});
+      const products = await Product.find({});
       const offers = await Offers.find(searchFilter).skip(skip).limit(limit);
       const count = await Offers.countDocuments(searchFilter);
 
@@ -1121,7 +1157,7 @@ const offers = [
         totalPages: Math.ceil(count / limit),
         searchQuery,
         products,
-        category
+        category,
       });
     } catch (error) {
       console.log(error);
@@ -1197,7 +1233,7 @@ const editOffer = [
       const offer = await Offers.findById({ _id: offerid });
       if (offer) {
         if (offer.expiryDate) {
-          offer.expiryDate = offer.expiryDate.toISOString().split('T')[0];
+          offer.expiryDate = offer.expiryDate.toISOString().split("T")[0];
         }
         res.render("admin/editOffer", { offer });
       } else {
@@ -1205,7 +1241,7 @@ const editOffer = [
           status: "error",
           message: "offer not found",
         });
-      } 
+      }
     } catch (error) {
       console.log(error);
       res.json({
@@ -1228,7 +1264,7 @@ const editOfferPost = async (req, res) => {
     if (existOffer) {
       res.json({
         status: "error",
-        message: "coupon  already exist",
+        message: "offer already exist",
       });
     } else {
       const editOffer = await Offers.findByIdAndUpdate(
@@ -1237,6 +1273,40 @@ const editOfferPost = async (req, res) => {
         { new: true }
       );
       if (editOffer) {
+        // const updateProducts = await Product.updateMany(
+        //   { "offers.offerId": offerid },
+        //   {
+        //     $set: {
+        //       "offers.$[elem].offerName": offerName,
+        //       "offers.$[elem].offerCode": offerCode,
+        //       "offers.$[elem].discount": discount,
+        //       "offers.$[elem].offerType": offerType,
+        //       "offers.$[elem].expiryDate": expiryDate,
+        //     },
+        //   },
+        //   {
+        //     arrayFilters: [{ "elem.offerId": offerid }],
+        //     multi: true,
+        //   }
+        // );
+
+        // const updateCategories = await Category.updateMany(
+        //   { "offers.offerId": offerid },
+        //   {
+        //     $set: {
+        //       "offers.$[elem].offerName": offerName,
+        //       "offers.$[elem].offerCode": offerCode,
+        //       "offers.$[elem].discount": discount,
+        //       "offers.$[elem].offerType": offerType,
+        //       "offers.$[elem].expiryDate": expiryDate,
+        //     },
+        //   },
+        //   {
+        //     arrayFilters: [{ "elem.offerId": offerid }], // Only update the matched offer in the `appliedOffers` array
+        //     multi: true, // Ensure all matching categories are updated
+        //   }
+        // );
+
         res.json({
           status: "success",
           message: "offer edited successfully",
@@ -1286,32 +1356,39 @@ const listOffer = async (req, res) => {
   }
 };
 
-
 const applyOfferToProducts = async (req, res) => {
-  console.log('applyOfferToProducts', req.body, req.params);
+  console.log("applyOfferToProducts", req.body, req.params);
 
   try {
-    const { productIds } = req.body; 
-    const { id } = req.params; 
+    const { productIds } = req.body;
+    const { id } = req.params;
 
     // Find the offer by ID
     const offer = await Offers.findById(id);
     if (!offer) {
-      return res.status(400).json({ status: 'error', message: 'Offer not found' });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Offer not found" });
     }
 
     // Fetch products to check for existing offers
     const products = await Product.find({ _id: { $in: productIds } });
 
     // Filter out products that already have the offer applied
-    const productsToUpdate = products.filter(product => 
-      !product.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString())
-    ).map(product => product._id);
+    const productsToUpdate = products
+      .filter(
+        (product) =>
+          !product.offers.some(
+            (existingOffer) =>
+              existingOffer.offerId.toString() === offer._id.toString()
+          )
+      )
+      .map((product) => product._id);
 
     if (productsToUpdate.length === 0) {
-      return res.status(400).json({ 
-        status: 'error', 
-        message: 'Offer is already applied to the selected products' 
+      return res.status(400).json({
+        status: "error",
+        message: "Offer is already applied to the selected products",
       });
     }
 
@@ -1326,57 +1403,65 @@ const applyOfferToProducts = async (req, res) => {
             offerCode: offer.offerCode,
             discount: offer.discount,
             offerType: offer.offerType,
-            expiryDate: offer.expiryDate
-          }
-        }
+            expiryDate: offer.expiryDate,
+          },
+        },
       }
     );
 
-    return res.status(200).json({ 
-      status: 'success', 
-      message: `Offer applied to ${productsToUpdate.length} products` 
+    return res.status(200).json({
+      status: "success",
+      message: `Offer applied to ${productsToUpdate.length} products`,
     });
-
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ status: 'error', message: 'Something went wrong' });
+    return res
+      .status(500)
+      .json({ status: "error", message: "Something went wrong" });
   }
 };
 
-
 const applyOfferToCategories = async (req, res) => {
-  console.log('applyOfferToCategories', req.body, req.params);
+  console.log("applyOfferToCategories", req.body, req.params);
 
   try {
-    const { categoryIds } = req.body; 
-    const { id } = req.params; 
+    const { categoryIds } = req.body;
+    const { id } = req.params;
 
     // Find the offer by ID
     const offer = await Offers.findById(id);
     if (!offer) {
-      return res.status(400).json({ status: 'error', message: 'Offer not found' });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Offer not found" });
     }
 
     // Fetch categories based on IDs and extract their labels
     const categories = await Category.find({ _id: { $in: categoryIds } });
 
     // Filter categories that already have the offer applied
-    const categoriesToUpdate = categories.filter(category =>
-      !category.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString())
+    const categoriesToUpdate = categories.filter(
+      (category) =>
+        !category.offers.some(
+          (existingOffer) =>
+            existingOffer.offerId.toString() === offer._id.toString()
+        )
     );
 
-    const categoryLabelsToUpdate = categoriesToUpdate.map(category => category.label);
+    const categoryLabelsToUpdate = categoriesToUpdate.map(
+      (category) => category.label
+    );
 
     if (categoriesToUpdate.length === 0) {
-      return res.status(400).json({ 
-        status: 'error', 
-        message: 'Offer is already applied to the selected categories' 
+      return res.status(400).json({
+        status: "error",
+        message: "Offer is already applied to the selected categories",
       });
     }
 
     // Apply the offer to the filtered categories
     await Category.updateMany(
-      { _id: { $in: categoriesToUpdate.map(category => category._id) } },
+      { _id: { $in: categoriesToUpdate.map((category) => category._id) } },
       {
         $addToSet: {
           offers: {
@@ -1385,19 +1470,27 @@ const applyOfferToCategories = async (req, res) => {
             offerCode: offer.offerCode,
             discount: offer.discount,
             offerType: offer.offerType,
-            expiryDate: offer.expiryDate
-          }
-        }
+            expiryDate: offer.expiryDate,
+          },
+        },
       }
     );
 
     // Fetch products belonging to the selected category labels
-    const products = await Product.find({ category: { $in: categoryLabelsToUpdate } });
+    const products = await Product.find({
+      category: { $in: categoryLabelsToUpdate },
+    });
 
     // Filter out products that already have the offer applied
-    const productsToUpdate = products.filter(product =>
-      !product.offers.some(existingOffer => existingOffer.offerId.toString() === offer._id.toString())
-    ).map(product => product._id);
+    const productsToUpdate = products
+      .filter(
+        (product) =>
+          !product.offers.some(
+            (existingOffer) =>
+              existingOffer.offerId.toString() === offer._id.toString()
+          )
+      )
+      .map((product) => product._id);
 
     // Apply the offer to the filtered products
     if (productsToUpdate.length > 0) {
@@ -1411,51 +1504,237 @@ const applyOfferToCategories = async (req, res) => {
               offerCode: offer.offerCode,
               discount: offer.discount,
               offerType: offer.offerType,
-              expiryDate: offer.expiryDate
-            }
-          }
+              expiryDate: offer.expiryDate,
+            },
+          },
         }
       );
     }
 
-    return res.status(200).json({ 
-      status: 'success', 
-      message: `Offer applied to ${categoriesToUpdate.length} categories and ${productsToUpdate.length} products` 
+    return res.status(200).json({
+      status: "success",
+      message: `Offer applied to ${categoriesToUpdate.length} categories and ${productsToUpdate.length} products`,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ status: 'error', message: 'Something went wrong' });
+    return res
+      .status(500)
+      .json({ status: "error", message: "Something went wrong" });
+  }
+};
+
+const sales = async (req, res) => {
+  try {
+    const salesData = await Orders.aggregate([
+      {
+        $group: {
+          _id: null,
+          salesCount: { $sum: 1 },
+          totalOrderAmount: { $sum: "$totalPrice" },
+          totalDiscount: { $sum: "$discount" },
+          totalCoupons: { $sum: "$totalCouponDiscount" },
+        },
+      },
+    ]);
+
+    const mostOrderedProductId = await Orders.aggregate([
+      {
+        $unwind: "$products",
+      },
+      {
+        $group: {
+          _id: "$products.productId",
+          totalQuantity: { $sum: "$products.quantity" },
+        },
+      },
+      {
+        $sort: { totalQuantity: -1 },
+      },
+      {
+        $limit: 1,
+      },
+    ]);
+
+    const mostOrderedProduct = await Product.findById(mostOrderedProductId);
+
+    const totalSales = await Orders.countDocuments();
+
+    // Render sales report view
+    res.render("admin/sales", {
+      totalSales,
+      totalSalesAmount: salesData[0].totalOrderAmount,
+      salesReport: salesData[0] || null,
+      totalDiscountAmount: salesData[0].totalDiscount,
+      mostOrderedProduct: mostOrderedProduct.pname,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", message: "something error" });
   }
 };
 
 const salesReport = async (req, res) => {
-    try {      
-        // Fetch sales data
-        const salesData = await Orders.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    salesCount: { $sum: 1 },
-                    totalOrderAmount: { $sum: '$totalPrice' },
-                    totalDiscount: { $sum: '$totalDiscount' },  
-                    totalCoupons: { $sum: '$totalCouponDiscount' }
-                }
-            }
-        ]);        
+  try {
+    const { reportType, startDate, endDate, format } = req.query;
 
-        const totalSales = await Orders.countDocuments();
-
-        // Render sales report view
-        res.render('admin/salesReport', {
-            totalSales,
-            totalSalesAmount:salesData[0].totalOrderAmount,
-            salesReport: salesData[0] || null,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Error generating sales report');
+    // Date filtering logic
+    let filter = {};
+    if (reportType === "custom" && startDate && endDate) {
+      filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    } else if (reportType === "daily") {
+      const today = new Date();
+      filter.createdAt = {
+        $gte: new Date(today.setHours(0, 0, 0)),
+        $lte: new Date(today.setHours(23, 59, 59)),
+      };
+    } else if (reportType === "weekly") {
+      const today = new Date();
+      const weekStart = new Date(
+        today.setDate(today.getDate() - today.getDay())
+      );
+      filter.createdAt = {
+        $gte: new Date(weekStart.setHours(0, 0, 0)),
+        $lte: new Date(),
+      };
+    } else if (reportType === "monthly") {
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      filter.createdAt = { $gte: monthStart, $lte: new Date() };
     }
+
+    // Query the orders collection and populate related fields
+    const orders = await Orders.find(filter)
+      .populate("userId", "name email address") // Assuming `userId` references the User schema
+      .populate("products.productId", "name price") // Assuming `products.productId` references the Product schema
+      .lean();
+
+    if (!orders.length) {
+      return res.status(404).send("No orders found for the selected period.");
+    }
+
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.totalPrice, 0);
+
+    // Generate Report based on format
+    if (format === "pdf") {
+      const doc = new PDFDocument();
+      const fileName = `sales-report-${reportType}.pdf`;
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+
+      doc.pipe(res);
+
+      // PDF Header
+      doc.fontSize(18).text("Sales Report", { align: "center" });
+      doc.text(`Report Type: ${reportType}`, { align: "center" });
+      doc.text(`Total Orders: ${totalOrders}`);
+      doc.text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`);
+      doc.moveDown();
+
+      // PDF Table
+      orders.forEach((order, index) => {
+        doc.fontSize(12).text(
+          `Order #${index + 1}:
+      Order ID: ${order._id}
+      User Name: ${order.userId.name}
+      User Email: ${order.userId.email}
+      User Address: ${order.address}
+      Order Status: ${order.orderStatus}
+      payment method: ${order.paymentMethod}
+      Created At: ${order.createdAt}
+
+      Products:
+      `
+        );
+      
+        // Add product details
+        order.products.forEach((product) => {
+          doc.text(
+            `  - Product Name: ${product.pname}
+          Quantity: ${product.quantity}
+          Price: ₹${product.price}`
+          );
+        });
+      
+        // Add discount and total price after product details
+        doc.text(
+          `   Discount Applied: ${order.discount || "N/A"}
+            Total Price: ₹${order.totalPrice}`
+        );
+      
+        doc.text("----------------------------------------");
+      });
+      
+      doc.end();
+      
+    } else if (format === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Sales Report");
+
+      // Excel Header
+      worksheet.columns = [
+        { header: "Order ID", key: "_id", width: 30 },
+        { header: "User Name", key: "userName", width: 20 },
+        { header: "User Email", key: "userEmail", width: 25 },
+        { header: "User Address", key: "userAddress", width: 30 },
+        { header: "Total Price (₹)", key: "totalPrice", width: 15 },
+        { header: "Discount", key: "discount", width: 15 },
+        { header: "Order Status", key: "orderStatus", width: 15 },
+        { header: "Created At", key: "createdAt", width: 20 },
+      ];
+
+      // Adding rows
+      orders.forEach((order) => {
+        worksheet.addRow({
+          _id: order._id,
+          userName: order.userId.name,
+          userEmail: order.userId.email,
+          userAddress: order.userId.address,
+          totalPrice: `₹${order.totalPrice}`,
+          discount: order.discount || "N/A",
+          orderStatus: order.orderStatus,
+          createdAt: order.createdAt.toISOString(),
+        });
+
+        // Add product details as sub-rows
+        order.products.forEach((product) => {
+          worksheet.addRow({
+            _id: `  - Product: ${product.pname}`,
+            userName: "",
+            userEmail: "",
+            userAddress: "",
+            totalPrice: `  Quantity: ${product.quantity}, Subtotal: ₹${product.total}`,
+          });
+        });
+      });
+
+      // Total Summary Row
+      worksheet.addRow({});
+      worksheet.addRow({ _id: "Total Orders:", totalPrice: totalOrders });
+      worksheet.addRow({ _id: "Total Revenue:", totalPrice: `₹${totalRevenue.toFixed(2)}` });
+
+      const fileName = `sales-report-${reportType}.xlsx`;
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+
+      await workbook.xlsx.write(res);
+      res.end();
+    } else {
+      res.status(400).send("Invalid format specified.");
+    }
+  } catch (err) {
+    console.error("Error generating sales report:", err);
+    res
+      .status(500)
+      .send("An error occurred while generating the sales report.");
+  }
 };
+
+
 
 module.exports = {
   checkSessionMiddleware,
@@ -1504,5 +1783,6 @@ module.exports = {
   listOffer,
   applyOfferToProducts,
   applyOfferToCategories,
+  sales,
   salesReport,
 };

@@ -459,7 +459,7 @@
         const data = await response.json();
 
         if (response.ok) {
-            const discount = data.discount; // Discount percentage from the server
+            const discount = data.discount;
             let totalPrice = parseFloat(totalPriceElement.innerText.replace(/[^\d.]/g, '')); 
             const discountAmount = (totalPrice * discount) / 100;
             const discountedTotal = totalPrice - discountAmount;
@@ -496,11 +496,12 @@
 
     document.getElementById('place_order_btn').addEventListener('click', async function() {
         let paymentMethod=document.querySelector('input[name="payment_method"]:checked').value;
-        // let addressSelected=document.getElementById('')
         const totalPriceElement = document.getElementById('total_price');
-        let totalPrice = parseFloat(totalPriceElement.innerText.replace(/[^\d.]/g, '')); 
-        console.log(addressSelected);
-        
+        let totalPrice = parseFloat(totalPriceElement.innerText.replace(/[^\d.]/g, ''));
+        const discountAmountElement = document.getElementById('discount_amount');
+        const discountAmount = parseFloat(discountAmountElement.textContent || discountAmountElement.innerText);
+        console.log('Discount Amount:', discountAmount);
+                
         if (!addressSelected || !paymentMethod) {
             Swal.fire({
                 icon: 'error',
@@ -521,6 +522,7 @@
                         address: document.querySelector('input[name="address"]:checked').value,
                         totalPrice: totalPrice ,
                         payment_method: document.querySelector('input[name="payment_method"]:checked').value,
+                        discountAmount:discountAmount
                     }),                    
                 });
 
