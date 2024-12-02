@@ -36,7 +36,7 @@
                     <div class="select_option_dropdown">
                         <% categories.forEach(category => { %>
                           <p>
-                            <a href="/viewProducts?Search=<%= searchQuery || '' %>&category=<%= category.value %>" 
+                            <a href="/viewProducts?Search=<%= searchQuery %>&category=<%= category.value %>" 
                                class="category-option" 
                                data-category="<%= category.value %>">
                               <%= category.value %>
@@ -44,8 +44,6 @@
                           </p>
                         <% }) %>
                       </div>
-                      
-                    
                 </div>
                 
                 <div class="select_option">
@@ -87,10 +85,10 @@
                                             const activeOffer = activeOffers.length > 0 ? activeOffers[0] : null;
                                 
                                             if (activeOffer) {
-                                                let disPrice = (product.pprice * (1 - activeOffer.offerId.discount / 100)).toFixed(2);
+                                                let discountedPrice = (product.pprice * (1 - activeOffer.offerId.discount / 100)).toFixed(2);
                                         %>
                                             <span  style="text-decoration: line-through; color: grey;">₹<%= product.pprice %></span>
-                                            <span class="discounted-price" id="Disprice-<%= product._id %>" style="color: rgb(16, 5, 5); font-weight: bold;"> ₹<%= disPrice %></span>
+                                            <span class="discounted-price" id="discountedPrice-<%= product._id %>" style="color: rgb(16, 5, 5); font-weight: bold;"> ₹<%= discountedPrice %></span>
                                         <% } else { %>
                                             ₹<%= product.pprice %>
                                         <% } %>
@@ -98,8 +96,6 @@
                                         ₹<%= product.pprice %>
                                     <% } %>
                                 </p>
-                                
-                                
                                 
                                                                
                                 <p class="<%= product.stock > 0 ? (product.stock < 20 ? 'low-stock' : 'stock-status') : 'out-of-stock' %>">
@@ -218,10 +214,14 @@
 <script>
   
         function addProductToCart(productId) {
-            console.log('log',document.getElementById(`Disprice-${productId}`))
-            let DisPriceElement = document.getElementById(`Disprice-${productId}`);
-            let DisPrice = parseFloat(DisPriceElement.innerText.replace(/[^\d.]/g, ''));
-            console.log('discoundedprice',DisPrice);
+            let discountedPriceElement = document.getElementById(`discountedPrice-${productId}`);
+            let discountedPrice;
+            if(discountedPriceElement){
+            discountedPrice = parseFloat(discountedPriceElement.innerText.replace(/[^\d.]/g, ''));
+            }else{
+                discountedPrice=null
+            }
+            console.log('discoundedprice',discountedPrice);
             
             
     fetch(`/addToCart/${productId }`, {
@@ -229,7 +229,7 @@
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ productId, quantity: 1 ,DisPrice })
+        body: JSON.stringify({ productId, quantity: 1 ,discountedPrice })
     })
     .then(response => response.json())
     .then(data => {

@@ -62,11 +62,27 @@ const productsSchema = new mongoose.Schema({
   popularity: Number,
   ratings: Number,
   featured: Boolean,
-  offers: [{   
-      offerId: {
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Offers',
-   }}]
+  offers: [{
+    offerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Offers',
+    },
+    offerName: {
+      type: String
+    },
+    offerCode: {
+      type: String
+    },
+    discount: {
+      type: Number
+    },
+    offerType: {
+      type: String
+    },
+    expiryDate: {
+      type: Date
+    }
+  }]
 
 });
 

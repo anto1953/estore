@@ -587,9 +587,10 @@ function viewOrderDetails(orderId) {
             // Populate order details
             const orderDetails = `
                 <strong>Order ID:</strong> ${order._id}<br>
-                <strong>Total Price:</strong> ₹${order.totalPrice}<br>
                 <strong>Status:</strong> ${order.orderStatus}<br>
                 <strong>Created At:</strong> ${new Date(order.createdAt).toLocaleString()}<br>
+                <strong>Discount:</strong> ${order.discount}<br>
+                <strong>Total Price:</strong> ₹${order.totalPrice}<br>
             `;
             document.getElementById('orderDetails').innerHTML = orderDetails;
 

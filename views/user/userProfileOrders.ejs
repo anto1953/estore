@@ -151,7 +151,14 @@
                                             <% } %>
                                         </div>
                                     <% }) %>
-                                </div>                                
+                                </div>         
+                                
+                                <% if (order.discount && order.discount > 0) { %>
+                                    <div class="order-discount">
+                                        <span>Discount</span>
+                                        <span> -<%= order.discount.toLocaleString('en-US', { style: 'currency', currency: 'INR' }) %></span>
+                                    </div>
+                                <% } %>
 
                                 <div class="order-total">
                                     <span>Total</span>
@@ -174,13 +181,29 @@
                                         (product) => product.isCancelled || product.returnStatus
                                     );
                                     %>
+                                    <% 
+                                        // Check if all products in the order have a returnRequestStatus
+                                        const allProductsHaveReturnStatus = order.products.every(product => product.returnRequestStatus);
+
+                                        // Check if there is only one product in the order and its returnRequestStatus is 'Accepted' or 'Rejected'
+                                        const singleProductWithFinalReturnStatus = order.products.length === 1 &&
+                                            (order.products[0].returnRequestStatus === 'Return Accepted' || order.products[0].returnRequestStatus === 'Return Rejected');
+
+                                        // Determine if the button should be enabled
+                                        const canReturnOrder = order.orderStatus === 'Delivered' &&
+                                            !allCancelledOrReturned &&
+                                            !singleProductWithFinalReturnStatus &&
+                                            !allProductsHaveReturnStatus;
+                                    %>
+
                                     <button id="returnButton"
-                                            class="btnn btn-primary" 
-                                            data-order-id="<%= order._id %>"
-                                            <%= (order.orderStatus === 'Delivered' && !allCancelledOrReturned) ? '' : 'disabled' %> 
-                                            onclick="openReturnModal('<%= order._id %>')">
-                                            Return Order
+                                        class="btnn btn-primary" 
+                                        data-order-id="<%= order._id %>"
+                                        <%= canReturnOrder ? '' : 'disabled' %>
+                                        onclick="openReturnModal('<%= order._id %>')">
+                                        Return Order
                                     </button>
+
 
                                 </div>
                                 

@@ -648,13 +648,17 @@ const updateOrderStatus = async (req, res) => {
 };
 
 const cancelOrder = async (req, res) => {
-  console.log(req.body);
+  console.log('cancel order details',req.body);
 
   const { orderId } = req.body;
   try {
     const order = await Orders.findById(orderId).populate({
       path: "products.productId",
     });
+
+    const userId=order.userId
+    const user=await User.findById(userId)    
+
     const cancelled = await Orders.updateOne(
       { _id: orderId },
       { orderStatus: "Cancelled" }
@@ -668,6 +672,22 @@ const cancelOrder = async (req, res) => {
           { $inc: { stock: quantityOrdered } }
         );
       }
+      const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      if(order.paymentMethod==='razorpay'){
+        user.wallet.balance += order.totalPrice;
+
+        user.wallet.transactions.push({
+          transactionId: transactionId,
+          orderId: order._id,
+          amount: order.totalPrice,
+          date: new Date(),
+          description: `Refund for cancelled  order #${order._id.toString().substring(0, 6)}`,
+          type: "credit",
+        });
+
+        await user.save();
+      }
+
       res.json({
         status: "success",
         message: "Order cancelled and stock restored",
@@ -721,7 +741,7 @@ const acceptReturnRequest = async (req, res) => {
       { new: true }
     );
 
-    if (order.paymentMethod === "Razorpay") {
+    if (order.paymentMethod === "razorpay") {
       const transactionId = `TID-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 6)
@@ -840,12 +860,12 @@ const acceptAProductReturnRequest = async (req, res) => {
     product.returnRequestStatus = "Return Accepted";
     product.isReturned = true;
 
-    const productTotal = product.price * product.quantity;
-    order.totalPrice -= productTotal;
+    // const productTotal = product.price * product.quantity;
+    // order.totalPrice -= productTotal;
     // Save the updated order
     await order.save();
 
-    if (order.paymentMethod === "Razorpay") {
+    if (order.paymentMethod === "razorpay") {
       const transactionId = `TID-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 6)
@@ -901,8 +921,8 @@ const rejectAProductReturnRequest = async (req, res) => {
     // Update the specific product's return request status
     product.returnRequestStatus = "Return Rejected";
 
-    const productTotal = product.price * product.quantity;
-    order.totalPrice -= productTotal;
+    // const productTotal = product.price * product.quantity;
+    // order.totalPrice -= productTotal;
 
     // Save the updated order
     await order.save();
@@ -1000,7 +1020,7 @@ const addCouponPost = async (req, res) => {
     console.log(req.body);
     const { couponCode, discount, expiryDate, usageLimit } = req.body;
     const existCoupon = await Coupons.findOne({
-      couponCode: { $regex: new RegExp(`^${couponCode}$`, "i") },
+      couponCode: { $regex: new RegExp(`^${couponCode.trim()}$`, "i") },
     });
     if (existCoupon) {
       return res.json({
@@ -1090,10 +1110,15 @@ const editCouponPOst = [
       console.log("coupon", req.body);
       const couponid = req.params.id;
       const { couponCode, discount, expiryDate, usageLimit, status } = req.body;
+      const trimmedCouponCode=couponCode.trim().replace(/\s+/g, " ");
+      console.log('trimeed coupon',trimmedCouponCode);
+      
       const existCoupon = await Coupons.findOne({
-        value: { $regex: new RegExp(`^${couponCode}$`, "i") },
+        couponCode: { $regex: new RegExp(`^${trimmedCouponCode}$`, "i") },
         _id: { $ne: couponid },
       });
+      console.log('existcoupon',existCoupon);
+      
       if (existCoupon) {
         return res.status(400).json({
           status: "error",
@@ -1191,7 +1216,7 @@ const addOfferPost = async (req, res) => {
     const { offerName, offerCode, offerType, discount, expiryDate, status } =
       req.body;
     const existOffer = await Offers.findOne({
-      offerCode: { $regex: new RegExp(`^${offerCode}$`, "i") },
+      offerCode: { $regex: new RegExp(`^${offerCode.trim()}$`, "i") },
     });
     if (existOffer) {
       res.json({
@@ -1257,10 +1282,11 @@ const editOfferPost = async (req, res) => {
     const offerid = req.params.id;
     const { offerName, offerCode, expiryDate, discount, offerType, status } =
       req.body;
-    const existOffer = await Offers.findOne({
-      offerCode: { $regex: new RegExp(`^${offerCode}$`, "i") },
-      _id: { $ne: offerid },
-    });
+      const existOffer = await Offers.findOne({
+        offerCode: { $regex: new RegExp(`^${offerCode.trim()}$`, "i") },
+        _id: { $ne: offerid },
+      });
+      
     if (existOffer) {
       res.json({
         status: "error",
@@ -1339,7 +1365,7 @@ const listOffer = async (req, res) => {
     if (updatedoffer) {
       res.json({
         status: "success",
-        message: offer.isListed ? "offer listed" : "offer unlisted",
+        message: offer.isListed ? "offer unlisted" : "offer     listed",
       });
     } else {
       res.json({
@@ -1564,11 +1590,11 @@ const sales = async (req, res) => {
       totalSales,
       totalSalesAmount: salesData[0].totalOrderAmount,
       salesReport: salesData[0] || null,
-      totalDiscountAmount: salesData[0].totalDiscount,
+      totalDiscountAmount: salesData[0].totalDiscount.toFixed(2),
       mostOrderedProduct: mostOrderedProduct.pname,
     });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ status: "error", message: "something error" });
   }
 };
@@ -1605,8 +1631,11 @@ const salesReport = async (req, res) => {
     // Query the orders collection and populate related fields
     const orders = await Orders.find(filter)
       .populate("userId", "name email address") // Assuming `userId` references the User schema
-      .populate("products.productId", "name price") // Assuming `products.productId` references the Product schema
+      .populate("products.productId", "pname price") // Assuming `products.productId` references the Product schema
       .lean();
+
+      console.log('orderaddress',orders[0]);
+      
 
     if (!orders.length) {
       return res.status(404).send("No orders found for the selected period.");
@@ -1640,7 +1669,6 @@ const salesReport = async (req, res) => {
       User Name: ${order.userId.name}
       User Email: ${order.userId.email}
       User Address: ${order.address}
-      Order Status: ${order.orderStatus}
       payment method: ${order.paymentMethod}
       Created At: ${order.createdAt}
 
@@ -1651,7 +1679,7 @@ const salesReport = async (req, res) => {
         // Add product details
         order.products.forEach((product) => {
           doc.text(
-            `  - Product Name: ${product.pname}
+            `  - Product Name: ${product.productId.pname}
           Quantity: ${product.quantity}
           Price: ₹${product.price}`
           );
@@ -1680,7 +1708,6 @@ const salesReport = async (req, res) => {
         { header: "User Address", key: "userAddress", width: 30 },
         { header: "Total Price (₹)", key: "totalPrice", width: 15 },
         { header: "Discount", key: "discount", width: 15 },
-        { header: "Order Status", key: "orderStatus", width: 15 },
         { header: "Created At", key: "createdAt", width: 20 },
       ];
 
@@ -1693,14 +1720,13 @@ const salesReport = async (req, res) => {
           userAddress: order.userId.address,
           totalPrice: `₹${order.totalPrice}`,
           discount: order.discount || "N/A",
-          orderStatus: order.orderStatus,
           createdAt: order.createdAt.toISOString(),
         });
 
         // Add product details as sub-rows
         order.products.forEach((product) => {
           worksheet.addRow({
-            _id: `  - Product: ${product.pname}`,
+            _id: `  - Product: ${product.productId.pname}`,
             userName: "",
             userEmail: "",
             userAddress: "",

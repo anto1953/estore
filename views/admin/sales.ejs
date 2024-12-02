@@ -25,42 +25,55 @@
    <%- include('../partials/topbar') %>
    <div class="content p-4" id="main-content">
        <div class="container-fluid mt-5 pt-5">
-           <div id="salesReport" class="section-details active">
+        <div class="container d-flex justify-content-end ">
+
+           <div id="salesReport" class="col-md-6 section-details active">
                <h2>Sales Report</h2>
                <p>Generate and view the sales report</p>
-   
-               <!-- Filter Form -->
-               <form action="/admin/salesReport" method="GET" class="d-flex align-items-center" style="flex: 1; margin-left: 33%;">
-                <!-- Report Type Dropdown -->
-                <div class="form-group me-3">
-                    <label for="reportType">Report Type</label>
-                    <select id="reportType" name="reportType" class="form-select" required>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="custom">Custom Date Range</option>
-                    </select>
-                </div>
+           </div>
+                
+                <div class="col-md-6" style="left: 3%; background-color: #6c757d; border-radius: 17px; padding: 20px;">
+                    <!-- Filter Form -->
+                    <form action="/admin/salesReport" method="GET">
+                        <div class="row g-3">
+                            <!-- Report Type Dropdown -->
+                            <div class="col-md-6" style="left: 10%;">
+                                <label for="reportType" class="form-label text-white">Report Type</label>
+                                <select id="reportType" name="reportType" class="form-select" required>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
             
-                <!-- Custom Date Range -->
-                <div class="form-group me-3" id="customDateRange" style="display: none;">
-                    <label for="startDate">Start Date</label>
-                    <input type="date" id="startDate" name="startDate" class="form-control">
-                    <label for="endDate">End Date</label>
-                    <input type="date" id="endDate" name="endDate" class="form-control">
-                </div>
+                            <!-- Custom Date Range -->
+                            <div class="col-md-6" id="customDateRange" style="display: none;">
+                                <label for="startDate" class="form-label text-white">Start Date</label>
+                                <input type="date" id="startDate" name="startDate" class="form-control">
+                                <label for="endDate" class="form-label text-white mt-2">End Date</label>
+                                <input type="date" id="endDate" name="endDate" class="form-control">
+                            </div>
             
-                <!-- Format Selector -->
-                <div class="form-group me-3">
-                    <label for="format">Download Format</label>
-                    <select id="format" name="format" class="form-select" required>
-                        <option value="pdf">PDF</option>
-                        <option value="excel">Excel</option>
-                    </select>
-                </div>
+                            <!-- Format Selector -->
+                            <div class="col-md-6">
+                                <label for="format" class="form-label text-white">Download Format</label><br>
+                                <select id="format" name="format" class="form-select" required>
+                                    <option value="pdf">PDF</option>
+                                    <option value="excel">Excel</option>
+                                </select>
+                            </div>
             
-                <button type="submit" class="btn btn-primary ms-2">Generate Report</button>
-            </form>
+                            <!-- Submit Button -->
+                            <div class="col-md-12 d-flex justify-content-center">
+                                <button type="submit" class="btn btn-primary mt-3">Generate Report</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+               <br>
                <!-- Summary Section -->
                <div class="row mb-4">
                    

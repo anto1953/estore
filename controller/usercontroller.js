@@ -116,7 +116,11 @@ const processImage = async (file) => {
 
 const logout = async (req, res) => {
   try {
-    await User.updateOne({ _id: req.session.user._id }, { isLoggedIn: false });
+    console.log('logout');
+    const userId=req.session.user._id
+    const loggedout=await User.updateOne({ _id: userId}, { isLoggedIn: false });
+    console.log('loggedout',loggedout);
+    
 
     req.session.destroy((err) => {
       if (err) {
@@ -389,7 +393,9 @@ const profile = async (req, res) => {
 const email = async (req, res) => {
   try {
     const user = req.session.user || null;
-    res.render("user/email", { user: user || null });
+    const userId=user._id
+    const cart=await Cart.findOne({user:userId})
+    res.render("user/email", { user: user || null ,cart});
   } catch (error) {
     res.send(error.message);
   }
@@ -518,14 +524,17 @@ const userhome = async (req, res) => {
   try {
     console.log(req.user);
     const user = req.session.user;
+    const userId=user._id
     const authenticated = req.user;
     const category = await Category.find({});
     const products = await Product.find({});
+    const cart = await Cart.findOne({user:userId})
     res.status(200).render("user/userhome", {
       category: category,
       user: user,
       products: products,
       authenticated: authenticated,
+      cart
     });
   } catch (error) {
     res.send(error.message);
@@ -545,6 +554,8 @@ const adminhome = async (req, res) => {
 };
 
 const viewProducts = async (req, res) => {  
+  console.log('view products',req.query);
+  
   try {
     const query = req.query.Search ? req.query.Search.toLowerCase() : "";
     const sortBy = req.query.sortBy || "";
@@ -557,24 +568,18 @@ const viewProducts = async (req, res) => {
       authenticated = true;
     }
 
-
-    // let filterCriteria = query
-    //   ? { pname: { $regex: query, $options: "i" } }
-    //   : {};
-    // if (category) {
-    //   filterCriteria = { ...filterCriteria, category: category };
-    // }
     const filterCriteria = Object.assign(
       query ? { pname: { $regex: query, $options: "i" } } : {},
       category ? { category: category } : {},
       { isListed: true } // Ensure only listed products are shown
     );
+    
     let products = await Product.find(
       Object.assign({}, filterCriteria, { isListed: true })
     ).populate({
       path: 'offers.offerId',
       model: 'Offers',
-    });    
+    });        
 
     let categories = await Category.find({ isListed: true });
 
@@ -614,6 +619,9 @@ const viewProducts = async (req, res) => {
       product.image = product.image[0];
       return product;
     });
+    
+    console.log('prioducts',products);
+    
     const cart = await Cart.findOne(userid ? { user: userid } : {});
     const cartProductIds = cart
       ? cart.products.map((item) => item.product.toString())
@@ -732,8 +740,9 @@ const viewProductDetails = async (req, res) => {
 const wishlist= async (req,res) => {
   const userId = req.session.user._id;
   const user = await User.findById(userId).populate('wishlist');
+  const cart=await Cart.findOne({user:userId})
 
-  res.render('user/wishlist', { wishlist: user.wishlist,user });
+  res.render('user/wishlist', { wishlist: user.wishlist,user,cart });
 }
 
 
@@ -803,6 +812,7 @@ const removeFromWishlist = async (req, res) => {
 const wallet = async (req, res) => {
   try {
     const userId = req.session.user._id;  // Assuming the user ID is stored in the session
+    const cart=await Cart.findOne({user:userId})
 
     // Find the user and their wallet data
     const user = await User.findById(userId);
@@ -811,7 +821,7 @@ const wallet = async (req, res) => {
     }
 
     // Send wallet data to the view
-    res.render('user/wallet', { wallet: user.wallet, transactions: user.wallet.transactions.sort((a, b) => b.date - a.date),user });
+    res.render('user/wallet', { wallet: user.wallet, transactions: user.wallet.transactions.sort((a, b) => b.date - a.date),user,cart });
   } catch (error) {
     console.log(error);
     res.status(500).send('Server error');
@@ -824,7 +834,7 @@ const cart = async (req, res) => {
     const user = await User.findById({ _id: userId });
     const cart = await Cart.findOne({ user }).populate({
       path: "products.product",
-      select: "pname pprice image stock isListed",
+      select: "pname pprice image stock isListed offers",
     });
 
     console.log("cart", cart.products);
@@ -906,7 +916,7 @@ const addToCart = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const price=req.body.DisPrice;
+    const price=req.body.discountedPrice;
     const productId = req.body.productId;
     const product = await Product.findById(productId);
     if (!product) {
@@ -1119,7 +1129,7 @@ const validateCoupon = async (req, res) => {
   try {
     const coupon = await Coupons.findOne({
       couponCode: couponCode,
-      // isListed: true,
+      isListed: true,
     });
 
     if (!coupon) {
@@ -1138,10 +1148,14 @@ const validateCoupon = async (req, res) => {
         .json({ message: "This coupon has reached its usage limit." });
     }
 
+    coupon.usageLimit-=1;
+    await coupon.save();
+
     // Return the discount amount (percentage)
     res.status(200).json({ discount: coupon.discount });
   } catch (error) {
-    res.status(500).json({ status:'error',message: "Internal server error." });
+    console.log('coupon error',error);
+    res.status(500).json({ status:'error',message: "something error." });
   }
 };
 
@@ -1205,7 +1219,7 @@ const placeOrder = async (req, res) => {
       userId: userid,
       address: address,
       paymentMethod: payment_method,
-      discount:discountAmount,
+      discount:discountAmount|| 0,
       razorpayOrderId:null,
       products: cart.products.map((product) => ({
         productId: product.product,
@@ -1490,6 +1504,7 @@ const userProfile = async (req, res) => {
   try {
     const userid = req.session.user._id;
     const user = await User.findById(userid);
+    const cart=await Cart.findOne({user:userid})
     // console.log("user", user);
 
     if (!user) {
@@ -1498,7 +1513,7 @@ const userProfile = async (req, res) => {
         message: "user not found!",
       });
     }
-    res.render("user/userProfile", { user });
+    res.render("user/userProfile", { user,cart });
   } catch (error) {
     console.log(error);
     res.json({
@@ -1518,7 +1533,8 @@ const editUserProfile = async (req, res) => {
         message: "user not found",
       });
     }
-    res.render("user/editUserProfile", { user });
+    const cart=await Cart.findOne({user:userid})
+    res.render("user/editUserProfile", { user,cart });
   } catch (error) {
     console.log(error.message);
     res.json({
@@ -1574,6 +1590,8 @@ const editUserProfilePost = async (req, res) => {
 const userProfileOrders = async (req, res) => {
   try {
     const user = req.session.user;
+    const userId=user._id;
+    const cart=await Cart.findOne({user:userId})
     if (!user) {
       Swal.fire({
         icon: "error",
@@ -1608,7 +1626,7 @@ const userProfileOrders = async (req, res) => {
       order.statusClass = getStatusClass(order.orderStatus);
     });
 
-    res.render("user/userProfileOrders", { orders, user });
+    res.render("user/userProfileOrders", { orders, user,cart });
   } catch (error) {
     console.log(error);
     res.json({
@@ -1696,9 +1714,11 @@ const returnAProductRequest = async (req, res) => {
 const addressbook = async (req, res) => {
   const email = req.session.user.email;
   const user = await User.findOne({ email });
+  const userId=user._id;
+  const cart=await Cart.findOne({user:userId})
   const addresses = user.addresses || [];
   try {
-    res.render("user/addressbook", { addresses, user });
+    res.render("user/addressbook", { addresses, user,cart });
   } catch (error) {
     res.send(error.message);
   }
@@ -1707,7 +1727,9 @@ const addressbook = async (req, res) => {
 const addAddress = async (req, res) => {
   try {
     const user = req.session.user;
-    res.render("user/addAddress", { user });
+    const userId=user._id;
+    const cart=await Cart.findOne({user:userId})
+    res.render("user/addAddress", { user ,cart});
   } catch (error) {
     res.send(error.message);
   }
@@ -1764,7 +1786,9 @@ const addAddressPost = async (req, res) => {
 const changePassword = async (req, res) => {
   try {
     const user = req.session.user;
-    res.render("user/changePassword", { user });
+    const userId=user._id;
+    const cart=await Cart.findOne({user:userId})
+    res.render("user/changePassword", { user ,cart});
   } catch (error) {
     res.send(error.message);
   }
@@ -1778,8 +1802,10 @@ const editAddress = async (req, res) => {
       { "addresses._id": id },
       { "addresses.$": 1 }
     );
+    const userId=user._id;
+    const cart=await Cart.findOne({user:userId})
     const address = user.addresses[0];
-    res.render("user/editAddress", { address, user });
+    res.render("user/editAddress", { address, user ,cart});
   } catch (error) {
     res.send(error.message);
   }

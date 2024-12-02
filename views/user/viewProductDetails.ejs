@@ -473,7 +473,14 @@ function hideMagnify() {
 }
         function addToCart(productId) {
         let discountedPriceElement = document.getElementById('discounted-price');
-        let discountedPrice = parseFloat(discountedPriceElement.innerText.replace(/[^\d.]/g, ''));
+        let discountedPrice;
+        if(discountedPriceElement){
+        discountedPrice = parseFloat(discountedPriceElement.innerText.replace(/[^\d.]/g, ''));        
+        }
+        else{
+            discountedPrice = null;
+        }
+        
          fetch(`/addToCart/${productId }`, {
         method: 'POST',
         headers: {
