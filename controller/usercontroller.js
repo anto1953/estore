@@ -118,7 +118,10 @@ const logout = async (req, res) => {
   try {
     console.log('logout');
     const userId=req.session.user._id
-    const loggedout=await User.updateOne({ _id: userId}, { isLoggedIn: false });
+    const user=await User.findById(userId)
+    user.isLoggedIn=false;
+    const loggedout=await user.save();
+    // const loggedout=await User.updateOne({ _id: userId}, { isLoggedIn: false });
     console.log('loggedout',loggedout);
     
 
@@ -275,7 +278,7 @@ const loginpost = async (req, res) => {
         return res.json({
           status: "success",
           message: "Admin login successful",
-          redirectUrl: "/adminhome",
+          redirectUrl: "/admin/adminhome",
         });
       }
     }
@@ -524,7 +527,7 @@ const userhome = async (req, res) => {
   try {
     console.log(req.user);
     const user = req.session.user;
-    const userId=user._id
+    const userId=user?user._id:null;
     const authenticated = req.user;
     const category = await Category.find({});
     const products = await Product.find({});
@@ -536,18 +539,6 @@ const userhome = async (req, res) => {
       authenticated: authenticated,
       cart
     });
-  } catch (error) {
-    res.send(error.message);
-  }
-};
-
-const adminhome = async (req, res) => {
-  try {
-    if (req.session.admin) {
-      res.render("admin/adminhome");
-    } else {
-      res.render("login");
-    }
   } catch (error) {
     res.send(error.message);
   }
@@ -1636,6 +1627,34 @@ const userProfileOrders = async (req, res) => {
   }
 };
 
+const invoice = async (req, res) => {
+  try {
+    console.log('invoice',req.params);
+    
+    const order = await Orders.findById(req.params.id).populate('products.productId'); 
+    if (!order) {
+      return res.json({
+        stauts:'error',
+        message: 'Order not found' });
+    }
+
+    const products = order.products.map(product => ({
+      name: product.productId.pname,
+      price: product.productId.pprice,
+      quantity: product.quantity,
+    }));
+
+    const user=await User.findById(order.userId)
+      const address=user.addresses.find(addr=>addr._id.toString()===order.address)
+      console.log('address',address);
+         
+    res.json({ order, products,user,address });
+  } catch (error) {
+    console.error('Error fetching order data:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
 const returnOrderRequest = async (req, res) => {
   try {
     console.log("params", req.params);
@@ -1922,7 +1941,6 @@ module.exports = {
   failure,
   profile,
   userhome,
-  adminhome,
   signup,
   signuppost,
   otp,
@@ -1950,6 +1968,7 @@ module.exports = {
   userProfileOrders,
   returnOrderRequest,
   returnAProductRequest,
+  invoice,
   addressbook,
   changePassword,
   addAddress,

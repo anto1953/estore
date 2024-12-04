@@ -167,16 +167,26 @@
 
                                 <div class="order-actions">
                                     <% const hasCancelableProducts = order.products.some(product => !product.isCancelled); %>
-                                    <button 
+                                    <% if (order.orderStatus === 'Delivered') { %>
+                                      <button 
+                                        class="btnn btn-success" 
+                                        data-order-id="<%= order._id %>"
+                                        onclick="downloadInvoice('<%= order._id %>')">
+                                        Invoice
+                                      </button>
+                                    <% } else { %>
+                                      <button 
                                         class="btnn btn-danger" 
                                         data-order-id="<%= order._id %>"
-                                        <%= !hasCancelableProducts || order.orderStatus === 'Cancelled' || order.orderStatus === 'Delivered' || order.returnRequestStatus ? 'disabled' : '' %> 
+                                        <%= !hasCancelableProducts || order.orderStatus === 'Cancelled' || order.orderStatus === 'Delivered' || order.returnRequestStatus ? 'disabled' : '' %>
                                         onclick="confirmCancelOrder('<%= order._id %>')">
                                         Cancel Order
-                                    </button>
+                                      </button>
+                                    <% } %>
+                                  
+                                  
 
                                     <%
-                                    // Check if all products are either cancelled or returned
                                     const allCancelledOrReturned = order.products.every(
                                         (product) => product.isCancelled || product.returnStatus
                                     );
@@ -232,6 +242,8 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 
     <script>
         let currentOrderToCancel = null;
@@ -569,6 +581,128 @@ function returnAProduct(orderId, productId) {
                 confirmButtonColor: '#d33',
             });
         });
+}
+
+function downloadInvoice(orderId) {
+  fetch(`/invoice/${orderId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'error') {
+        Swal.fire({
+          icon: 'error',
+          text: data.message,
+        });
+        return;
+      }
+
+      const { order, products,address,user } = data;
+
+      // Create a new jsPDF instance
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const formatRupee = new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+      });
+
+      // Title Section
+      doc.setFontSize(22);
+      doc.setFont('Helvetica', 'bold');
+      doc.text('Invoice', 105, 20, { align: 'center' });
+
+      // Customer Details
+      doc.setFontSize(12);
+      doc.setFont('Helvetica', 'bold');
+      doc.text('Customer Details:', 20, 60);
+
+      doc.setFont('Helvetica', 'normal');
+      doc.text(`Name: ${user.name}`, 20, 70);
+      doc.text(`Email: ${user.email}`, 20, 75);
+      doc.text(`Phone: ${user.phone || 'N/A'}`, 20, 80);
+
+      //  Order Details
+      doc.setFontSize(12);
+      doc.setFont('Helvetica', 'bold');
+      doc.text('Order Details:', 20, 90);
+
+      doc.setFont('Helvetica', 'normal');
+      doc.text(`Order ID: ${order._id}`, 20, 100);
+      doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 20, 105);
+      doc.text(`Status: ${order.orderStatus}`, 20, 110);
+      doc.text(`Shipping Address: ${address.street}, ${address.city}, ${address.state}, ${address.zip}`, 20, 115, { maxWidth: 170 });
+
+      // Product Details Table
+      let startY = 130;
+
+      doc.setFontSize(12);
+      doc.setFont('Helvetica', 'bold');
+      doc.text('Products:', 20, startY);
+      startY += 10;
+
+      // Add Table Headers
+      doc.setFontSize(10);
+      doc.text('Product Name', 20, startY);
+      doc.text('Quantity', 90, startY);
+      doc.text('Price', 120, startY);
+      doc.text('Total', 160, startY);
+      startY += 5;
+
+      // Draw a line under the headers
+      doc.line(20, startY, 190, startY);
+      startY += 10;
+
+      doc.setFont('Helvetica', 'normal');
+      products.forEach(product => {
+        doc.text(product.name, 20, startY);
+        doc.text(product.quantity.toString(), 90, startY);
+        doc.text(formatRupee.format(product.price), 120, startY);
+        doc.text(formatRupee.format(product.quantity * product.price), 160, startY);
+        startY += 10;
+
+        // Move to the next page if content exceeds page height
+        if (startY > 270) {
+          doc.addPage();
+          startY = 20;
+        }
+      });
+
+      startY += 10;
+      doc.setFontSize(12);
+      doc.setFont('Helvetica', 'bold');
+      doc.text(`Total Price: ${formatRupee.format(order.totalPrice)}`, 20, startY);
+      startY += 10;
+
+      // Apply Discount
+      if (order.discount && order.discount > 0) {
+        const discountedPrice = order.totalPrice - order.discount;
+        doc.text(`Discount: ${formatRupee.format(order.discount)}`, 20, startY);
+        startY += 10;
+        doc.text(`Final Total: ${formatRupee.format(discountedPrice)}`, 20, startY);
+      }
+
+
+
+      // Save the generated PDF
+      doc.save(`invoice_${order._id}.pdf`);
+
+      // Show success notification
+      Swal.fire({
+        icon: 'success',
+        title: 'Invoice Generated',
+        text: `Your invoice has been generated successfully.`,
+      });
+    })
+    .catch(error => {
+      console.error('Error generating invoice:', error);
+
+      // Show error notification
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'There was an issue generating your invoice. Please try again later.',
+      });
+    });
 }
 
 

@@ -1,37 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <%- include('../partials/_header') %>
     <%- include('../partials/style') %>
-
-    
 </head>
-
 <body>
     <%- include('../partials/sidebar')  %>
     <%- include('../partials/topbar')  %>
 
-    
-    <!-- Main Content Area -->
     <div class="content p-4" id="main-content">
         <div class="container-fluid mt-5 pt-5">
-            <!-- Dashboard Section -->
             <div id="dashboard" class="section-details active">
                 <h2>Dashboard</h2>
                 <p>Manage your dashboard here</p>
                 <div class="row mt-4">
                     <div class="col-md-6">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Sales</h5>
+                                <p><strong><%= totalSales %></strong> orders</p>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- New Total Revenue Section -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Revenue</h5>
+                                <p><strong>$<%= totalRevenue.toFixed(2) %></strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm text-center h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Discount Amount</h5>
+                                <p class="card-text">₹<%= totalDiscountAmount %></p>
+                            </div>
+                        </div>
+                    </div>  
+                    </div>
+    
+                    <!-- New Top 5 Best-Selling Products Section -->
+                    <div class="col-md-3">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Top 5 Best-Selling Products</h5>
+                                <ul>
+                                    <% topProducts.forEach(product => { %>
+                                        <li><%= product.productDetails.name %> - <%= product.totalSold %> units</li>
+                                    <% }); %>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- New Top 5 Selling Categories Section -->
+                    <div class="col-md-3">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Top 5 Selling Categories</h5>
+                                <ul>
+                                    <% topCategories.forEach(category => { %>
+                                        <li><%= category %> </li>
+                                    <% }); %>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Existing Sales Chart -->
+                    <div class="col-md-6">
                         <div class="card shadow-sm mb-4">
                             <div class="card-body">
                                 <h5 class="card-title">Sales</h5>
+                                <div class="filter-container">
+                                    <label for="filter">Filter:</label>
+                                    <select id="filter" onchange="applyFilter()">
+                                      <option value="yearly">Yearly</option>
+                                      <option value="monthly">Monthly</option>
+                                      <option value="weekly">Weekly</option>
+                                    </select>
+                                  </div>
+                                  
                                 <canvas id="salesChart"></canvas>
                             </div>
                         </div>
                     </div>
+                    <!-- Existing Customers Chart -->
                     <div class="col-md-6">
                         <div class="card shadow-sm mb-4">
                             <div class="card-body">
@@ -40,6 +100,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Existing Orders Chart -->
                     <div class="col-md-6">
                         <div class="card shadow-sm mb-4">
                             <div class="card-body">
@@ -48,6 +109,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Existing Revenue Chart -->
                     <div class="col-md-6">
                         <div class="card shadow-sm mb-4">
                             <div class="card-body">
@@ -56,125 +118,14 @@
                             </div>
                         </div>
                     </div>
+    
+                    <!-- New Total Sales Section -->
+                    
                 </div>
             </div>
-            
-
-              <!-- Categories Section   -->
-             <!-- <div id="categories" class="section-details">
-                <h2>Categories Management</h2>
-                <p>Manage your categories here</p>
-                <button class="btn btn-primary mb-3" onclick="alert('Add Category functionality to be implemented.')" style="float: right;"><i class="bi bi-plus-circle"></i> Add Category</button>
-                <table class="table table-striped mt-4">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Category 1</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Category 2</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div> -->
-
-             <!-- Coupons Section  -->
-            <!-- <div id="coupons" class="section-details">
-                <h2>Coupons Management</h2>
-                <p>Manage your coupons here</p>
-                <button class="btn btn-primary mb-3" onclick="alert('Add Coupon functionality to be implemented.')" style="float: right;"><i class="bi bi-plus-circle"></i> Add Coupon</button>
-                <table class="table table-striped mt-4">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Code</th>
-                            <th>Discount</th>
-                            <th>Expiry Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>COUPON1</td>
-                            <td>10%</td>
-                            <td>2024-12-31</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>COUPON2</td>
-                            <td>20%</td>
-                            <td>2024-11-30</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>    
-                </table>
-            </div>  -->
-
-            <!-- Offers Section -->
-             <!-- <div id="offers" class="section-details">
-                <h2>Offers Management</h2>
-                <p>Manage your offers here</p>
-                <button class="btn btn-primary mb-3" onclick="alert('Add Offer functionality to be implemented.')" style="float: right;"><i class="bi bi-plus-circle"></i> Add Offer</button>
-                <table class="table table-striped mt-4">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Offer Name</th>
-                            <th>Discount</th>
-                            <th>Valid Until</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Offer 1</td>
-                            <td>15%</td>
-                            <td>2024-12-31</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Offer 2</td>
-                            <td>25%</td>
-                            <td>2024-11-30</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div> -->
         </div>  
     </div> 
+    
      
     <script>
 
@@ -208,6 +159,11 @@ function loadSection(section) {
                 button.innerText = 'Active';
             }
         }
+
+        function applyFilter() {
+  const filter = document.getElementById("filter").value;
+  window.location.href = `/admin/adminhome?filter=${filter}`;
+}
 
         // Chart.js code for the charts
         const ctxSales = document.getElementById('salesChart').getContext('2d');

@@ -4,6 +4,7 @@ const admincontroller = require("../controller/admincontroller");
 const path = require("path");
 const { upload } = require("../config/multer");
 
+router.get('/adminhome',admincontroller.adminhome)
 router.get("/users", admincontroller.users);
 router.post("/blockuser/:id", admincontroller.blockUser);
 router.post("/unblockuser/:id", admincontroller.unblockUser);
@@ -57,7 +58,7 @@ router.get('/listOffer/:id',admincontroller.listOffer)
 router.post('/applyOfferToProducts/:id',admincontroller.applyOfferToProducts)
 router.post('/applyOfferToCategories/:id',admincontroller.applyOfferToCategories)
 router.get("/adminLogout", admincontroller.adminLogout);
-router.get('/sales',admincontroller.sales)
+// router.get('/sales',admincontroller.sales)
 router.get('/salesReport',admincontroller.salesReport)
 
 

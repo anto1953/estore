@@ -1,5 +1,7 @@
 <%- include('../partials/_header') %>
 <%- include('../partials/style') %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <body>
         <style>
             .chart-container {
@@ -16,68 +18,125 @@
             }
             
             .chart-container canvas {
-                max-height: 300px; /* Ensure canvas doesn't exceed container height */
-                height: 100%;      /* Fill available height */
-                width: 100%;       /* Maintain responsiveness */
+                max-height: 300px;
+                height: 100%;      
+                width: 100%; 
+                   
             }
+            .custom-dropdown {
+                padding: 8px;
+                border: 1px solid #ced4da;
+                background-color: #f8f9fa;
+                border-radius: 5px;
+                width: 230px;
+            }
+            .filter-container {
+            position: relative;
+            display: inline-block;
+            font-size: 20px;
+            cursor: pointer;
+            }
+
+            .filter-icon {
+            color: #fff;
+            font-size: 20px;
+            padding: 5px;
+            cursor: pointer;
+            }
+
+            /* Style the dropdown to make it more attractive */
+            .graphCustom-dropdown {
+            display: none; /* Hide the dropdown by default */
+            position: absolute;
+            top: 30px; /* Position the dropdown below the icon */
+            left: 0;
+            background-color: #626262;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            width: 100px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 1;
+            }
+
+            .filter-container:hover .graphCustom-dropdown {
+            display: block; /* Show dropdown when hover over the container */
+            }
+
+            /* Dropdown item style */
+            .graphCustom-dropdown option {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            }
+
+            .graphCustom-dropdown option:hover {
+            background-color: #444;
+            }
+
             </style>
    <%- include('../partials/sidebar') %>
    <%- include('../partials/topbar') %>
    <div class="content p-4" id="main-content">
        <div class="container-fluid mt-5 pt-5">
-        <div class="container d-flex justify-content-end ">
-
-           <div id="salesReport" class="col-md-6 section-details active">
-               <h2>Sales Report</h2>
-               <p>Generate and view the sales report</p>
-           </div>
-                
-                <div class="col-md-6" style="left: 3%; background-color: #6c757d; border-radius: 17px; padding: 20px;">
-                    <!-- Filter Form -->
-                    <form action="/admin/salesReport" method="GET">
-                        <div class="row g-3">
-                            <!-- Report Type Dropdown -->
-                            <div class="col-md-6" style="left: 10%;">
-                                <label for="reportType" class="form-label text-white">Report Type</label>
-                                <select id="reportType" name="reportType" class="form-select" required>
-                                    <option value="daily">Daily</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="custom">Custom Date Range</option>
-                                </select>
-                            </div>
-            
-                            <!-- Custom Date Range -->
-                            <div class="col-md-6" id="customDateRange" style="display: none;">
-                                <label for="startDate" class="form-label text-white">Start Date</label>
-                                <input type="date" id="startDate" name="startDate" class="form-control">
-                                <label for="endDate" class="form-label text-white mt-2">End Date</label>
-                                <input type="date" id="endDate" name="endDate" class="form-control">
-                            </div>
-            
-                            <!-- Format Selector -->
-                            <div class="col-md-6">
-                                <label for="format" class="form-label text-white">Download Format</label><br>
-                                <select id="format" name="format" class="form-select" required>
-                                    <option value="pdf">PDF</option>
-                                    <option value="excel">Excel</option>
-                                </select>
-                            </div>
-            
-                            <!-- Submit Button -->
-                            <div class="col-md-12 d-flex justify-content-center">
-                                <button type="submit" class="btn btn-primary mt-3">Generate Report</button>
-                            </div>
-                        </div>
-                    </form>
+            <div class="container col-md-12 d-flex " style="border-radius: 17px;">
+                <div id="salesReport" class="col-md-6 section-details active" style="align-content: center;  border-radius: 17px;">
+                    <h2 style="font-size: 50px;">Sales Report</h2>
+                    <p>Generate and view the sales report</p>
                 </div>
+        
+            <div class="col-md-6" style=" border-radius: 17px; border-color: white; border-width: 6px; border-style: solid; padding: 7px">
+                <!-- Filter Form -->
+                <form id="salesReportForm" action="/admin/salesReport" method="get">
+                    <div class="row g-3">
+                        <!-- Report Type Dropdown -->
+                        <div class="col-md-6 ">
+                            <label for="reportType" class="form-label text-white">Report Type</label>
+                            <select id="reportType" name="reportType" class="form-select custom-dropdown" required>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="custom">Custom Date Range</option>
+                            </select>
+                        </div>
+        
+                        <!-- Custom Date Range -->
+                        <div class="col-md-6" id="customDateRange" style="display: none;">
+                            <label for="startDate" class="form-label text-white">Start Date</label>
+                            <input type="date" id="startDate" name="startDate" class="form-control">
+                            <label for="endDate" class="form-label text-white mt-2">End Date</label>
+                            <input type="date" id="endDate" name="endDate" class="form-control">
+                        </div>
+        
+                        <!-- Format Selector -->
+                        <div class="col-md-6 d-flex flex-column align-items-start"id="downloadFormat" style="position: relative; ">
+                            <label for="format" class="form-label text-white">Download Format</label>
+                            <select id="format" name="format" class="form-select custom-dropdown" required>
+                                <option value="pdf">PDF</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+        
+                        <!-- Submit Button -->
+                        <div class="col-md-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary mt-4 px-4">Generate Report</button>
+                        </div>
+                    </div>
+                </form>
             </div>
+        </div>
+        
             
                <br>
                <!-- Summary Section -->
-               <div class="row mb-4">
+               <div class="col-md-12 d-flex">
                    
-                   <div class="col-md-3">
+                   <div class="col-md-3 ">
                        <div class="card shadow-sm text-center h-100">
                            <div class="card-body">
                                <h5 class="card-title">Total Sales</h5>
@@ -110,18 +169,30 @@
                        </div>
                    </div>
                </div>
+       </div>
    
                <!-- Graph Section -->
+                <div class="col-md-12 d-flex">
+               <div class="col-md-8">
                <div class="row mt-4">
-                   <div class="col-md-6">
+                   <div class="col-md-12">
                        <div class="card shadow-sm mb-4 chart-container">
-                           <div class="card-body">
-                               <h5 class="card-title">Sales</h5>
+                           <div class="card-body "> 
+                               <h5 class="card-title">Sales
+                               <div class="filter-container">
+                                <i class="fas fa-filter filter-icon"></i>
+                                <select id="filterSelect" onchange="updateCharts()" class="graphCustom-dropdown">
+                                  <option value="yearly">Yearly</option>
+                                  <option value="monthly">Monthly</option>
+                                  <option value="weekly">Weekly</option>
+                                </select>
+                              </div></h5>
                                <canvas id="salesChart"></canvas>
                            </div>
                        </div>
                    </div>
-                   <div class="col-md-6">
+                  
+                   <div class="col-md-12">
                        <div class="card shadow-sm mb-4 chart-container">
                            <div class="card-body">
                                <h5 class="card-title">Orders</h5>
@@ -130,124 +201,220 @@
                        </div>
                    </div>
                </div>
+               </div>
+               <div class="col-md-4 " style="top: 20px;">
+                <div class="col-md-12 ">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Top 5 Best-Selling Products</h5>
+                            <ul>
+                                <% topProducts.forEach(product => { %>  
+                                    <li><%= product.productDetails.pname %> </li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Top 5 Selling Categories</h5>
+                            <ul>
+                                <% topCategories.forEach(category => { %>
+                                    <li><%= category._id %> - <%= category.totalSold %> units </li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+               </div>
+                </div>
            </div>
-       </div>
-   </div>
-
-   
-   
-    
-                <!-- Summary Section -->
-                <!-- <div class="mt-4">
-                    <h3>Sales Summary</h3> -->
-                    <!-- <div>
-                        <p><strong>Total Sales Count:</strong> <%= salesReport.salesCount %></p>
-                        <p><strong>Total Sales Amount:</strong> ₹<%= (salesReport.totalOrderAmount - salesReport.totalDiscount).toFixed(2) %></p>
-                    </div> -->
-                <!-- </div> -->
-    
-                <!-- Sales Table
-                <div class="table-responsive">
-                    <% if (salesReport) { %>
-                        <table class="table table-striped mt-4">
-                            <thead>
-                                <tr>
-                                    <th>Sales Count</th>
-                                    <th>Order Amount</th>
-                                    <th>Discount Deducted</th>
-                                    <th>Total Sales</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><%= salesReport.salesCount %></td>
-                                    <td>₹<%= salesReport.totalOrderAmount.toFixed(2) %></td>
-                                    <td>₹<%= salesReport.totalDiscount.toFixed(2) %></td>
-                                    <td>₹<%= (salesReport.totalOrderAmount - salesReport.totalDiscount).toFixed(2) %></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    <% } else { %>
-                        <h3>No sales data found for the selected period</h3>
-                    <% } %>
-                </div> -->
-            </div>
         </div>
-    </div>
+
+            
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
     <script>
+        document.querySelector('.filter-icon').addEventListener('click', function() {
+  const dropdown = document.getElementById('filterSelect');
+  dropdown.style.display = (dropdown.style.display === 'block' ? 'none' : 'block');
+});
+
         const reportTypeSelect = document.getElementById("reportType");
     const customDateRangeDiv = document.getElementById("customDateRange");
+    const downloadFormatDiv=document.getElementById('downloadFormat')
 
     // Event listener for dropdown change
     reportTypeSelect.addEventListener("change", function () {
         if (this.value === "custom") {
             customDateRangeDiv.style.display = "block";
+            downloadFormatDiv.style.marginTop='-12%'
         } else {
             customDateRangeDiv.style.display = "none";
+            downloadFormatDiv.style.marginTop='0%';
         }
     });
 
-        const ctxSales = document.getElementById('salesChart').getContext('2d');
-        const salesChart = new Chart(ctxSales, {
-            type: 'line',
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-                datasets: [{
-                    label: 'Sales',
-                    data: [65, 59, 80, 81, 56, 55, 40],
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    borderColor: 'rgba(255, 255, 255, 1)',
-                    borderWidth: 2,
-                    fill: true,
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: 'white' //  y-axis text color
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            color: 'white' //  x-axis text color
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: 'white' // legend text color
-                        }
-                    }
-                }
+    async function updateCharts() {
+        
+    const filter = document.getElementById('filterSelect').value    
+    const response = await fetch(`/admin/adminhome?filter=${filter}`);
+    const data = await response.json();
+        console.log('data',data);
+        
+    // Update Sales Chart
+    salesChart.data.labels = data.ordersData.map(item => item._id);
+    salesChart.data.datasets[0].data = data.ordersData.map(item => item.totalSales);
+    salesChart.update();
+
+    // Update Orders Chart
+    ordersChart.data.labels = data.orderStatusData.map(item =>{
+        return item._id==='Return Request Accepted'? 'Returned':item._id});
+    ordersChart.data.datasets[0].data = data.orderStatusData.map(item => item.count);
+ordersChart.data.datasets[0].backgroundColor = data.orderStatusData.map(item => {
+  switch (item._id) {
+    case 'Delivered':
+      return '#4caf50'; // Green
+    case 'Pending':
+      return '#ff9800'; // Orange
+    case 'Cancelled':
+      return '#f44336'; // Red
+    case 'Return Request Accepted':
+      return '#ffeb3b'; // Yellow
+    default:
+      return '#cccccc'; // Default color if status doesn't match
+  }
+});
+    ordersChart.update();
+  }
+
+
+  const ctxSales = document.getElementById('salesChart').getContext('2d');
+const salesChart = new Chart(ctxSales, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Sales',
+      data: [],
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      borderColor: 'rgba(75, 192, 192, 1)',
+      borderWidth: 1,
+      fill: true,
+    }],
+  },
+  options: {
+    plugins: {
+      legend: {
+        labels: {
+          color: 'white', // legend text color 
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'white', //  x-axis tick color 
+        },
+        title: {
+          color: 'white', //  x-axis title color 
+        },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: 'white', //  y-axis tick color 
+        },
+        title: {
+          color: 'white', //  y-axis title color 
+        },
+      },
+    },
+    elements: {
+      line: {
+        borderColor: 'white', 
+      },
+    },
+  },
+});
+
+
+const ctxOrders = document.getElementById('ordersChart').getContext('2d');
+const ordersChart = new Chart(ctxOrders, {
+  type: 'doughnut',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Orders',
+      data: [],
+      backgroundColor: [], // We'll dynamically fill this array
+    }],
+  },
+  options: {
+    plugins: {
+      legend: {
+        labels: {
+          color: 'white', // Change legend text color to white
+        },
+      },
+      tooltip: {
+        bodyColor: 'white', // Change tooltip text color to white
+      },
+    },
+  },
+});
+
+
+  // Initial load
+  updateCharts();
+
+    document.getElementById('salesReportForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(this); 
+    const queryString = new URLSearchParams(formData).toString(); 
+
+    fetch(`/admin/salesReport?${queryString}`)
+
+    .then(async (response) => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
+            const data=await  response.blob();
+            function downloadBlob(blob, fileName) {
+  const url = window.URL.createObjectURL(blob); // Create a temporary URL for the blob
+  const a = document.createElement("a"); // Create an <a> element
+  a.style.display = "none";
+  a.href = url; // Set the blob URL as the href
+  a.download = fileName; // Set the file name for the download
+  document.body.appendChild(a); // Append the <a> element to the DOM
+  a.click(); // Trigger the click to start the download
+  window.URL.revokeObjectURL(url); // Revoke the blob URL to free memory
+  a.remove(); // Remove the <a> element from the DOM
+}
+    let format=document.querySelector("#format").value
+
+    downloadBlob(data,`example.${format.toLowerCase()==='excel'?'xlsx':'pdf'}`)
+                    Swal.fire({
+                    icon: 'success',
+                    text: 'sales report downloaded',
+                    confirmButtonText: 'OK',
+                });
+        })
+       
+        .catch((error) => {
+            console.log(error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while generating the report.',
+                confirmButtonText: 'OK',
+            });
         });
-        const ctxOrders = document.getElementById('ordersChart').getContext('2d');
-        const ordersChart = new Chart(ctxOrders, {
-            type: 'doughnut',
-            data: {
-                labels: ['Delivered', 'Pending', 'Cancelled'],
-                datasets: [{
-                    label: 'Orders',
-                    data: [10, 5, 2],
-                    backgroundColor: ['#4caf50', '#ff9800', '#f44336'],
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: 'white' 
-                        }
-                    }
-                }
-            }
-        });
+});
     </script>
 </body>
