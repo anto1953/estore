@@ -77,6 +77,8 @@
     min-width: 120px; 
 }
 
+
+
 </style>
 <body>
     <!-- Top Bar -->
@@ -117,8 +119,11 @@
                                         </div>
                                     </div>
                                     <span class="status-badge <%= order.statusClass %>">
-                                        <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                        <%= order.paymentStatus === 'Payment Pending' 
+                                            ? 'Payment Pending' 
+                                            : order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
                                     </span>
+                                    
                                 </div>
                                 <div class="order-items">
                                     <% order.products.forEach(product => { %>
@@ -151,8 +156,8 @@
                                             <% } %>
                                         </div>
                                     <% }) %>
-                                </div>         
-                                
+                                </div>   
+
                                 <% if (order.discount && order.discount > 0) { %>
                                     <div class="order-discount">
                                         <span>Discount</span>
@@ -160,30 +165,39 @@
                                     </div>
                                 <% } %>
 
+                                <div>
+                                    <span>delivery Charge:+50</span>
+                                </div>
                                 <div class="order-total">
                                     <span>Total</span>
                                     <span><%= order.totalPrice.toLocaleString('en-US', { style: 'currency', currency: 'INR' }) %></span>
                                 </div>
 
                                 <div class="order-actions">
+                                    <% if (order.paymentStatus === 'Payment Pending') { %>
+                                        <button class="btn-info continue-payment-btn" data-order-id="<%= order._id %>">
+                                            Continue Payment
+                                        </button>
+                                    <% } %>
                                     <% const hasCancelableProducts = order.products.some(product => !product.isCancelled); %>
                                     <% if (order.orderStatus === 'Delivered') { %>
-                                      <button 
-                                        class="btnn btn-success" 
-                                        data-order-id="<%= order._id %>"
-                                        onclick="downloadInvoice('<%= order._id %>')">
-                                        Invoice
-                                      </button>
-                                    <% } else { %>
-                                      <button 
-                                        class="btnn btn-danger" 
-                                        data-order-id="<%= order._id %>"
-                                        <%= !hasCancelableProducts || order.orderStatus === 'Cancelled' || order.orderStatus === 'Delivered' || order.returnRequestStatus ? 'disabled' : '' %>
-                                        onclick="confirmCancelOrder('<%= order._id %>')">
-                                        Cancel Order
-                                      </button>
-                                    <% } %>
-                                  
+                                        <button 
+                                          class="btnn btn-success" 
+                                          data-order-id="<%= order._id %>" 
+                                          onclick="downloadInvoice('<%= order._id %>')">
+                                          Invoice
+                                        </button>
+                                      <% } else { %>
+                                        <% if (hasCancelableProducts && order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Delivered' && !order.returnRequestStatus && order.paymentStatus !== 'Payment Pending') { %>
+                                          <button 
+                                            class="btnn btn-danger" 
+                                            data-order-id="<%= order._id %>" 
+                                            onclick="confirmCancelOrder('<%= order._id %>')">
+                                            Cancel Order
+                                          </button>
+                                        <% } %>
+                                      <% } %>
+                                      
                                   
 
                                     <%
@@ -192,29 +206,25 @@
                                     );
                                     %>
                                     <% 
-                                        // Check if all products in the order have a returnRequestStatus
                                         const allProductsHaveReturnStatus = order.products.every(product => product.returnRequestStatus);
 
-                                        // Check if there is only one product in the order and its returnRequestStatus is 'Accepted' or 'Rejected'
                                         const singleProductWithFinalReturnStatus = order.products.length === 1 &&
                                             (order.products[0].returnRequestStatus === 'Return Accepted' || order.products[0].returnRequestStatus === 'Return Rejected');
 
-                                        // Determine if the button should be enabled
                                         const canReturnOrder = order.orderStatus === 'Delivered' &&
                                             !allCancelledOrReturned &&
                                             !singleProductWithFinalReturnStatus &&
                                             !allProductsHaveReturnStatus;
                                     %>
-
-                                    <button id="returnButton"
+                                          <% if (canReturnOrder) {%>
+                                            <button id="returnButton"
                                         class="btnn btn-primary" 
                                         data-order-id="<%= order._id %>"
-                                        <%= canReturnOrder ? '' : 'disabled' %>
                                         onclick="openReturnModal('<%= order._id %>')">
                                         Return Order
                                     </button>
-
-
+                                          <% } %>
+                                    
                                 </div>
                                 
                                 <div id="returnModal" class="modal">
@@ -243,6 +253,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 
     <script>
@@ -252,7 +263,7 @@
             switch(status) {
                 case 'Pending': return 'status-pending';
                 case 'Processing': return 'status-processing';
-                case 'shipped': return 'starus-shipped';
+                case 'shipped': return 'status-shipped';
                 case 'Delivered': return 'status-delivered';
                 case 'Cancelled': return 'status-cancelled';
                 case 'Return Request Accepted' : return 'Return Request Accepted';
@@ -271,6 +282,56 @@
             document.getElementById('confirmationModal').style.display = 'none';
             currentOrderToCancel = null;
         }
+
+        document.querySelectorAll('.continue-payment-btn').forEach(button => {
+        button.addEventListener('click', async function () {
+        const orderId = this.getAttribute('data-order-id');
+        try {
+            const response = await fetch(`/continuePayment/${orderId}`, { method: 'POST' });
+            const data = await response.json();
+            console.log('data',data);
+            const razorpayKeyId=data.razorpayKeyId;
+            // const orderId=data.order._id;       
+
+            if (data.razorpayOrder) {
+                const options = {
+                    key: razorpayKeyId,
+                    order_id: data.razorpayOrder.id,
+                    amount: data.razorpayOrder.amount,
+                    name: 'E-store',
+                    description: 'Order Payment',
+                    handler: async function (response) {
+                        // Verify payment
+                        const verifyResponse = await fetch('/verifyPayment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(response),
+                        });
+
+                        const verifyData = await verifyResponse.json();
+                        console.log('verifyData',verifyData);
+                        
+                        if (verifyData.success) {
+                            Swal.fire('Payment Successful!', 'Your order is confirmed.', 'success');
+                            location.reload()
+                        } else {
+                            Swal.fire('Error!', 'Payment verification failed.', 'error');
+                        }
+                    },
+                    theme: { color: '#3399cc' },
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            }
+        } catch (error) {
+            console.log(error);
+            
+            Swal.fire('Error!', 'Failed to continue payment.', 'error');
+        }
+    });
+});
+
 
 function confirmCancelOrder(orderId) {
     Swal.fire({
@@ -323,13 +384,13 @@ function confirmCancelOrder(orderId) {
 
 function getStatusClass(status) {
     const statusClasses = {
-        'Pending': 'badge-pending',
+        'Pending': 'badge-processing',
         'Processing': 'badge-processing',
         'Shipped': 'badge-shipped',
         'Delivered': 'badge-delivered',
         'Cancelled': 'badge-cancelled',
-        'Return Request Accepted' :' badge-Return Request Accepted',
-        'Return Request Rejected' :' badge-Return Request Rejected'
+        'Return Request Accepted' :' badge-shipped',
+        'Return Request Rejected' :' badge-cancelled'
 
     };
     return statusClasses[status] || 'badge-default';

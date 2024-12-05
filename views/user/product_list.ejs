@@ -103,9 +103,9 @@
                                 </p>
                                 <div class="buttons" style="left: 20%;">
                                     <button class="btn btn-default btn-sm" onclick="addProductToCart('<%= product._id %>')" 
-                                        <%= product.stock > 0 && !cart.includes(product._id.toString()) ? '' : 'disabled' %>>
+                                        <%= product.stock > 0 && !cartItem.includes(product._id.toString()) ? '' : 'disabled' %>>
                                         <i class="fas fa-shopping-cart"></i> 
-                                        <%= cart.includes(product._id.toString()) ? 'Added to Cart' : 'Add to Cart' %>
+                                        <%= cartItem.includes(product._id.toString()) ? 'Added to Cart' : 'Add to Cart' %>
                                     </button>
     
                                     <button 

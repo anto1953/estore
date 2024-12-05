@@ -311,7 +311,6 @@
                                 <i class="fas fa-university"></i>
                                 Online Payment
                             </label>
-                            
                         </div>
                     </div>
                 </div>
@@ -340,9 +339,11 @@
                             <input style="margin-left: auto;" type="text" id="coupon_code" placeholder="Enter coupon code" />
                             <button class="tp_btn" id="apply_coupon">Apply Coupon</button>
                             <div id="discount_section" style="display: none;">
-                                <p>Discount Applied: <span id="discount_amount"> </span></p>
+                                <p>Discount Applied: -<span id="discount_amount"> </span></p>
                                 <!-- <p>Discounted Total: <span id="discounted_total"></span></p> -->
                             </div>
+                            <p>Delivery charge: +<span id='Delivery_charge'><%= deliveryCharge %></span></p>
+
                         </div>
                         <div class="total_amount">
                             <h5>Total</h5>
@@ -363,6 +364,7 @@
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script>
+        const deliveryCharge=document.getElementById('delivery_charge')
             // Add interactivity to payment options
             document.querySelectorAll('.payment_option').forEach(option => {
                 option.addEventListener('click', function() {
@@ -375,7 +377,22 @@
                 });
             });
 
-            // Track selection of address and payment method
+            // const totalPrice=orderDetails.totalPrice;
+            // console.log('totalprice',totalPrice);
+            
+            // const codOption = document.getElementById('cod_payment_option');
+            // if (totalPrice > 1000) {
+            //     console.log('>1000');
+                
+            //     codOption.disabled = true;
+
+            //     Swal.fire({
+            //     icon: 'info',
+            //     title: 'Cash on Delivery Unavailable',
+            //     text: 'Cash on Delivery is not available for orders above ₹1000. Please choose another payment method.',
+            //     });
+            // }
+
         let addressSelected = false;
         let paymentMethodSelected = false;
 
@@ -497,10 +514,22 @@
     document.getElementById('place_order_btn').addEventListener('click', async function() {
         let paymentMethod=document.querySelector('input[name="payment_method"]:checked').value;
         const totalPriceElement = document.getElementById('total_price');
-        let totalPrice = parseFloat(totalPriceElement.innerText.replace(/[^\d.]/g, ''));
+        let totalPrice = parseFloat(totalPriceElement.innerText.replace(/[^\d.]/g, ''));   
+        totalPrice +=deliveryCharge     
         const discountAmountElement = document.getElementById('discount_amount');
         const discountAmount = parseFloat(discountAmountElement.textContent || discountAmountElement.innerText);
         console.log('Discount Amount:', discountAmount);
+        console.log('paymentmethod',paymentMethod);
+        
+
+        if(paymentMethod==='cash_on_delivery' && totalPrice > 1000){
+            Swal.fire({
+                icon:'info',
+                title:'Oops...',
+                text:'Cash on Delivery is not available for orders above ₹1000. Please choose another payment method.'
+            })
+            return;
+        }
                 
         if (!addressSelected || !paymentMethod) {
             Swal.fire({
@@ -522,7 +551,7 @@
                         address: document.querySelector('input[name="address"]:checked').value,
                         totalPrice: totalPrice ,
                         payment_method: document.querySelector('input[name="payment_method"]:checked').value,
-                        discountAmount:discountAmount
+                        discountAmount:discountAmount,
                     }),                    
                 });
 
@@ -610,7 +639,7 @@
                     body: JSON.stringify({
                         address: document.querySelector('input[name="address"]:checked').value,
                         payment_method: document.querySelector('input[name="payment_method"]:checked').value,
-                        totalPrice
+                        totalPrice,discountAmount
 
                         
                     }),

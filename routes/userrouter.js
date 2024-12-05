@@ -98,6 +98,7 @@ router.get(
 );
 router.post("/validateCoupon", usercontroller.validateCoupon);
 router.post("/placeOrder", blockCheckMiddleware, usercontroller.placeOrder);
+router.post('/continuePayment/:id',usercontroller.continuePayment)
 router.post("/verifyPayment", usercontroller.verifyPayment);
 router.post("/cancelOrder", blockCheckMiddleware, usercontroller.cancelOrder);
 router.post(

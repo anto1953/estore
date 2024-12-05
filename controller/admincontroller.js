@@ -1995,6 +1995,40 @@ const salesReport = async (req, res) => {
 }
 }
 
+const generateLedger= async (req, res) => {
+  console.log('generateledger');
+  
+  try {
+    // Fetch orders
+    const orders = await Orders.find({}).populate('userId').populate('products.productId');
+
+    // Format orders for CSV
+    const ledgerData = orders.map((order, index) => ({
+        SNo: index + 1,
+        OrderID: order._id,
+        UserName: order.userId ? order.userId.name : 'N/A',
+        Products: order.products
+            .map(product => `${product.productId ? product.productId.pname : 'Unknown Product'} (Qty: ${product.quantity})`)
+            .join(', '),
+        TotalPrice: `₹${order.totalPrice.toFixed(2)}`,
+        OrderStatus: order.orderStatus,
+        Date: new Date(order.createdAt).toLocaleDateString()
+    }));
+
+    // Convert to CSV
+    const json2csvParser = new Parser();
+    const csv = json2csvParser.parse(ledgerData);
+
+    // Set response headers for download
+    res.header('Content-Type', 'text/csv');
+    res.attachment('ledger.csv');
+    res.send(csv);
+} catch (error) {
+    console.error('Error generating ledger:', error);
+    res.status(500).send('Error generating ledger');
+}
+}
+
 
 
 module.exports = {
@@ -2047,4 +2081,5 @@ module.exports = {
   applyOfferToCategories,
   // sales,
   salesReport,
+  generateLedger
 };
