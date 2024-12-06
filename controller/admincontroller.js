@@ -150,8 +150,6 @@ const users = async (req, res) => {
     : {};
 
   try {
-    if (req.session.admin) {
-      // Fetch paginated users based on search filter
       const users = await User.find(searchFilter)
         .skip(skip)
         .limit(limit)
@@ -167,7 +165,6 @@ const users = async (req, res) => {
         searchQuery: searchQuery,
         limit: limit,
       });
-    }
   } catch (error) {
     res.json({
       status: "error",
@@ -199,38 +196,30 @@ const unblockUser = async (req, res) => {
   }
 };
 
-const topbar = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const topbar = async (req, res) => {
     try {
-      if (req.session.admin) {
         res.render("topbar");
-      }
     } catch (error) {
       res.send(error.message);
     }
-  },
-];
+  }
 
-const sidebar = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const sidebar = async (req, res) => {
     try {
       res.render("sidebar");
     } catch (error) {
       res.send(error.message);
     }
-  },
-];
+  }
+
 const _header = async (req, res) => {
   try {
-    if (req.session.admin) {
       res.render("_header");
-    }
   } catch (error) {
     res.send(error.message);
   }
 };
+
 const products = async (req, res) => {
   const query = req.query.search ? req.query.search.toLowerCase() : "";
   const page = parseInt(req.query.page) || 1;
@@ -243,7 +232,6 @@ const products = async (req, res) => {
     : {};
 
   try {
-    if (req.session.admin) {
       let products = await Product.find(searchFilter)
         .skip(skip)
         .limit(limit)
@@ -261,7 +249,6 @@ const products = async (req, res) => {
         totalPages: Math.ceil(count / limit),
         searchQuery: searchQuery,
       });
-    }
   } catch (error) {
     res.send(error.message);
   }
@@ -269,7 +256,6 @@ const products = async (req, res) => {
 
 const relistProduct = async (req, res) => {
   try {
-    if (req.session.admin) {
       const productid = req.params.id;
       const result = await Product.findByIdAndUpdate(
         productid,
@@ -288,7 +274,6 @@ const relistProduct = async (req, res) => {
           message: "Product not found",
         });
       }
-    }
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -324,10 +309,8 @@ const processImages = async (files) => {
 
 const addproduct = async (req, res) => {
   try {
-    if (req.session.admin) {
       const categories = await Category.find();
       res.render("admin/addproduct", { categories });
-    }
   } catch (error) {
     res.send(error.message);
   }
@@ -383,7 +366,6 @@ const addproductpost = async (req, res) => {
 
 const editproduct = async (req, res) => {
   try {
-    if (req.session.admin) {
       const productId = req.params.id;
       const product = await Product.findById(productId);
       const categories = await Category.find();
@@ -391,7 +373,6 @@ const editproduct = async (req, res) => {
         return res.status(404).send("product not found");
       }
       res.render("admin/editproduct", { product, categories });
-    }
   } catch (error) {
     res.send(error.message);
   }
@@ -469,9 +450,7 @@ const editproductpost = async (req, res) => {
 
 const toggleProductListed = async (req, res) => {
   try {
-    if (req.session.admin) {
       const productid = req.params.id;
-
       const product = await Product.findById(productid);
       if (!product) {
         return res.status(404).json({
@@ -497,7 +476,6 @@ const toggleProductListed = async (req, res) => {
           status: "error",
           message: "Failed to update product listing",
         });
-      }
     }
   } catch (error) {
     res.status(500).json({
@@ -518,7 +496,6 @@ const categories = async (req, res) => {
     ? { value: { $regex: searchQuery, $options: "i" } }
     : {};
   try {
-    if (req.session.admin) {
       const categories = await Category.find(searchFilter)
         .skip(skip)
         .limit(limit);
@@ -530,23 +507,20 @@ const categories = async (req, res) => {
         totalPages: Math.ceil(count / limit),
         searchQuery,
       });
-    }
-  } catch (error) {
+    } catch (error) {
     res.send(error.message);
   }
 };
 
 const editcategory = async (req, res) => {
   try {
-    if (req.session.admin) {
       const categoryId = req.params.id;
       const category = await Category.findById(categoryId);
       if (!category) {
         return res.status(404).send("category not found");
       }
       res.render("admin/editcategory", { category });
-    }
-  } catch (error) {
+    } catch (error) {
     res.send(error.message);
   }
 };
@@ -593,9 +567,7 @@ const editcategorypost = async (req, res) => {
 
 const addcategory = async (req, res) => {
   try {
-    if (req.session.admin) {
       res.render("admin/addcategory");
-    }
   } catch (error) {
     res.send(error.message);
   }
@@ -642,7 +614,6 @@ const addcategorypost = async (req, res) => {
 
 const listCategory = async (req, res) => {
   try {
-    if (req.session.admin) {
       const categoryId = req.params.id;
 
       const category = await Category.findById({ _id: categoryId });
@@ -687,7 +658,6 @@ const listCategory = async (req, res) => {
           message: "Failed to update category listing",
         });
       }
-    }
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -800,9 +770,7 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-const getReturnRequest = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const getReturnRequest = async (req, res) => {
     const orderid = req.params.id;
     try {
       const order = await Orders.findById(orderid);
@@ -814,16 +782,13 @@ const getReturnRequest = [
     } catch (error) {
       res.status(500).json({ status: "error", message: "An error occurred." });
     }
-  },
-];
+  }
 
 const acceptReturnRequest = async (req, res) => {
   const orderid = req.params.id;
-
   try {
     const order = await Orders.findById({ _id: orderid });
     const user = await User.findById(order.userId);
-
     const updatedOrder = await Orders.findByIdAndUpdate(
       orderid,
       {
@@ -892,9 +857,7 @@ const rejectReturnRequst = async (req, res) => {
   }
 };
 
-const getReturnAProductRequest = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const getReturnAProductRequest = async (req, res) => {
     console.log("retuenaproduct", req.params);
 
     const { orderid, productId } = req.params;
@@ -921,8 +884,7 @@ const getReturnAProductRequest = [
     } catch (error) {
       res.status(500).json({ status: "error", message: "An error occurred." });
     }
-  },
-];
+  }
 
 const acceptAProductReturnRequest = async (req, res) => {
   console.log("params", req.params);
@@ -1057,9 +1019,7 @@ const orderDetails = async (req, res) => {
   }
 };
 
-const coupons = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const coupons = async (req, res) => {
     const query = req.query.search ? req.query.search.toLowerCase() : "";
     const page = parseInt(req, query.page) || 1;
     const limit = 10;
@@ -1093,12 +1053,9 @@ const coupons = [
         message: "something error",
       });
     }
-  },
-];
+  }
 
-const addCoupon = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const addCoupon = async (req, res) => {
     try {
       res.render("admin/addcoupon");
     } catch (error) {
@@ -1108,8 +1065,7 @@ const addCoupon = [
         message: "something error",
       });
     }
-  },
-];
+  }
 
 const addCouponPost = async (req, res) => {
   try {
@@ -1176,9 +1132,7 @@ const deleteCoupon = async (req, res) => {
   }
 };
 
-const editCoupon = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const editCoupon = async (req, res) => {
     try {
       const couponid = req.params.id;
       const coupon = await Coupons.findById({ _id: couponid });
@@ -1197,8 +1151,7 @@ const editCoupon = [
         message: "something wrong",
       });
     }
-  },
-];
+  }
 
 const editCouponPOst = [
   async (req, res) => {
@@ -1248,9 +1201,7 @@ const editCouponPOst = [
   },
 ];
 
-const offers = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const offers = async (req, res) => {
     const query = req.query.search ? req.query.search.toLowerCase() : "";
     const page = parseInt(req, query.page) || 1;
     const limit = 10;
@@ -1287,12 +1238,9 @@ const offers = [
         message: "something error",
       });
     }
-  },
-];
+  }
 
-const addOffer = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const addOffer = async (req, res) => {
     try {
       res.render("admin/addOffer");
     } catch (error) {
@@ -1302,8 +1250,7 @@ const addOffer = [
         message: "something error",
       });
     }
-  },
-];
+  }
 
 const addOfferPost = async (req, res) => {
   try {
@@ -1346,9 +1293,7 @@ const addOfferPost = async (req, res) => {
   }
 };
 
-const editOffer = [
-  checkSessionMiddleware,
-  async (req, res) => {
+const editOffer = async (req, res) => {
     try {
       const offerid = req.params.id;
       const offer = await Offers.findById({ _id: offerid });
@@ -1370,8 +1315,7 @@ const editOffer = [
         message: "something wrong",
       });
     }
-  },
-];
+  }
 
 const editOfferPost = async (req, res) => {
   try {

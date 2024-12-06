@@ -35,6 +35,7 @@ router.get("/failure", usercontroller.failure);
 router.get("/userhome", usercontroller.userhome);
 router.get("/signup", usercontroller.signup);
 router.post("/signup", usercontroller.signuppost);
+router.post('/validateReferralCode',usercontroller.validateReferralCode)
 router.get("/otp", usercontroller.otp);
 router.post("/otp", usercontroller.otpPost);
 router.get("/email", usercontroller.email);
@@ -163,6 +164,7 @@ router.get(
   blockCheckMiddleware,
   usercontroller.changePassword
 );
+router.post('/changePassword',usercontroller.changePasswordPost)
 router.get(
   "/addAddress",
   checkSessionMiddleware,

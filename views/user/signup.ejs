@@ -131,6 +131,30 @@
       .input-wrapper .toggle-password:hover {
         color: #000;
       }
+      .referral-wrapper {
+  display: flex;
+  gap: 10px; /* Space between input and button */
+}
+
+.referral-wrapper input {
+  border-radius: 4px;
+  font-size: 14px;
+  width: 80%;
+}
+
+.referral-wrapper .apply-btn {
+  width: 20%;
+  padding: 1px ;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0px;
+}
+
+.referral-wrapper .apply-btn:hover {
+  background-color: #0056b3;
+}
     </style>
   </head>
   <body>
@@ -183,6 +207,17 @@
             </div>
             <span class="error-message" id="confirmPasswordError"></span>
           </div>
+          <div class="form-group">
+            <label for="referralCode">Referral Code (Optional)</label>
+            <div class="d-flex referral-wrapper">
+              <input type="text" id="referralCode" name="referralCode" />
+              <button type="button" class="btn apply-btn" onclick="applyReferralCode()">Apply</button>
+            </div>
+            <span class="error-message" id="referralCodeError"></span>
+            <span class="success-message" id="referralCodeSuccess" style="color: green;"></span>
+          </div>
+          
+          
 
           <button type="submit" class="btn">Sign Up</button>
         </form>
@@ -348,6 +383,43 @@
               });
           });
         });
+
+        async function applyReferralCode() {
+  const referralCode = document.getElementById('referralCode').value.trim();
+  const referralCodeError = document.getElementById('referralCodeError');
+  const referralCodeSuccess = document.getElementById('referralCodeSuccess');
+
+  // Clear previous messages
+  referralCodeError.textContent = '';
+  referralCodeSuccess.textContent = '';
+
+  if (!referralCode) {
+    referralCodeError.textContent = 'Please enter a referral code.';
+    return;
+  }
+
+  try {
+    // Send referral code to the server for validation
+    const response = await fetch('/validateReferralCode', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ referralCode }),
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success') {
+      referralCodeSuccess.textContent = 'Referral code applied successfully!';
+    } else {
+      referralCodeError.textContent = data.message || 'Invalid referral code.';
+    }
+  } catch (error) {
+    referralCodeError.textContent = 'An error occurred. Please try again.';
+  }
+}
+
     </script>
   </body>
 </html>

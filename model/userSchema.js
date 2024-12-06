@@ -98,6 +98,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
 },
+referralCode:{
+  type:String
+},
+referredBy: {
+  type:String
+},
 wishlist: { type: [wishlistSchema], default: [] }, // Embedding the wishlist schema
 
 wallet: {

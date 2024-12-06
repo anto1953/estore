@@ -214,6 +214,29 @@ const signuppost = async (req, res) => {
   }
 };
 
+const validateReferralCode=async (req, res) => {
+  try {
+    const { referralCode } = req.body;
+
+    // Check if the referral code exists in the database
+    const referredBy = await User.findOne({ referralCode });
+    if (referredBy) {
+      return res.json({
+        status: 'success',
+        message: 'Referral code is valid.',
+        referredBy
+      });
+    } else {
+      return res.json({
+        status: 'error',
+        message: 'Referral code is invalid.',
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+}
+
 const otp = async (req, res) => {
   try {
     res.render("user/otp");
@@ -226,23 +249,51 @@ const otpPost = async (req, res) => {
   try {
     console.log(req.body);
     console.log(req.session.otp);
+    console.log('userdata',req.session.userdata);
+    
 
     const otp = req.body.otp;
     const { name, email, phone, password } = req.session.userdata;
+    const referralCode=req.session.userdata.referralCode?referralCode:null;
     if (otp === req.session.otp) {
+
+      let newReferralCode;
+      do {
+        newReferralCode = Math.random().toString().slice(2, 8); // Generates referral code
+      } while (await User.findOne({ referralCode:newReferralCode })); 
+
+      
+        const referredBy= referralCode? await User.findOne({referralCode:referralCode}):null
+
       const user = new User({
         name: name,
         email: email,
         phone: phone,
         password: password,
+        referralCode:newReferralCode,
+        referredBy:referredBy?referredBy._id:null,
       });
       const userdata = await user.save();
-      if (userdata) {
+      if (userdata&&userdata.referredBy==!null) {
+        const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+        referredBy.wallet.balance+=100;
+
+        referredBy.wallet.transactions.push({
+          transactionId:transactionId,
+          amount:100,
+          date:new Date(),
+          description:'Bonus for referral',
+          type:'credit'
+        })
+        await referredBy.save();
+      }
+        
         res.json({
           status: "success",
           message: "signup successfull",
         });
-      }
+      
     } else {
       res.json({
         status: "error",
@@ -377,15 +428,49 @@ const profile = async (req, res) => {
       return res.render("/login");
     } else if (user.isBlocked == true) {
       res.send(`
-          <script>
-            alert('user is blocked')
-              window.location.href = "/login"; // Redirect to login after alert
-          </script>
+            <html>
+            <head>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            </head>
+            <body>
+                <script>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'blocked',
+                        text: 'user is blocked',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                  window.location.href='/login'
+                  });;
+                </script>
+            </body>   
+        </html>
       `);
     } else {
       req.session.user = authenticated;
       await User.updateOne({ _id: user._id }, { isLoggedIn: true });
+      if(!req.session.user){
       res.status(200).redirect("/userhome");
+      }else{
+        res.send(`
+          <html>
+          <head>
+              <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+          </head>
+          <body>
+              <script>
+                  Swal.fire({
+                      icon: 'info',
+                      text: 'Another user is already loggedin',
+                      confirmButtonText: 'OK'
+                  }).then(() => {
+                window.location.href='/login'
+                });;
+              </script>
+          </body>   
+      </html>
+    `);
+      }
     }
   } catch (error) {
     console.log(error);
@@ -722,7 +807,7 @@ const viewProductDetails = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    Swal.fire({
+    res.json({
       status: "error",
       message: "something error",
     });
@@ -829,15 +914,26 @@ const cart = async (req, res) => {
       select: "pname pprice image stock isListed offers",
     });
 
-    console.log("cart", cart.products);
-
     if (!cart) {
-      Swal.fire({
-        title: "cart is empty",
-        text: "Add a product to the cart",
-        confirmButtonColor: "#d33",
-      });
-      return;
+      return res.send(`
+        <html>
+            <head>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            </head>
+            <body>
+                <script>
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'cart is empty',
+                        text: 'add some products to cart',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                  window.location.href='/viewProducts'
+                  });;
+                </script>
+            </body>   
+        </html>
+      `);
     }
 
     const subtotal = cart.products.reduce(
@@ -867,26 +963,26 @@ const cart = async (req, res) => {
       cart: { ...cart.toObject(), products: cartWithSingleImage },
       subtotal,
       user: user,
-      shippingOptions: [
-        {
-          name: "Standard Shipping",
-          price: 5.0,
-          value: "standard",
-          selected: true,
-        },
-        {
-          name: "Express Shipping",
-          price: 10.0,
-          value: "express",
-          selected: false,
-        },
-        {
-          name: "Next Day Delivery",
-          price: 15.0,
-          value: "next-day",
-          selected: false,
-        },
-      ],
+      // shippingOptions: [
+      //   {
+      //     name: "Standard Shipping",
+      //     price: 5.0,
+      //     value: "standard",
+      //     selected: true,
+      //   },
+      //   {
+      //     name: "Express Shipping",
+      //     price: 10.0,
+      //     value: "express",
+      //     selected: false,
+      //   },
+      //   {
+      //     name: "Next Day Delivery",
+      //     price: 15.0,
+      //     value: "next-day",
+      //     selected: false,
+      //   },
+      // ],
       products: listedProducts,
     });
   } catch (error) {
@@ -1337,10 +1433,25 @@ const verifyPayment= async (req, res) => {
     
   } catch (error) {
     console.log(error);
-    Swal.fire({
-      status:'error',
-      message:'something error'
-    })
+   return res.send(`
+    <html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    </head>
+    <body>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'unlisted',
+                text: 'some products are unlisted',
+                confirmButtonText: 'OK'
+            }).then(() => {
+          window.location.href='/cart'
+          });;
+        </script>
+    </body>   
+</html>
+   `)
   }
   
 }
@@ -1630,13 +1741,25 @@ const userProfileOrders = async (req, res) => {
     const userId=user._id;
     const cart=await Cart.findOne({user:userId})
     if (!user) {
-      Swal.fire({
-        icon: "error",
-        title: "User Not Found",
-        text: "Please check and try again.",
-        confirmButtonColor: "#d33",
-      });
-      return;
+      return res.send(`
+        <html>
+            <head>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            </head>
+            <body>
+                <script>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'user not found',
+                        text: 'Please check and try again.',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                  window.location.href='/userProfile'
+                  });;
+                </script>
+            </body>   
+        </html>
+      `);
     }
 
     const getStatusClass = (status) => {
@@ -1671,7 +1794,7 @@ const userProfileOrders = async (req, res) => {
     console.log(error);
     res.json({
       status: "error",
-      message: "soething error",
+      message: "something error",
     });
   }
 };
@@ -1862,6 +1985,36 @@ const changePassword = async (req, res) => {
   }
 };
 
+const changePasswordPost=async (req,res) => {
+  try {
+    console.log('change password',req.body);
+    const{cPassword,newPassword}=req.body;
+    const userId=req.session.user._id;
+    const user=await User.findById(userId)
+    if(cPassword===user.password){
+      user.password=newPassword
+      const changed=await user.save();
+      if(changed){
+        return res.json({
+          status:'success',
+          message:'password changed',
+        })
+      }
+    }else{
+      return res.json({
+        status:'error',
+        message:'wrong password',
+      })
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({
+      status:'error',
+      message:'something error'
+    })
+  }
+}
+
 const editAddress = async (req, res) => {
   try {
     const id = req.params.id;
@@ -1992,6 +2145,7 @@ module.exports = {
   userhome,
   signup,
   signuppost,
+  validateReferralCode,
   otp,
   otpPost,
   viewProducts,
@@ -2021,6 +2175,7 @@ module.exports = {
   invoice,
   addressbook,
   changePassword,
+  changePasswordPost,
   addAddress,
   addAddressPost,
   editAddress,
