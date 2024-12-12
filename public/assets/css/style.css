@@ -13161,7 +13161,6 @@ input:focus {
   background-color: #fff;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
   padding: 20px;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s;

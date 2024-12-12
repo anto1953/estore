@@ -713,13 +713,16 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-const cancelOrder = async (req, res) => {
+const   cancelOrder = async (req, res) => {
   console.log('cancel order details',req.body);
 
   const { orderId } = req.body;
   try {
     const order = await Orders.findById(orderId).populate({
       path: "products.productId",
+      populate:{
+        path:'coupon'
+      }
     });
 
     const userId=order.userId
@@ -738,14 +741,20 @@ const cancelOrder = async (req, res) => {
           { $inc: { stock: quantityOrdered } }
         );
       }
+      const nonCancelledTotal = order.products
+  .filter((product) => !product.isCancelled)
+  .reduce((total, product) => total + product.price * product.quantity, 0);
+      // const refundAmount=order.totalPrice-50;
+
       const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
       if(order.paymentMethod==='razorpay'){
-        user.wallet.balance += order.totalPrice;
+        user.wallet.balance += nonCancelledTotal;
 
         user.wallet.transactions.push({
           transactionId: transactionId,
           orderId: order._id,
-          amount: order.totalPrice,
+          amount: nonCancelledTotal,
           date: new Date(),
           description: `Refund for cancelled  order #${order._id.toString().substring(0, 6)}`,
           type: "credit",
@@ -787,8 +796,20 @@ const getReturnRequest = async (req, res) => {
 const acceptReturnRequest = async (req, res) => {
   const orderid = req.params.id;
   try {
-    const order = await Orders.findById({ _id: orderid });
+    const order = await Orders.findById({ _id: orderid }).populate({
+      path:'coupon'
+    });
+    console.log('orderrrr',order);
+    
     const user = await User.findById(order.userId);
+
+    const nonCancelledTotal = order.products
+  .filter((product) => !product.isCancelled && !product.returnRequestStatus)
+  .reduce((total, product) => total + product.price * product.quantity, 0);
+
+
+  console.log('Non-cancelled total price:', nonCancelledTotal);
+
     const updatedOrder = await Orders.findByIdAndUpdate(
       orderid,
       {
@@ -802,25 +823,30 @@ const acceptReturnRequest = async (req, res) => {
       { new: true }
     );
 
-    if (order.paymentMethod === "razorpay") {
+    let refundAmount = nonCancelledTotal;
+if (order.coupon && order.coupon.discount) {
+      refundAmount = refundAmount * ( order.coupon.discount / 100);
+    }
+
       const transactionId = `TID-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 6)
         .toUpperCase()}`;
-
-      user.wallet.balance += order.totalPrice;
+      
+      user.wallet.balance += refundAmount;
       user.wallet.transactions.push({
         transactionId: transactionId,
         orderId: orderid,
-        amount: order.totalPrice,
+        amount: refundAmount,
         date: new Date(),
         description: `Refund for returned order #${order._id
           .toString()
           .substring(0, 6)}`,
         type: "credit",
       });
+      console.log('totalPrice',refundAmount);
+      
       await user.save();
-    }
 
     if (updatedOrder) {
       res.json({ status: "success", message: "Return request accepted." });
@@ -891,12 +917,16 @@ const acceptAProductReturnRequest = async (req, res) => {
   const { orderId, productId } = req.params;
 
   try {
-    const order = await Orders.findById(orderId);
+    const order = await Orders.findById(orderId).populate({
+      path:'coupon'
+    });
     if (!order) {
       return res
         .status(404)
         .json({ status: "error", message: "Order not found." });
     }
+
+    console.log('order',order);
 
     const user = await User.findById(order.userId);
     if (!user) {
@@ -918,21 +948,22 @@ const acceptAProductReturnRequest = async (req, res) => {
     product.returnRequestStatus = "Return Accepted";
     product.isReturned = true;
 
-    // const productTotal = product.price * product.quantity;
-    // order.totalPrice -= productTotal;
     // Save the updated order
     await order.save();
 
-    if (order.paymentMethod === "razorpay") {
       const transactionId = `TID-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 6)
         .toUpperCase()}`;
-      user.wallet.balance += product.total;
+        let totalPrice=product.total;
+        if(order.coupon&&order.discount){ 
+          totalPrice=totalPrice * ( order.coupon.discount / 100);
+         }
+      user.wallet.balance += totalPrice;
       user.wallet.transactions.push({
         transactionId,
         orderId,
-        amount: product.total,
+        amount: totalPrice,
         date: new Date(),
         description: `Refund for returned product #${productId.substring(
           0,
@@ -940,10 +971,11 @@ const acceptAProductReturnRequest = async (req, res) => {
         )} in order #${orderId.substring(0, 6)}`,
         type: "credit",
       });
+      console.log('totalprice',totalPrice);
+      
 
       // Save the updated user
       await user.save();
-    }
 
     res.json({
       status: "success",
@@ -1594,8 +1626,7 @@ const adminhome = async (req, res) => {
     console.log('adminhome');
     const {filter}=req.query;
     console.log('filter',filter);
-    
-
+      
     const date=new Date();
     let startDate;
 
@@ -1603,7 +1634,9 @@ const adminhome = async (req, res) => {
       startDate = new Date(date.getFullYear(), date.getMonth(), 1); // Start of the month
     } else if (filter === 'weekly') {
       startDate = new Date(date.setDate(date.getDate() - 7)); // Last 7 days
-    } else {
+    } else if (filter === 'daily') {
+      startDate = new Date(date.setDate(date.getDate()-1)); // Start of the day
+    }else {
       startDate = new Date(date.getFullYear(), 0, 1); // Start of the year
     }  
 
@@ -1693,27 +1726,26 @@ const adminhome = async (req, res) => {
     ]);
 
     const topCategories = await Orders.aggregate([
-  { $unwind: "$products" }, // Unwind the products array
+  { $unwind: "$products" }, 
   {
     $lookup: {
-      from: "products", // Join with the products collection
+      from: "products",
       localField: "products.productId",
       foreignField: "_id",
       as: "productDetails",
     },
   },
-  { $unwind: "$productDetails" }, // Unwind the productDetails array
+  { $unwind: "$productDetails" }, 
   {
     $group: {
-      _id: "$productDetails.category", // Group by the category field
-      totalSold: { $sum: "$products.quantity" }, // Sum the quantities sold
+      _id: "$productDetails.category", 
+      totalSold: { $sum: "$products.quantity" }, 
     },
   },
-  { $sort: { totalSold: -1 } }, // Sort by totalSold in descending order
-  { $limit: 5 }, // Limit to the top 5 categories
+  { $sort: { totalSold: -1 } },
+  { $limit: 5 }, 
 ]);    
 
-    // Render sales report view
     if (filter) {
       return res.json({
         ordersData,
@@ -1728,7 +1760,7 @@ const adminhome = async (req, res) => {
       topCategories,
       totalSales,
       salesData,
-      totalSalesAmount: salesData[0].totalOrderAmount,
+      totalSalesAmount: salesData[0].totalOrderAmount.toFixed(2),
       salesReport: salesData[0] || null,
       totalDiscountAmount: salesData[0].totalDiscount.toFixed(2),
       mostOrderedProduct: mostOrderedProduct.pname,
@@ -1756,7 +1788,7 @@ const salesReport = async (req, res) => {
         $gte: new Date(today.setHours(0, 0, 0)),
         $lte: new Date(today.setHours(23, 59, 59)),
       };
-    } else if (reportType === "weekly") {
+    } else if (reportType == "weekly") {
       const today = new Date();
       const weekStart = new Date(
         today.setDate(today.getDate() - today.getDay())
@@ -1772,8 +1804,8 @@ const salesReport = async (req, res) => {
     }
 
     const orders = await Orders.find(filter)
-      .populate("userId", "name email address") 
-      .populate("products.productId", "pname price") 
+      .populate("userId") 
+      .populate("products.productId") 
       .lean();
 
       console.log('orderaddress',orders);
@@ -1790,88 +1822,122 @@ const salesReport = async (req, res) => {
 
     // Generate Report based on format
     if (format === "pdf") {
-      const doc = new PDFDocument();
+      const doc = new PDFDocument({ margin: 30 });
       const fileName = `sales-report-${reportType}.pdf`;
     
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
       doc.pipe(res);
-
     
       // PDF Header
-      doc.fontSize(18).text("Sales Report", { align: "center" });
-      doc.moveDown();
+      const currentDate = new Date();
+      const dateAndTime = currentDate.toLocaleString();
+      doc.fontSize(18).text("Sales Report", { align: "center" }).moveDown();
       doc.fontSize(14).text(`Report Type: ${reportType}`);
+      if(reportType=='custom'){
+        doc.text(`Start Date: ${startDate}`);
+        doc.text(`End Date: ${endDate}`);
+      }
       doc.text(`Total Orders: ${totalOrders}`);
-      doc.text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`);
-      doc.moveDown();
+      doc.text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`).moveDown();
+      doc.text(`Date: ${dateAndTime}`);
+
     
-      // Table Header
-      const startX = 50; // Starting X position
-      const startY = doc.y; // Starting Y position
-      const columnWidths = [100, 150, 120, 100]; // Column widths
+      const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
     
-      const drawRow = (y, columns) => {
-        doc.lineWidth(0.5).moveTo(startX, y).lineTo(550, y).stroke(); // Top border
+      // Adjusted column widths
+      const columnWidths = [
+        pageWidth * 0.15, // Order ID
+        pageWidth * 0.10, // User Name
+        pageWidth * 0.17, // Payment Method
+        pageWidth * 0.35, // Products
+        pageWidth * 0.12, // Discount
+        pageWidth * 0.11, // Total Price
+      ];
+    
+      const startX = doc.page.margins.left;
+      let currentY = doc.y;
+    
+      const tableHeaders = [
+        "Order ID",
+        "User Name",
+        "Payment Method",
+        "Products",
+        "Discount",
+        "Total Price",
+      ];
+    
+      // Function to calculate row height dynamically
+      const calculateRowHeight = (columns, columnWidths, fontSize) => {
+        const padding = 10;
+        return columns.reduce((maxHeight, text, index) => {
+          const columnWidth = columnWidths[index] - padding;
+          const lines = doc.heightOfString(text, { width: columnWidth, fontSize });
+          return Math.max(maxHeight, lines);
+        }, 0) + padding;
+      };
+    
+      // Function to draw rows
+      const drawRow = (y, columns, isHeader = false) => {
+        const fontSize = isHeader ? 12 : 10;
+        const rowHeight = calculateRowHeight(columns, columnWidths, fontSize);
+    
         let x = startX;
+    
         columns.forEach((text, index) => {
-          doc.text(text, x + 5, y + 5, { width: columnWidths[index], align: "left" });
-          x += columnWidths[index];
+          const columnWidth = columnWidths[index];
+    
+          // Draw cell border
+          doc
+            .rect(x, y, columnWidth, rowHeight)
+            .stroke();
+    
+          // Add text inside cell
+          doc
+            .fontSize(fontSize)
+            .text(text, x + 5, y + 5, { width: columnWidth - 10, align: "left" });
+    
+          x += columnWidth;
         });
+    
+        return y + rowHeight; // Return the new Y position
       };
     
-      const drawLine = (y) => {
-        doc.lineWidth(0.5).moveTo(startX, y).lineTo(550, y).stroke(); // Horizontal line
-      };
-    
-      // Draw Header Row
-      drawRow(startY, ["Order ID", "User Name", "Payment Method", "Total Price"]);
-      drawLine(startY + 20);
+      // Draw Table Header
+      currentY = drawRow(currentY, tableHeaders, true);
     
       // Table Body
-      let currentY = startY + 25;
-      orders.forEach((order, index) => {
-        drawRow(currentY, [
+      orders.forEach((order) => {        
+        if (currentY > doc.page.height - 50) {
+          doc.addPage();
+          currentY = 50; // Reset Y position for new page
+          currentY = drawRow(currentY, tableHeaders, true); // Redraw header
+        }
+    
+        // Combine product details into a single string
+        const productDetails = order.products
+          .map(
+            (product) =>
+              `${product.productId.pname} (Qty: ${product.quantity}, ₹${product.price.toFixed(
+                2
+              )})`
+          )
+          .join("\n");
+    
+        // Order Row with dynamic row height
+        currentY = drawRow(currentY, [
           order._id,
           order.userId.name,
           order.paymentMethod,
-          `₹${order.totalPrice.toFixed(2)}`,
+          productDetails,
+          `₹${order.discount || 0}`, // Discount column
+          `₹${order.totalPrice.toFixed(2)}`, // Total Price column
         ]);
-        currentY += 25;
-    
-        // Add Products Header
-        doc.fontSize(10).text("Products:", startX, currentY);
-        currentY += 15;
-    
-        drawRow(currentY, ["Product Name", "Quantity", "Price"]);
-        drawLine(currentY + 20);
-        currentY += 25;
-    
-        // Add Product Details
-        order.products.forEach((product) => {
-          drawRow(currentY, [
-            product.productId.pname,
-            product.quantity.toString(),
-            `₹${product.price.toFixed(2)}`,
-          ]);
-          currentY += 25;
-        });
-    
-        // Add Discount
-        doc.fontSize(10).text(
-          `Discount Applied: ${order.discount || "N/A"}`,
-          startX,
-          currentY
-        );
-        currentY += 15;
-    
-        drawLine(currentY); // Divider for next order
-        currentY += 10;
       });
-      // const writeStreamfs.createWriteStream(fileName)
-
+    
       doc.end();
     }
+    
      else if (format === "excel") {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Sales Report");

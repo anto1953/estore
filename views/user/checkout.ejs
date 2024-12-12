@@ -294,6 +294,7 @@
                     <!-- Payment Method Selection -->
                     <div class="payment_method">
                         <h3>Select Payment Method</h3>
+                        <h6>*Cash on Delivery is not available for orders above ₹1000.</h6>
                         <div class="payment_options">
                             <label class="payment_option ">
                                 <input disabled type="radio" name="payment_method" value="credit_card" />
@@ -319,14 +320,35 @@
                     <div class="order_summary">
                         <h3>Order Summary</h3>
                         <ul class="order_list">
-                            <% orderDetails.products.forEach(product => { %>
+                            <% let totalOrderPrice = 0; %>
+                            <% cart.products.forEach(product => { %>
                                 <li>
                                     <div class="product_details">
-                                        <img src="  /uploads/<%= product.product.image[0] %>" alt="<%= product.product.pname %>" class="product_image" />
+                                        <img src="/uploads/<%= product.product.image[0] %>" alt="<%= product.product.pname %>" class="product_image" />
                                         <div class="product_info">
                                             <span class="product_name"><%= product.product.pname %></span> 
-                                            <span class="product_quantity"><%= product.quantity %> x <%= product.price %></span>
-                                            <span class="product_total">₹<%= product.total %></span>
+                    
+                                            <% 
+                                                let discountedPrice = product.product.pprice; 
+                                                if (product.product.offers && product.product.offers.length > 0) {
+                                                    const activeOffers = product.product.offers
+                                                        .filter(offer => 
+                                                            offer.offerId &&
+                                                            new Date(offer.offerId.expiryDate) > new Date() && 
+                                                            offer.offerId.isListed
+                                                        )
+                                                        .sort((a, b) => b.offerId.discount - a.offerId.discount); 
+                                                    
+                                                    const activeOffer = activeOffers.length > 0 ? activeOffers[0] : null;
+                                                    if (activeOffer) {
+                                                        discountedPrice = (product.product.pprice * (1 - activeOffer.offerId.discount / 100)).toFixed(2);
+                                                    }
+                                                }
+                                                totalOrderPrice += product.quantity * discountedPrice;
+                                            %>
+                    
+                                            <span class="product_quantity"><%= product.quantity %> x ₹<%= discountedPrice %></span>
+                                            <span class="product_total">₹<%= (product.quantity * discountedPrice).toFixed(2) %></span>
                                         </div>
                                     </div>
                                 </li>
@@ -347,7 +369,7 @@
                         </div>
                         <div class="total_amount">
                             <h5>Total</h5>
-                            <span id="total_price"> ₹ <%= orderDetails.totalPrice %></span>
+                            <span id="total_price"> ₹ <%= (totalOrderPrice + deliveryCharge).toFixed(2) %></span>
                         </div>
                         <button type="submit" class="place_order_btn" id="place_order_btn" disabled>Place Order</button>
                     </div>
@@ -376,22 +398,6 @@
                     this.classList.add('selected');
                 });
             });
-
-            // const totalPrice=orderDetails.totalPrice;
-            // console.log('totalprice',totalPrice);
-            
-            // const codOption = document.getElementById('cod_payment_option');
-            // if (totalPrice > 1000) {
-            //     console.log('>1000');
-                
-            //     codOption.disabled = true;
-
-            //     Swal.fire({
-            //     icon: 'info',
-            //     title: 'Cash on Delivery Unavailable',
-            //     text: 'Cash on Delivery is not available for orders above ₹1000. Please choose another payment method.',
-            //     });
-            // }
 
         let addressSelected = false;
         let paymentMethodSelected = false;
@@ -441,15 +447,17 @@
 
     // If "Remove Coupon" is clicked
     if (couponButton.innerText === "Remove Coupon") {
-        discountSection.style.display = 'none'; // Hide discount details
-        couponCodeInput.value = ''; // Clear coupon code input
-        couponButton.innerText = "Apply Coupon"; // Change button back to "Apply Coupon"
-        totalPriceElement.innerText = `₹${originalTotalPrice.toFixed(2)}`; // Reset total price
+        discountSection.style.display = 'none'; 
+        couponCodeInput.value = ''; 
+        couponButton.innerText = "Apply Coupon"; 
+        totalPriceElement.innerText = `₹${originalTotalPrice.toFixed(2)}`; 
         Swal.fire({
             icon: 'success',
             title: 'Coupon Removed',
             text: 'The coupon has been removed successfully.',
-        });
+        }).then(()=>{
+            location.reload();
+        })
         return;
     }
 
@@ -518,6 +526,9 @@
         totalPrice +=deliveryCharge     
         const discountAmountElement = document.getElementById('discount_amount');
         const discountAmount = parseFloat(discountAmountElement.textContent || discountAmountElement.innerText);
+        const couponCode = document.getElementById('coupon_code').value;
+        console.log('couponcode',couponCode);
+        
         console.log('Discount Amount:', discountAmount);
         console.log('paymentmethod',paymentMethod);
         
@@ -552,6 +563,7 @@
                         totalPrice: totalPrice ,
                         payment_method: document.querySelector('input[name="payment_method"]:checked').value,
                         discountAmount:discountAmount,
+                        couponCode
                     }),                    
                 });
 
@@ -559,7 +571,10 @@
                  console.log('data',data);
                  
                 if (!response.ok) {                    
-                    throw new Error(data.message || 'Failed to create Razorpay order.');
+                    Swal.fire({
+                        icon:'error',
+                        text:'there is something error with placing order'
+                    });
                 }
                 const razorpayKeyId="<%= razorpayKeyId %>";
                 
@@ -571,9 +586,7 @@
                     name: 'E-store',
                     description: 'Order Payment',
                     order_id: data.razorpayOrder.id,
-                    handler: async function (razorpayResponse) {
-                        console.log('responce',razorpayResponse);
-                        
+                    handler: async function (razorpayResponse) {                                                
                         // Verify payment on the server
                         const verifyResponse = await fetch('/verifyPayment', {
                             method: 'POST',
@@ -589,7 +602,7 @@
                         });
 
                         const verifyData = await verifyResponse.json();
-                        console.log('verification ',verifyResponse);
+                        console.log('verification ',verifyData);
                         
                         
                         if (verifyData.success) {
@@ -598,28 +611,37 @@
                                 title: 'Payment Successful!',
                                 text: 'Your order has been placed successfully!',
                             }).then(() => {
-                                window.location.href = '/cart'; // Redirect after successful order
+                                window.location.href = '/userProfileOrders';
                             });
                         } else {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Payment Verification Failed',
+                                title: 'Payment  Failed',
                                 text: verifyData.message || 'Please contact support.',
                             });
                         }
                     },
                     prefill: {
-                        name: '<%= user.name %>', // Prefill user data (update dynamically)
+                        name: '<%= user.name %>', 
                         email: '<%= user.email %>',
                         contact: '<%= user.phone %>',
                     },
                     theme: {
-                        color: '#3399cc', // Customize Razorpay modal theme color
+                        color: '#3399cc', 
                     },
                 };
 
                 const rzp = new Razorpay(options);
                 rzp.open();
+                rzp.on('payment.failed',function (razorpayResponse){
+                    Swal.fire({
+                        icon:'error',
+                        text:'Payment failed',
+                        confirmButtonText:'try again',
+                    }).then(()=>{
+                        window.location.href="/userProfileOrders"
+                    })
+                })
             } catch (error) {
                 console.log(error);
                 
@@ -639,14 +661,13 @@
                     body: JSON.stringify({
                         address: document.querySelector('input[name="address"]:checked').value,
                         payment_method: document.querySelector('input[name="payment_method"]:checked').value,
-                        totalPrice,discountAmount
+                        totalPrice,
+                        discountAmount,
+                        couponCode
 
-                        
                     }),
                 });
                 console.log('responce',response);
-                
-
                 const data = await response.json();
 
                 if (response.ok) {
@@ -655,7 +676,7 @@
                         title: 'Order Placed!',
                         text: 'Your order has been placed successfully!',
                     }).then(() => {
-                        window.location.href = '/cart';
+                        window.location.href = '/userProfileOrders';
                     });
                 } else {
                     Swal.fire({
@@ -674,8 +695,6 @@
             }
         }
     }});
-    
-
     </script>
 </body>
 </html>

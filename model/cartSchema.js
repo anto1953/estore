@@ -36,8 +36,31 @@ const cartSchema = new Schema({
         },
         category: {
             type: String
-        }
+        },
+        offers: [{
+            offerId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Offers',
+            },
+            offerName: {
+                type: String,
+            },
+            offerCode: {
+                type: String,
+            },
+            discount: {
+                type: Number,
+            },
+            offerType: {
+                type: String,
+            },
+            expiryDate: {
+                type: Date,
+            }
+        }],
+        
     }],
+    
     totalPrice: {
         type: Number,
         required: true,
@@ -59,6 +82,15 @@ cartSchema.pre('save', function(next) {
     this.products.forEach(product => {
         total += product.total;
     });
+    // Apply discounts from offers, if any
+    if (this.offers && this.offers.length > 0) {
+        this.offers.forEach(offer => {
+            if (offer.discount) {
+                total -= (total * offer.discount) / 100; // Assuming percentage discount
+            }
+        });
+    }
+
     this.totalPrice = total;
     this.updatedAt = Date.now();
     next();

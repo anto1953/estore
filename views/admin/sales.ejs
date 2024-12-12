@@ -15,6 +15,13 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
+                box-shadow: none ;
+                
+            }
+            .card-body {
+              border-radius: 15px;;
+              box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3), 
+                        -5px -5px 10px rgba(66, 84, 141, 0.8);
             }
             
             .chart-container canvas {
@@ -90,7 +97,13 @@
                     <p>Generate and view the sales report</p>
                 </div>
         
-            <div class="col-md-6" style=" border-radius: 17px; border-color: white; border-width: 6px; border-style: solid; padding: 7px">
+            <div class="col-md-6" style=" 
+            border-radius: 17px; 
+            border-width: 0px; 
+            padding: 7px; 
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3), 
+                        -5px -5px 10px rgba(81, 96, 138, 0.8);
+          ">
                 <!-- Filter Form -->
                 <form id="salesReportForm" action="/admin/salesReport" method="get">
                     <div class="row g-3">
@@ -130,7 +143,6 @@
                 </form>
             </div>
         </div>
-        
             
                <br>
                <!-- Summary Section -->
@@ -185,6 +197,7 @@
                                   <option value="yearly">Yearly</option>
                                   <option value="monthly">Monthly</option>
                                   <option value="weekly">Weekly</option>
+                                  <option value="daily">Daily</option>
                                 </select>
                               </div></h5>
                                <canvas id="salesChart"></canvas>
@@ -286,14 +299,38 @@ ordersChart.data.datasets[0].backgroundColor = data.orderStatusData.map(item => 
     case 'Return Request Accepted':
       return '#ffeb3b'; // Yellow
     default:
-      return '#cccccc'; // Default color if status doesn't match
+      return '#cccccc'; // Default color 
   }
 });
     ordersChart.update();
   }
+  const ctxOrders = document.getElementById('ordersChart').getContext('2d');
+const ordersChart = new Chart(ctxOrders, {
+  type: 'doughnut',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Orders',
+      data: [],
+      backgroundColor: [], 
+    }],
+  },
+  options: {
+    plugins: {
+      legend: {
+        labels: {
+          color: 'white',
+        },
+      },
+      tooltip: {
+        bodyColor: 'white', 
+      },
+    },
+  },
+});
 
 
-  const ctxSales = document.getElementById('salesChart').getContext('2d');
+const ctxSales = document.getElementById('salesChart').getContext('2d');
 const salesChart = new Chart(ctxSales, {
   type: 'line',
   data: {
@@ -341,33 +378,6 @@ const salesChart = new Chart(ctxSales, {
     },
   },
 });
-
-
-const ctxOrders = document.getElementById('ordersChart').getContext('2d');
-const ordersChart = new Chart(ctxOrders, {
-  type: 'doughnut',
-  data: {
-    labels: [],
-    datasets: [{
-      label: 'Orders',
-      data: [],
-      backgroundColor: [], // We'll dynamically fill this array
-    }],
-  },
-  options: {
-    plugins: {
-      legend: {
-        labels: {
-          color: 'white', // Change legend text color to white
-        },
-      },
-      tooltip: {
-        bodyColor: 'white', // Change tooltip text color to white
-      },
-    },
-  },
-});
-
 
   // Initial load
   updateCharts();

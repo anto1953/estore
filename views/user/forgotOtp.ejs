@@ -134,8 +134,8 @@
         let countdownElement = document.getElementById("countdown");
         let resendLink = document.getElementById("resend-link");
         let verifyBtn = document.getElementById("verify-btn"); 
-        let totalTime = 1 * 60; 
-        let activateLinkTime = 30; 
+        let totalTime = 5 * 60; 
+        let activateLinkTime = 60; 
         let timeLeft = totalTime;
         let timerInterval;
 
@@ -199,8 +199,7 @@
         }).then(Response=>Response.json())
         .then(result => {
                 if(result.status=='success'){
-                    console.log("succuss");
-                    
+                    console.log("succusss");
                 Swal.fire({
                     title: 'success!',
                     icon: 'success',
@@ -209,16 +208,17 @@
                 }).then(()=>{
                     window.location.href='/newPassword';
                 })
-                otpForm.reset();
+                // otpForm.reset();
             }else{
                 Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
                         text: result.message,
-                }).then(()=>{
-                    otpForm.reset();
-
                 })
+                // .then(()=>{
+                    // otpForm.reset();
+
+                // })
             }})
     })
         

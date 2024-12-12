@@ -69,7 +69,7 @@
                   <!-- Transaction Table -->
                   <div class="table-responsive mt-4">
                     <h4 class="mb-3">Transaction History</h4>
-
+                  
                     <table class="table">
                       <thead>
                         <tr>
@@ -100,15 +100,24 @@
                         <% } %>
                       </tbody>
                     </table>
+                  
+                    <!-- Pagination Controls -->
+                    <% if (totalPages > 1) { %>
+                      <nav aria-label="Transaction History Pagination">
+                        <ul class="pagination justify-content-center">
+                          <% for (let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                              <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                            </li>
+                          <% } %>
+                        </ul>
+                      </nav>
+                    <% } %>
                   </div>
+                  
                 </div>
               </div>
             </div>
-      
-            <!-- <div class="text-right mt-3">
-              <a class="btn_1" href="/dashboard">Back to Dashboard</a>
-            </div> -->
-      
           </div>
         </div>
       </section>

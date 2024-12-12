@@ -17,11 +17,15 @@ async (request, accessToken, refreshToken, profile, done) => {
         let user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
+            let newReferralCode;
+        newReferralCode = Math.random().toString().slice(2, 8); // Generates referral code
+      
             user = new User({
                 googleId: profile.id,
                 name: profile.displayName,
                 email: (profile.emails && profile.emails[0]) ? profile.emails[0].value : '',
-                profilephoto: (profile.photos && profile.photos[0]) ? profile.photos[0].value : ''
+                profilephoto: (profile.photos && profile.photos[0]) ? profile.photos[0].value : '',
+                referralCode:newReferralCode,
             });           
             await user.save();
         }

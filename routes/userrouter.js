@@ -29,7 +29,7 @@ router.get(
   }
 );
 
-router.get("/profile", usercontroller.profile);
+router.get("/profile",usercontroller.profile);
 router.get("/success", usercontroller.success);
 router.get("/failure", usercontroller.failure);
 router.get("/userhome", usercontroller.userhome);
@@ -40,12 +40,9 @@ router.get("/otp", usercontroller.otp);
 router.post("/otp", usercontroller.otpPost);
 router.get("/email", usercontroller.email);
 router.post("/email", usercontroller.emailPost);
-router.post("/forgotOtp", usercontroller.forgotOtpPost);
+router.post("/forgotOtp",checkSessionMiddleware,blockCheckMiddleware, usercontroller.forgotOtpPost);
 router.get(
-  "/newPassword",
-  checkSessionMiddleware,
-  blockCheckMiddleware,
-  usercontroller.newPassword
+  "/newPassword",checkSessionMiddleware,blockCheckMiddleware,usercontroller.newPassword
 );
 router.post("/newPassword", usercontroller.newPasswordPost);
 router.get("/viewProducts", usercontroller.viewProducts);
@@ -181,7 +178,7 @@ router.get(
 router.post("/editAddress/:id", usercontroller.editAddressPost);
 router.post("/deleteAddress/:id", usercontroller.deleteAddress);
 router.post("/setDefaultAddress/:id", usercontroller.setDefaultAddress);
-router.get("/forgotOtp", usercontroller.forgotOtp);
+router.get("/forgotOtp",checkSessionMiddleware,blockCheckMiddleware, usercontroller.forgotOtp);
 
 router.get("/logout", usercontroller.logout);
 

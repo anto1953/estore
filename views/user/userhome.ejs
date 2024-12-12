@@ -13,7 +13,7 @@
                 <!-- Logo -->
                 <div class="col-xl-1 col-lg-1 col-md-1 col-sm-3">
                   <div class="logo">
-                    <a href="index.html"
+                    <a href="/userhome"
                       ><img src="assets/img/logo/logo.png" alt=""
                     /></a>
                   </div>
@@ -26,14 +26,14 @@
                         <li><a href="userhome">Home</a></li>
                         <li><a href="#category">Category</a></li>
                         <li><a href="viewProducts">products</a></li>
-                        <li>
+                        <!-- <li>
                           <a href="blog.html">Blog</a>
                           <ul class="submenu">
                             <li><a href="blog.html">Blog</a></li>
                             <li><a href="single-blog.html">Blog Details</a></li>
                           </ul>
                         </li>
-                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="contact.html">Contact</a></li> -->
                       </ul>
                     </nav>
                   </div>
@@ -233,11 +233,8 @@
             <% category.forEach(function(category) { %>
             <div class="col-xl-4 col-lg-6">
               <div class="single-category mb-30">
-                <div class="category-img">
-                  <img
-                    src="uploads/<%= category.image %>"
-                    alt="<%= category.value %>"
-                  />
+                <div class="category-img">                  
+                  <img src="uploads/<%= category.image %>" alt="<%= category.value %>"/>
                   <div class="category-caption">
                     <h2><%= category.value %></h2>
                     <span class="best"><a href="#">Best New Deals</a></span>
@@ -256,8 +253,7 @@
       <section class="latest-product-area padding-bottom">
         <div class="container">
           <div
-            class="row product-btn d-flex justify-content-end align-items-end"
-          >
+            class="row product-btn d-flex justify-content-end align-items-end">
             <!-- Section Tittle -->
             <div class="col-xl-4 col-lg-5 col-md-5">
               <div class="section-tittle mb-30">
@@ -277,8 +273,7 @@
                       role="tab"
                       aria-controls="nav-home"
                       aria-selected="true"
-                      >All</a
-                    >
+                      >All</a>
                     <a
                       class="nav-item nav-link"
                       id="nav-profile-tab"
@@ -287,28 +282,22 @@
                       role="tab"
                       aria-controls="nav-profile"
                       aria-selected="false"
-                      >New</a
-                    >
-                    <a
-                      class="nav-item nav-link"
-                      id="nav-contact-tab"
+                      >New</a>
+                    <a class="nav-item nav-link" id="nav-contact-tab"
                       data-toggle="tab"
                       href="#nav-contact"
                       role="tab"
                       aria-controls="nav-contact"
-                      aria-selected="false"
-                      >Featured</a
-                    >
-                    <a
-                      class="nav-item nav-link"
+                      aria-selected="false">Featured
+                    </a>
+                    <a class="nav-item nav-link"
                       id="nav-last-tab"
                       data-toggle="tab"
                       href="#nav-last"
                       role="tab"
                       aria-controls="nav-contact"
-                      aria-selected="false"
-                      >Offer</a
-                    >
+                      aria-selected="false">
+                      Offer</a>
                   </div>
                 </nav>
                 <!--End Nav Button  -->
@@ -332,8 +321,7 @@
                       <a href="/viewProductDetails/<%= product._id %>">
                         <img
                           src="uploads/<%= product.image[0] %>"
-                          alt="<%= product.name %>"
-                      /></a>
+                          alt="<%= product.name %>"/></a>
                       <% if (product.isNew) { %>
                       <div class="new-product">
                         <span>New</span>
@@ -354,17 +342,21 @@
                         >
                       </h4>
                       <div class="price">
-                        <p>
+                        <p>                             
                           <% if (product.offers.length > 0) { %>
-                              <% 
-                                  const activeOffer = product.offers.find(offer => new Date(offer.expiryDate) > new Date()); 
-                              %>
-                              <% if (activeOffer) { 
-                                  const discountedPrice = (product.pprice * (1 - activeOffer.discount / 100)).toFixed(2); 
-                              %>
-                                  <span style="text-decoration: line-through; color: grey;">₹<%= product.pprice %></span>
-                                  <span style="color: rgb(16, 5, 5); font-weight: bold;"> ₹<%= discountedPrice %></span><br>  
-                                  <span class="discount-percentage">(Discount: <%= activeOffer.discount %>%)</span>
+                            <%               
+                                const activeOffers = product.offers
+                                    .filter(offer =>
+                                        new Date(offer.offerId.expiryDate) > new Date() && 
+                                        offer.offerId.isListed
+                                    )                                
+                                const activeOffer = activeOffers.length > 0 ? activeOffers[0] : null;
+                    
+                                if (activeOffer) {
+                                    let discountedPrice = (product.pprice * (1 - activeOffer.offerId.discount / 100)).toFixed(2);
+                            %>
+                            <span  style="text-decoration: line-through; color: grey;">₹<%= product.pprice %></span>
+                            <span class="discounted-price" id="discountedPrice-<%= product._id %>" style="color: rgb(16, 5, 5); font-weight: bold;"> ₹<%= discountedPrice %></span>
                               <% } else { %>
                                   ₹<%= product.pprice %>
                               <% } %>

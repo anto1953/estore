@@ -56,7 +56,32 @@
                       </div>
                     </td>
                     <td>
-                      <h5 class="product-price" data-index="<%= index %>">₹<%= item.price.toFixed(2) %></h5> 
+                      <h5 class="product-price" data-index="<%= index %>">
+                        <% if (item.product.offers.length > 0) { %>
+                          <%               
+                              const activeOffers = item.product.offers
+                                  .filter(offer => 
+                                      offer.offerId &&
+                                      new Date(offer.offerId.expiryDate) > new Date() && 
+                                      offer.offerId.isListed
+                                  )
+                                  .sort((a, b) => b.offerId.discount - a.offerId.discount); 
+                                  console.log('activeoffers',item.product.offers)
+                              
+                              const activeOffer = activeOffers.length > 0 ? activeOffers[0] : null;                  
+                              console.log('activeoffer',activeOffer)
+
+                              if (activeOffer) {
+                                  let discountedPrice = (item.product.pprice * (1 - activeOffer.offerId.discount / 100)).toFixed(2);
+                          %>
+                          ₹<%= discountedPrice %>
+                          <% } else { %>
+                        ₹<%= item.product.pprice.toFixed(2) %> 
+                        <% } %>
+                        <% } else { %>
+                          ₹<%= item.product.pprice.toFixed(2) %> 
+                          <% } %>
+                        </h5>
                     </td>
                     <td>
                       <div class="product_count">
@@ -84,13 +109,13 @@
                       
                     </td>
                     <td>
-                      <h5 class="product-total" data-index="<%= index %>">₹<%= (item.price * item.quantity).toFixed(2) %></h5> 
+                      <h5 class="product-total" data-index="<%= index %>">₹</h5> 
                     </td>
                     <td>
                       <button class="btnn btn-danger" onclick="deleteProductFromCart('<%= item.product._id %>')">
                         <i class="fas fa-times"></i>
                     </button>
-                                        </td>
+                      </td>
                   </tr>
                 <% }) %>
               <% } %>
@@ -104,12 +129,13 @@
           <!-- Checkout Buttons -->
           <div class="checkout_btn_inner float-right">
             <a class="btn_1" href="/viewProducts">Continue Shopping</a>
-            <button 
-            class="btn_1 checkout_btn_1" 
-            onclick="window.location.href='/checkout/<%= cart._id %>'">
-            Proceed to Checkout
-          </button>
-                    </div>
+            <a 
+                class="btn_1 checkout_btn_1" 
+                id="checkoutButton"
+                data-cart-id="<%= cart._id %>" href="/checkout/<%= cart._id %>">
+                Proceed to Checkout
+          </a>
+            </div>
         </div>
       </div>
     </div>
@@ -127,6 +153,33 @@
 
   <script>
   document.addEventListener("DOMContentLoaded", function() {
+
+    const rows = document.querySelectorAll('tr');
+  
+  rows.forEach((row) => {
+    const priceElement = row.querySelector('.product-price'); // Get the product price element
+    const quantityInput = row.querySelector('.input-number'); // Get the quantity input element
+    const totalElement = row.querySelector('.product-total'); // Get the product total element
+
+    if (priceElement && quantityInput && totalElement) {
+      // Parse the price
+      const basePrice = parseFloat(priceElement.textContent.replace('₹', '').trim()) || 0;
+
+      // Function to update the total price for this row
+      const updateTotal = () => {
+        const quantity = parseInt(quantityInput.value) || 1;
+        const total = basePrice * quantity;
+        totalElement.textContent = `₹${total.toFixed(2)}`;
+      };
+
+      // Update total on quantity change
+      quantityInput.addEventListener('input', updateTotal);
+
+      // Initialize the total
+      updateTotal();
+    }
+  });
+
   const quantityInputs = document.querySelectorAll(".input-number");
   const totalAmountEl = document.getElementById("totalAmount");
 
@@ -253,6 +306,64 @@ function deleteProductFromCart(productId) {
     }
   });
 }
+
+// document.addEventListener('DOMContentLoaded', () => {
+//   const checkoutButton = document.getElementById('checkoutButton');
+//   // const totalAmountText = document.getElementById("totalAmount").textContent;
+//   // const totalAmount = parseFloat(totalAmountText.replace('₹', '').trim());
+  
+
+
+//   if (checkoutButton) {
+//     checkoutButton.addEventListener('click', async () => {
+//       const cartId = checkoutButton.getAttribute('data-cart-id');
+
+//       try {
+//         Swal.fire({
+//           title: 'Processing your order...',
+//           text: 'Please wait while we process your checkout.',
+//           allowOutsideClick: false,
+//           showConfirmButton: false,
+//           didOpen: () => {
+//             Swal.showLoading();
+//           },
+//         });
+
+//         const response = await fetch(`/checkout/${cartId}`, {
+//           method: 'GET',
+//           // headers: {
+//           //   'Content-Type': 'application/json',
+//           // },
+//           // body: JSON.stringify({ cartId}), 
+//         });
+
+//         const result = await response.json();
+
+//         if (response.status!='success') {
+//           Swal.fire({
+//             icon: response.status,
+//             text: response.message,
+//             confirmButtonText: 'Ok',
+//           }).then(() => {
+//             location.reload();
+//           });
+//         } 
+//       } catch (error) {
+//         console.error('Error during checkout:', error);
+//         Swal.fire({
+//           icon: 'error',
+//           title: 'Unexpected Error',
+//           text: 'Something went wrong. Please try again.',
+//         });
+//       } finally {
+//         checkoutButton.textContent = 'Proceed to Checkout';
+//         checkoutButton.disabled = false;
+//       }
+//     });
+//   }
+// });
+
+
   
   </script>
 </body>

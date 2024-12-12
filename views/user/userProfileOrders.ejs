@@ -118,12 +118,14 @@
                                             <%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
                                         </div>
                                     </div>
+                                    <div>
+                                    <h6>Payment method:<%= order.paymentMethod %></h6>
                                     <span class="status-badge <%= order.statusClass %>">
                                         <%= order.paymentStatus === 'Payment Pending' 
                                             ? 'Payment Pending' 
-                                            : order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                            :  order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
                                     </span>
-                                    
+                                    </div>
                                 </div>
                                 <div class="order-items">
                                     <% order.products.forEach(product => { %>
@@ -142,7 +144,8 @@
                                                 order.products.length > 1 && 
                                                 product.orderStatus !== 'Cancelled' && 
                                                 !product.isCancelled && 
-                                                !product.returnRequestStatus
+                                                !product.returnRequestStatus&&
+                                                order.orderStatus !='Cancelled'
                                             ) { %>
                                                 <button 
                                                     class="btnn btn-danger cancel-product-btn" 
@@ -323,6 +326,15 @@
 
                 const rzp = new Razorpay(options);
                 rzp.open();
+                rzp.on('payment.failed',function (razorpayResponse){
+                    Swal.fire({
+                        icon:'error',
+                        text:'Payment failed',
+                        confirmButtonText:'try again',
+                    }).then(()=>{
+                        window.location.href="/userProfileOrders"
+                    })
+                })
             }
         } catch (error) {
             console.log(error);
@@ -562,7 +574,6 @@ function cancelAProduct(orderId, productId) {
             })
             .then(data => {
                 if (data.status === 'success') {
-                    // Update the UI
                     const productElement = document.querySelector(`[data-product-id='${productId}']`);
                     if (productElement) {
                         const cancelButton = productElement.querySelector('.cancel-product-btn');
@@ -576,16 +587,13 @@ function cancelAProduct(orderId, productId) {
                         productElement.appendChild(span);
                     }
 
-                    // Show success alert
                     Swal.fire({
                         icon: 'success',
                         text: data.message
                     }).then(() => {
-                        // Reload or redirect if necessary
                         window.location.href = '/userProfileOrders';
                     });
                 } else {
-                    // Show error alert for backend errors
                     Swal.fire({
                         icon: 'error',
                         text: data.message || 'Unable to cancel the product.'
@@ -657,6 +665,8 @@ function downloadInvoice(orderId) {
       }
 
       const { order, products,address,user } = data;
+      console.log('dataaa',data);
+      
 
       // Create a new jsPDF instance
       const { jsPDF } = window.jspdf;
@@ -671,6 +681,12 @@ function downloadInvoice(orderId) {
       doc.setFontSize(22);
       doc.setFont('Helvetica', 'bold');
       doc.text('Invoice', 105, 20, { align: 'center' });
+
+      doc.setFontSize(15)
+      doc.text('E-store',95,30);
+      doc.text('Online Fashion Store',80,40)
+
+
 
       // Customer Details
       doc.setFontSize(12);
@@ -691,7 +707,7 @@ function downloadInvoice(orderId) {
       doc.text(`Order ID: ${order._id}`, 20, 100);
       doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 20, 105);
       doc.text(`Status: ${order.orderStatus}`, 20, 110);
-      doc.text(`Shipping Address: ${address.street}, ${address.city}, ${address.state}, ${address.zip}`, 20, 115, { maxWidth: 170 });
+      doc.text(`Shipping Address: ${address.street}, ${address.city}, ${address.state}, ${address.zipcode}`, 20, 115, { maxWidth: 170 });
 
       // Product Details Table
       let startY = 130;
@@ -714,8 +730,8 @@ function downloadInvoice(orderId) {
       startY += 10;
 
       doc.setFont('Helvetica', 'normal');
-      products.forEach(product => {
-        doc.text(product.name, 20, startY);
+      order.products.forEach(product => {
+        doc.text(product.productId.pname, 20, startY);
         doc.text(product.quantity.toString(), 90, startY);
         doc.text(formatRupee.format(product.price), 120, startY);
         doc.text(formatRupee.format(product.quantity * product.price), 160, startY);
@@ -727,6 +743,15 @@ function downloadInvoice(orderId) {
           startY = 20;
         }
       });
+      
+      // Apply Discount
+      if (order.discount && order.discount > 0) {
+        const discountedPrice = order.totalPrice - order.discount;
+        doc.text(`Discount: ${formatRupee.format(order.discount)}`, 20, startY);
+      }
+
+      startY += 10;
+      doc.text('Delivery charge: 50',20,startY)
 
       startY += 10;
       doc.setFontSize(12);
@@ -734,20 +759,10 @@ function downloadInvoice(orderId) {
       doc.text(`Total Price: ${formatRupee.format(order.totalPrice)}`, 20, startY);
       startY += 10;
 
-      // Apply Discount
-      if (order.discount && order.discount > 0) {
-        const discountedPrice = order.totalPrice - order.discount;
-        doc.text(`Discount: ${formatRupee.format(order.discount)}`, 20, startY);
-        startY += 10;
-        doc.text(`Final Total: ${formatRupee.format(discountedPrice)}`, 20, startY);
-      }
-
-
-
+      
       // Save the generated PDF
       doc.save(`invoice_${order._id}.pdf`);
 
-      // Show success notification
       Swal.fire({
         icon: 'success',
         title: 'Invoice Generated',
@@ -756,8 +771,6 @@ function downloadInvoice(orderId) {
     })
     .catch(error => {
       console.error('Error generating invoice:', error);
-
-      // Show error notification
       Swal.fire({
         icon: 'error',
         title: 'Error',

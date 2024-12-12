@@ -31,11 +31,11 @@
                     <input type="text" name="Search" placeholder="Search keyword" value="<%= searchQuery || '' %>">
                 </form>
             
-                <div class="select_option">
+                <!-- <div class="select_option">
                     <div class="select_option_list">Category <i class="right fas fa-caret-down"></i></div>
                     <div class="select_option_dropdown">
                         <% categories.forEach(category => { %>
-                          <p>
+                            <p>
                             <a href="/viewProducts?Search=<%= searchQuery %>&category=<%= category.value %>" 
                                class="category-option" 
                                data-category="<%= category.value %>">
@@ -45,7 +45,7 @@
                         <% }) %>
                       </div>
                 </div>
-                
+                 -->
                 <div class="select_option">
                     <div class="select_option_list">Sort by <i class="right fas fa-caret-down"></i></div>
                     <div class="select_option_dropdown">
@@ -299,7 +299,7 @@ document.addEventListener("DOMContentLoaded", function() {
             method: "GET",
         })
         .then(response => response.json())
-        .then(data => {
+        .then(data => { 
             if (data.success) {
                 const productContainer = document.getElementById('product-container');
                 productContainer.innerHTML = '';  

@@ -105,7 +105,7 @@
                                                 <select 
                                                     class="form-select" 
                                                     onchange="updateOrderStatus('<%= order._id %>', this.value)" 
-                                                    <%= (order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled') ? 'disabled' : '' %>
+                                                    <%= (order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled'||order.paymentStatus!='Success') ? 'disabled' : '' %>
                                                 >
                                                     <% ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].forEach(status => { %>
                                                         <option value="<%= status %>" <%= order.orderStatus === status ? 'selected' : '' %>><%= status %></option>
@@ -616,7 +616,7 @@ function viewOrderDetails(orderId) {
              // Populate address details
              document.getElementById('addressDetails').innerHTML = `
                 ${address.street}, ${address.city}, 
-                ${address.state} - ${address.zipCode}
+                ${address.state} - ${address.zipcode}<br>phone:${address.phone}
             `;
 
             // Populate order details
@@ -626,7 +626,7 @@ function viewOrderDetails(orderId) {
                 <strong>Created At:</strong> ${new Date(order.createdAt).toLocaleString()}<br>
                 <strong>Discount:</strong> ₹${order.discount}<br>
                 <strong>Delivery charge:</strong>₹50<br>
-                <strong>Total Price:</strong> ₹${order.totalPrice}<br>
+                <strong>Total Price:</strong> ₹${order.totalPrice.toFixed(2)}<br>
             `;
             document.getElementById('orderDetails').innerHTML = orderDetails;
 

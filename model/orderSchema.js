@@ -115,6 +115,10 @@ const orderSchema = new mongoose.Schema({
   discount: {
     type: Number,
   },
+  coupon: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "coupons",
+  },
 });
 
 module.exports = mongoose.model("orders", orderSchema);
