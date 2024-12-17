@@ -297,9 +297,9 @@
                         <h6>*Cash on Delivery is not available for orders above ₹1000.</h6>
                         <div class="payment_options">
                             <label class="payment_option ">
-                                <input disabled type="radio" name="payment_method" value="credit_card" />
+                                <input type="radio" name="payment_method" value="wallet" />
                                 <i class="fas fa-credit-card"></i>
-                                Credit Card
+                                Wallet
                             </label>
                             <label class="payment_option">
                                 <input type="radio" name="payment_method" value="cash_on_delivery" />
@@ -648,7 +648,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: error.message,
+                    text: 'something error',
                 });
             }
         } else {
@@ -669,8 +669,16 @@
                 });
                 console.log('responce',response);
                 const data = await response.json();
-
-                if (response.ok) {
+                console.log('datas',data);
+                
+                if(data.status!='success'){
+                    Swal.fire({
+                        icon:data.status,
+                        title:data.title,
+                        text:data.message,
+                    })
+                }
+                else if (response.ok) {
                     Swal.fire({ 
                         icon: 'success',
                         title: 'Order Placed!',

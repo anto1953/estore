@@ -24,11 +24,8 @@
                     <h3 class="text">₹<%= wallet.balance.toFixed(2) %></h3>
                   </div>
       
-                  <!-- Wallet Actions with Toggle Button to Change Balance -->
                   <div class="wallet_actions">
-                    <button id="toggleWalletForm" class="btn-primary" style="background-color: green; border-radius: 14px; border-style:hidden;">update Wallet</button>
                     
-                    <!-- Form to add or deduct balance, initially hidden -->
                     <form id="walletForm" style="display: none;">
                       <div class="input-group">
                         <input type="number" id="amount" class="form-control" placeholder="Amount" min="1" required>

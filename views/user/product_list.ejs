@@ -31,7 +31,7 @@
                     <input type="text" name="Search" placeholder="Search keyword" value="<%= searchQuery || '' %>">
                 </form>
             
-                <!-- <div class="select_option">
+                <div class="select_option">
                     <div class="select_option_list">Category <i class="right fas fa-caret-down"></i></div>
                     <div class="select_option_dropdown">
                         <% categories.forEach(category => { %>
@@ -45,16 +45,16 @@
                         <% }) %>
                       </div>
                 </div>
-                 -->
+                
                 <div class="select_option">
                     <div class="select_option_list">Sort by <i class="right fas fa-caret-down"></i></div>
                     <div class="select_option_dropdown">
                         <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=popularity">Popularity</a></p>
                         <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=price-asc">Price: Low to High</a></p>
                         <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=price-desc">Price: High to Low</a></p>
-                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=ratings">Average Ratings</a></p>                                                
-                        <p><a href="#" class="sort-option" data-sort="featured">Featured</a></p>
-                        <p><a href="#" class="sort-option" data-sort="new-arrivals">New Arrivals</a></p>
+                        <!-- <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=ratings">Average Ratings</a></p>                                                 -->
+                        <!-- <p><a href="#" class="sort-option" data-sort="featured">Featured</a></p>
+                        <p><a href="#" class="sort-option" data-sort="new-arrivals">New Arrivals</a></p> -->
                         <p><a href="#" class="sort-option" data-sort="a-z">A-Z</a></p>
                         <p><a href="#" class="sort-option" data-sort="z-a">Z-A</a></p>
                     </div>
@@ -351,8 +351,12 @@ document.addEventListener("DOMContentLoaded", function() {
     fetch(`/viewProducts?category=${encodeURIComponent(selectedCategory)}&ajax=true`)
       .then(response => response.json())
       .then(data => {
-        displayProducts(data.products);
-      })
+        if (data.success) {
+          displayProducts(data.products);
+        } else {
+          console.error('Error:', data.message);
+        }
+        })
       .catch(error => console.error('Error fetching products:', error));
   });
 });
@@ -384,18 +388,27 @@ function displayProducts(products) {
     const response = await fetch(`/addToWishlist/${productId}`, {
       method: 'POST',
     });
+    const result = await response.json();
 
-    if (response.ok) {
-      // Reload the page to update the button state or show a notification
-      location.reload();
+    if (result.status=='success') {
+        Swal.fire({
+            icon:'success',
+            text:result.message
+        }).then(()=>{
+            location.reload();
+        })
     } else {
-      const result = await response.json();
-      alert(result.message || 'Failed to add product to wishlist.');
+        Swal.fire({
+            icon:result.status,
+            text:result.message
+        })
     }
   } catch (error) {
     console.error('Error adding product to wishlist:', error);
-    alert('An error occurred. Please try again later.');
-  }
+Swal.json({
+    icon:'error',
+    text:'something error'
+})  }
 }
 
 

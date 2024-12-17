@@ -136,13 +136,21 @@
 
             // Validate Offer Code
             const offerCode = document.getElementById("offerCode").value.trim();
-            const offerCodeError = document.getElementById("offerCodeError");
-            if (!offerCode) {
-                offerCodeError.textContent = "Offer Code is required.";
-                valid = false;
-            } else {
-                offerCodeError.textContent = "";
-            }
+const offerCodeError = document.getElementById("offerCodeError");
+
+if (!offerCode) {
+    offerCodeError.textContent = "Offer Code is required.";
+    valid = false;
+} else if (!/^[A-Za-z0-9]+$/.test(offerCode)) {
+    offerCodeError.textContent = "Offer Code must not contain spaces or special characters.";
+    valid = false;
+} else if (!/[A-Za-z]/.test(offerCode) || !/\d/.test(offerCode)) {
+    offerCodeError.textContent = "Offer Code must contain both letters and numbers.";
+    valid = false;
+} else {
+    offerCodeError.textContent = "";
+}
+
 
             // Validate Discount
             const discount = document.getElementById("discount").value.trim();
@@ -150,8 +158,8 @@
             if (!discount) {
                 discountError.textContent = "Discount is required.";
                 valid = false;
-            } else if (isNaN(discount) || discount < 0 || discount > 100) {
-                discountError.textContent = "Discount must be a number between 0 and 100.";
+            } else if (isNaN(discount) || discount < 0 || discount > 80) {
+                discountError.textContent = "Discount must be a number between 0 and 80.";
                 valid = false;
             } else {
                 discountError.textContent = "";

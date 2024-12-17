@@ -42,101 +42,6 @@ const adminLogout = async (req, res) => {
   }
 };
 
-// const adminhome = async (req, res) => {
-//   try {
-//     if (req.session.admin) {
-//       // Fetch top 5 best-selling products
-//       const topProducts = await Orders.aggregate([
-//         { $unwind: "$products" },
-//         {
-//           $group: {
-//             _id: "$products.productId",
-//             totalSold: { $sum: "$products.quantity" },
-//           },
-//         },
-//         { $sort: { totalSold: -1 } },
-//         { $limit: 5 },
-//         {
-//           $lookup: {
-//             from: "products",
-//             localField: "_id",
-//             foreignField: "_id",
-//             as: "productDetails",
-//           },
-//         },
-//         { $unwind: "$productDetails" },
-//       ]);
-
-//       // Fetch top 5 selling categories
-//       const topCategories = await Orders.aggregate([
-//         { $unwind: "$products" },
-//         {
-//           $lookup: {
-//             from: "products",
-//             localField: "products.productId",
-//             foreignField: "_id",
-//             as: "productDetails",
-//           },
-//         },
-//         { $unwind: "$productDetails" },
-//         {
-//           $group: {
-//             _id: "$productDetails.category",
-//             totalSold: { $sum: "$products.quantity" },
-//           },
-//         },
-//         { $sort: { totalSold: -1 } },
-//         { $limit: 5 },
-//         {
-//           $lookup: {
-//             from: "categories",
-//             localField: "_id",
-//             foreignField: "_id",
-//             as: "categoryDetails",
-//           },
-//         },
-//         { $unwind: "$categoryDetails" },
-//       ]);
-
-//       // Calculate total sales and total revenue
-//       const totalSales = await Orders.aggregate([
-//         {
-//           $group: {
-//             _id: null,
-//             totalRevenue: { $sum: "$totalPrice" },
-//             totalOrders: { $sum: 1 },
-//           },
-//         },
-//       ]);
-//       const salesData = await Orders.aggregate([
-//         {
-//           $group: {
-//             _id: null,
-//             salesCount: { $sum: 1 },
-//             totalOrderAmount: { $sum: "$totalPrice" },
-//             totalDiscount: { $sum: "$discount" },
-//             totalCoupons: { $sum: "$totalCouponDiscount" },
-//           },
-//         },
-//       ]);
-
-//       res.render("admin/adminhome", {
-//         topProducts,
-//         topCategories,
-//         totalSales: totalSales[0]?.totalOrders || 0,
-//         totalRevenue: totalSales[0]?.totalRevenue || 0,
-//         totalSalesAmount: salesData[0].totalOrderAmount,
-//       salesReport: salesData[0] || null,
-//       totalDiscountAmount: salesData[0].totalDiscount.toFixed(2),
-//       });
-//     } else {
-//       res.render("login");
-//     }
-//   } catch (error) {
-//     res.send(error.message);
-//   }
-// };
-
 
 const users = async (req, res) => {
   const query = req.query.search ? req.query.search.toLowerCase() : "";
@@ -674,7 +579,7 @@ const orders = async (req, res) => {
 
   const searchQuery = req.query.search || "";
   const searchFilter = searchQuery
-    ? { pname: { $regex: searchQuery, $options: "i" } }
+    ? { orderStatus: { $regex: searchQuery, $options: "i" } }
     : {};
 
   try {
@@ -740,6 +645,10 @@ const   cancelOrder = async (req, res) => {
           { _id: product._id },
           { $inc: { stock: quantityOrdered } }
         );
+        item.orderStatus='Cancelled',
+        item.isCancelled=true
+        await order.save();
+
       }
       const nonCancelledTotal = order.products
   .filter((product) => !product.isCancelled)
@@ -748,7 +657,7 @@ const   cancelOrder = async (req, res) => {
 
       const transactionId = `TID-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
-      if(order.paymentMethod==='razorpay'){
+      if(order.paymentMethod==='razorpay'||order.paymentMethod==='wallet'){
         user.wallet.balance += nonCancelledTotal;
 
         user.wallet.transactions.push({
@@ -845,6 +754,18 @@ if (order.coupon && order.coupon.discount) {
         type: "credit",
       });
       console.log('totalPrice',refundAmount);
+
+      // srock increment
+      for (const item of order.products) {
+        if (!item.isReturned) { 
+          const product = item.productId;
+          const quantityReturned = item.quantity;
+          await Product.updateOne(
+            { _id: product },
+            { $inc: { stock: quantityReturned } }
+          );
+        }
+      }
       
       await user.save();
 
@@ -976,6 +897,12 @@ const acceptAProductReturnRequest = async (req, res) => {
 
       // Save the updated user
       await user.save();
+
+      const quantityReturned = product.quantity;
+    await Product.updateOne(
+      { _id: productId },
+      { $inc: { stock: quantityReturned } }
+    );
 
     res.json({
       status: "success",
@@ -1833,6 +1760,10 @@ const salesReport = async (req, res) => {
       const currentDate = new Date();
       const dateAndTime = currentDate.toLocaleString();
       doc.fontSize(18).text("Sales Report", { align: "center" }).moveDown();
+      doc.fontSize(15).text("E-store", { align: "center" })
+      doc.fontSize(13).text("Online fashion store", { align: "center" })
+
+
       doc.fontSize(14).text(`Report Type: ${reportType}`);
       if(reportType=='custom'){
         doc.text(`Start Date: ${startDate}`);
@@ -1946,10 +1877,10 @@ const salesReport = async (req, res) => {
       worksheet.columns = [
         { header: "Order ID", key: "_id", width: 30 },
         { header: "User Name", key: "userName", width: 20 },
-        { header: "User Email", key: "userEmail", width: 25 },
-        { header: "User Address", key: "userAddress", width: 30 },
-        { header: "Total Price (₹)", key: "totalPrice", width: 15 },
+        { header: "Payment method", key: "PaymentMethod", width: 25 },
+        { header: "Products", key: "Products", width: 30 },
         { header: "Discount", key: "discount", width: 15 },
+        { header: "Total Price (₹)", key: "totalPrice", width: 15 },
         { header: "Created At", key: "createdAt", width: 20 },
       ];
 
@@ -1958,23 +1889,14 @@ const salesReport = async (req, res) => {
         worksheet.addRow({
           _id: order._id,
           userName: order.userId.name,
-          userEmail: order.userId.email,
-          userAddress: order.userId.address,
+          PaymentMethod: order.paymentMethod,
+          Products: order.products.map((product) => product.productId.pname).join(", "),
           totalPrice: `₹${order.totalPrice}`,
           discount: order.discount || "N/A",
           createdAt: order.createdAt.toISOString(),
         });
 
-        // Add product details as sub-rows
-        order.products.forEach((product) => {
-          worksheet.addRow({
-            _id: `  - Product: ${product.productId.pname}`,
-            userName: "",
-            userEmail: "",
-            userAddress: "",
-            totalPrice: `  Quantity: ${product.quantity}, Subtotal: ₹${product.total}`,
-          });
-        });
+       
       });
 
       // Total Summary Row
@@ -2089,7 +2011,6 @@ module.exports = {
   listOffer,
   applyOfferToProducts,
   applyOfferToCategories,
-  // sales,
   salesReport,
   generateLedger
 };

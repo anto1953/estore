@@ -169,11 +169,14 @@ function validateForm() {
     }
 
     // Validate Phone (check if it's a valid number)
-    const phoneRegex = /^[+]?[0-9]{10}$/; // Updated to allow international formats
-    if (!phone || !phoneRegex.test(phone)) {
-        isValid = false;
-        document.getElementById('phone-error').textContent = 'Phone must be a valid number.';
-    }
+    const phoneRegex = /^(?!([0-9])\1{9})[+]?[0-9]{10}$/; // Disallow same digit repeated 10 times
+if (!phone || !phoneRegex.test(phone)) {
+    isValid = false;
+    document.getElementById('phone-error').textContent = 'Phone must be a valid number.';
+} else {
+    document.getElementById('phone-error').textContent = ''; // Clear the error if valid
+}
+
 
     // Validate Street Address
     if (!street) {

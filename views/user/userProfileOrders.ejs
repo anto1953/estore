@@ -61,6 +61,7 @@
 }
 
 .item {
+    box-shadow: -2px -4px 4px rgba(97, 101, 117, 0.3), -1px -1px 1px rgba(157, 175, 210, 0.8);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -76,8 +77,21 @@
     color: #555;
     min-width: 120px; 
 }
+.hidden {
+    display: none;
+}
 
-
+.order-address {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+}
+.addressButton {
+    background-color: none;
+    color: black;
+    border: none;
+}
+    
 
 </style>
 <body>
@@ -110,12 +124,22 @@
                         <p class="no-orders-message">You have no orders yet.</p>
                     <% } else { %>
                         <% orders.forEach(order => { %>
-                            <div class="order-card" data-status="<%= order.orderStatus %>">
+                            <div class="order-card" style="box-shadow: -2px -4px 4px rgba(97, 101, 117, 0.3), -4px -4px 9px rgba(157, 175, 210, 0.8)" data-status="<%= order.orderStatus %>">
                                 <div class="order-header">
                                     <div class="order-info">
                                         <h2>Order #<%= order._id %></h2>
                                         <div class="order-date">
                                             <%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                        </div>
+                                        <div>
+                                            <button class="addressButton" onclick="toggleAddress('<%= order._id %>')">Show Address</button>
+                                            <div id="address-<%= order._id %>" class="order-address hidden">
+                                                <% const address = user.addresses.find((a) => String(a._id) === String(order.address)); %>
+                                                <% if (address) { %>
+                                                    Address: <%= address.name %>, <%= address.street %>, <%= address.city %>, <%= address.state %>, <%= address.zipcode %>, <%= address.country %>
+
+                                                <% } %>
+                                            </div>
                                         </div>
                                     </div>
                                     <div>
@@ -123,7 +147,7 @@
                                     <span class="status-badge <%= order.statusClass %>">
                                         <%= order.paymentStatus === 'Payment Pending' 
                                             ? 'Payment Pending' 
-                                            :  order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                            : 'Order Status: ' +  order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
                                     </span>
                                     </div>
                                 </div>
@@ -183,7 +207,7 @@
                                         </button>
                                     <% } %>
                                     <% const hasCancelableProducts = order.products.some(product => !product.isCancelled); %>
-                                    <% if (order.orderStatus === 'Delivered') { %>
+                                    <% if (order.orderStatus === 'Delivered'&&order.paymentStatus=="Success") { %>
                                         <button 
                                           class="btnn btn-success" 
                                           data-order-id="<%= order._id %>" 
@@ -200,9 +224,6 @@
                                           </button>
                                         <% } %>
                                       <% } %>
-                                      
-                                  
-
                                     <%
                                     const allCancelledOrReturned = order.products.every(
                                         (product) => product.isCancelled || product.returnStatus
@@ -215,6 +236,7 @@
                                             (order.products[0].returnRequestStatus === 'Return Accepted' || order.products[0].returnRequestStatus === 'Return Rejected');
 
                                         const canReturnOrder = order.orderStatus === 'Delivered' &&
+                                        order.paymentStatus=='Success'&&
                                             !allCancelledOrReturned &&
                                             !singleProductWithFinalReturnStatus &&
                                             !allProductsHaveReturnStatus;
@@ -393,6 +415,16 @@ function confirmCancelOrder(orderId) {
         }
     });
 }
+function toggleAddress(orderId) {
+        const addressContainer = document.getElementById(`address-${orderId}`);
+        if (addressContainer.classList.contains('hidden')) {
+            addressContainer.classList.remove('hidden');
+            event.target.innerText = 'Hide Address'; // Update button text
+        } else {
+            addressContainer.classList.add('hidden');
+            event.target.innerText = 'Show Address'; // Revert button text
+        }
+    }
 
 function getStatusClass(status) {
     const statusClasses = {
@@ -696,7 +728,7 @@ function downloadInvoice(orderId) {
       doc.setFont('Helvetica', 'normal');
       doc.text(`Name: ${user.name}`, 20, 70);
       doc.text(`Email: ${user.email}`, 20, 75);
-      doc.text(`Phone: ${user.phone || 'N/A'}`, 20, 80);
+      doc.text(`Phone: ${user.phone ||address.phone|| 'N/A'}`, 20, 80);
 
       //  Order Details
       doc.setFontSize(12);
@@ -707,7 +739,7 @@ function downloadInvoice(orderId) {
       doc.text(`Order ID: ${order._id}`, 20, 100);
       doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 20, 105);
       doc.text(`Status: ${order.orderStatus}`, 20, 110);
-      doc.text(`Shipping Address: ${address.street}, ${address.city}, ${address.state}, ${address.zipcode}`, 20, 115, { maxWidth: 170 });
+      doc.text(`Shipping Address: ${address.street}, ${address.city}, ${address.state}, ${address.zipcode}, ${address.phone}`, 20, 115, { maxWidth: 170 });
 
       // Product Details Table
       let startY = 130;

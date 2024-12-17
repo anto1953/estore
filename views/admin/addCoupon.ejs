@@ -132,9 +132,9 @@
           if (!discount) {
             discountError.textContent = "Discount is required.";
             valid = false;
-          } else if (isNaN(discount) || discount < 0 || discount > 100) {
+          } else if (isNaN(discount) || discount < 0 || discount > 80) {
             discountError.textContent =
-              "Discount must be a number between 0 and 100.";
+              "Discount must be a number between 0 and 80.";
             valid = false;
           } else {
             discountError.textContent = "";

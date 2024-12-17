@@ -550,17 +550,27 @@ async function addToWishlist(productId) {
     const response = await fetch(`/addToWishlist/${productId}`, {
       method: 'POST',
     });
+    const result = await response.json();
 
-    if (response.ok) {
-      location.reload();
-    } else {
-      const result = await response.json();
-      alert(result.message || 'Failed to add product to wishlist.');
-    }
-  } catch (error) {
-    console.error('Error adding product to wishlist:', error);
-    alert('An error occurred. Please try again later.');
-  }
+if (result.status=='success') {
+    Swal.fire({
+        icon:'success',
+        text:result.message
+    }).then(()=>{
+        location.reload();
+    })
+} else {
+    Swal.fire({
+        icon:result.status,
+        text:result.message
+    })
+}
+} catch (error) {
+console.error('Error adding product to wishlist:', error);
+Swal.json({
+icon:'error',
+text:'something error'
+})  }
 }
     </script>
 </body>

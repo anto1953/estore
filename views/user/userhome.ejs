@@ -160,7 +160,7 @@
                       data-animation="fadeInRight"
                       data-delay="1s"
                     >
-                      <a href="industries.html" class="btn hero-btn"
+                      <a href="/viewProducts" class="black-btn"
                         >Shop Now</a
                       >
                     </div>
@@ -225,25 +225,29 @@
           <div class="row">
             <div class="col-lg-12">
               <div class="section-tittle text-center mb-85">
-                <h2>Shop by Category</h2>
+                <h2>Top Categories</h2>
               </div>
             </div>
           </div>
-          <div class="row">
-            <% category.forEach(function(category) { %>
-            <div class="col-xl-4 col-lg-6">
-              <div class="single-category mb-30">
-                <div class="category-img">                  
-                  <img src="uploads/<%= category.image %>" alt="<%= category.value %>"/>
-                  <div class="category-caption">
-                    <h2><%= category.value %></h2>
-                    <span class="best"><a href="#">Best New Deals</a></span>
-                    <span class="collection">New Collection</span>
+          <div class="row" style="margin-left: 45px;">
+            <% category.slice(0, 3).forEach(function(category) { %>
+             <a href="/viewProducts?category=<%= category.value %>"><div class="col-xl-4 col-lg-6">
+                <div class="single-category mb-30">
+                  <div class="category-img">                  
+                    <img src="uploads/<%= category.image %>" alt="<%= category.value %>"/>
+                    <div class="category-caption">
+                      <span class="collection" style="color: black;"><%= category.value %></span>
+
+                      <!-- <div style="background-color: rgb(203, 203, 198); border-radius: 20px; width: 45%; ">
+                      <span class="best" style="color: black;">Best New Deals</a></span>
+                      <span class="collection">New Collection</span>
+                      </div> -->
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </div></a>
             <% }); %>
+            
           </div>
         </div>
       </section>
@@ -263,43 +267,7 @@
             <div class="col-xl-8 col-lg-7 col-md-7">
               <div class="properties__button f-right">
                 <!--Nav Button  -->
-                <nav>
-                  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                    <a
-                      class="nav-item nav-link active"
-                      id="nav-home-tab"
-                      data-toggle="tab"
-                      href="#nav-home"
-                      role="tab"
-                      aria-controls="nav-home"
-                      aria-selected="true"
-                      >All</a>
-                    <a
-                      class="nav-item nav-link"
-                      id="nav-profile-tab"
-                      data-toggle="tab"
-                      href="#nav-profile"
-                      role="tab"
-                      aria-controls="nav-profile"
-                      aria-selected="false"
-                      >New</a>
-                    <a class="nav-item nav-link" id="nav-contact-tab"
-                      data-toggle="tab"
-                      href="#nav-contact"
-                      role="tab"
-                      aria-controls="nav-contact"
-                      aria-selected="false">Featured
-                    </a>
-                    <a class="nav-item nav-link"
-                      id="nav-last-tab"
-                      data-toggle="tab"
-                      href="#nav-last"
-                      role="tab"
-                      aria-controls="nav-contact"
-                      aria-selected="false">
-                      Offer</a>
-                  </div>
-                </nav>
+                
                 <!--End Nav Button  -->
               </div>
             </div>
@@ -317,7 +285,7 @@
                 <% products.slice(0,9).forEach(product => { %>
                 <div class="col-xl-4 col-lg-4 col-md-6">
                   <div class="single-product mb-60">
-                    <div class="product-img">
+                    <div class="product-img" style="height: 334px;">
                       <a href="/viewProductDetails/<%= product._id %>">
                         <img
                           src="uploads/<%= product.image[0] %>"
@@ -329,13 +297,7 @@
                       <% } %>
                     </div>
                     <div class="product-caption">
-                      <div class="product-ratting">
-                        <% for (let i = 0; i < 5; i++) { %>
-                        <i
-                          class="far fa-star <%= i >= product.rating ? 'low-star' : '' %>"
-                        ></i>
-                        <% } %>
-                      </div>
+                       
                       <h4>
                         <a href="/viewProductDetails/<%= product._id %>"
                           ><%= product.pname %></a
@@ -400,7 +362,7 @@
                     from Our Shop
                   </h2>
                   <p>Designers who are interesten creating state ofthe.</p>
-                  <a href="#" class="black-btn">Shop Now</a>
+                  <a href="/viewProducts" class="black-btn">Shop Now</a>
                 </div>
               </div>
             </div>
@@ -421,7 +383,7 @@
               <div class="best-left-cap">
                 <h2>Best Collection of This Month</h2>
                 <p>Designers who are interesten crea.</p>
-                <a href="#" class="btn shop1-btn">Shop Now</a>
+                <a href="/viewProducts" class="black-btn">Shop Now</a>
               </div>
               <div class="best-left-img mb-30 d-none d-sm-block">
                 <img src="assets/img/collection/collection1.png" alt="" />
