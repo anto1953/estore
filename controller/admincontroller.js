@@ -1706,7 +1706,7 @@ const adminhome = async (req, res) => {
                   text: 'something error',
                   confirmButtonText: 'OK'
               }).then(() => {
-            window.location.href='/login'
+            window.location.href='/adminhome'
             });;
           </script>
       </body>   
