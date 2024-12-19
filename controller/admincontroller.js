@@ -1687,15 +1687,31 @@ const adminhome = async (req, res) => {
       topCategories,
       totalSales,
       salesData,
-      totalSalesAmount: salesData[0].totalOrderAmount.toFixed(2),
+      totalSalesAmount: salesData? salesData[0].totalOrderAmount.toFixed(2):null,
       salesReport: salesData[0] || null,
-      totalDiscountAmount: salesData[0].totalDiscount.toFixed(2),
+      totalDiscountAmount: salesData?salesData[0].totalDiscount.toFixed(2):null,
       mostOrderedProduct: mostOrderedProduct.pname,
     })};
   } catch (error) {
     console.log(error);
-    res.status(500).json({ status: "error", message: "something error" });
-  }
+    res.send(`
+      <html>
+      <head>
+          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      </head>
+      <body>
+          <script>
+              Swal.fire({
+                  icon: 'error',
+                  text: 'something error',
+                  confirmButtonText: 'OK'
+              }).then(() => {
+            window.location.href='/login'
+            });;
+          </script>
+      </body>   
+  </html>
+`);  }
 };
 
 const salesReport = async (req, res) => {
