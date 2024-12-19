@@ -14,7 +14,7 @@ const otpGenerator = require("otp-generator");
 const passport = require("passport");
 const Razorpay = require('razorpay');
 
-mongoose.connect("mongodb://localhost:27017/project1");
+mongoose.connect("mongodb://atlas-sql-66b1b3fd008896368bbafdef-1rrqh.a.query.mongodb.net/db1?ssl=true&authSource=admin");
 
 const port = 2000;
 

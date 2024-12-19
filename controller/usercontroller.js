@@ -316,7 +316,6 @@ const loginpost = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email });
-
     if (email === admin.email && password === admin.password) {
       const isAnyUserLoggedIn = await User.findOne({ isLoggedIn: true });
       if (isAnyUserLoggedIn && req.session.user) {

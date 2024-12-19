@@ -1,5 +1,5 @@
 const passport = require('passport');
-const User=require('../project1/model/userSchema')
+const User=require('./model/userSchema')
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const bcrypt=require('bcrypt');
 
