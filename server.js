@@ -13,8 +13,20 @@ const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
 const passport = require("passport");
 const Razorpay = require('razorpay');
+try{
 
-mongoose.connect("mongodb://atlas-sql-66b1b3fd008896368bbafdef-1rrqh.a.query.mongodb.net/db1?ssl=true&authSource=admin");
+   (async ()=>{
+    await mongoose.connect("mongodb+srv://anto_jn:yFPn4g6W0hwpYwOJ@cluster0.yne0h77.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+    console.log('Successfully Connected')  
+  }
+  )()
+
+
+  }
+catch(error){
+  console.log(error)
+  console.log("Error Connecting to mongodb")
+}
 
 const port = 2000;
 
