@@ -65,7 +65,7 @@ app.use("/admin", adminroute);
 app.use("/", userroute);
 
 app.use((req, res, next) => {
-  res.status(404).render("user/404", { title: "Page Not Found" });
+  res.status(404).render("404", { title: "Page Not Found" });
 });
 
 app.listen(port, () => {
