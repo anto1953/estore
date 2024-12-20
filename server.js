@@ -16,7 +16,7 @@ const Razorpay = require('razorpay');
 try{
 
    (async ()=>{
-    await mongoose.connect("mongodb+srv://anto_jn:yFPn4g6W0hwpYwOJ@cluster0.yne0h77.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+    await mongoose.connect(process.env.MONGO_CONNECTION_STRING)
     console.log('Successfully Connected')  
   }
   )()
