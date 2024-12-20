@@ -238,6 +238,7 @@ const addproductpost = async (req, res) => {
         message: "product already exist",
       });
     }
+   
 
     let image = req.files.map((file) => {
       return file.filename;
@@ -1465,28 +1466,28 @@ const applyOfferToCategories = async (req, res) => {
     const categories = await Category.find({ _id: { $in: categoryIds } });
 
     // Filter categories that already have the offer applied
-    const categoriesToUpdate = categories.filter(
-      (category) =>
-        !category.offers.some(
-          (existingOffer) =>
-            existingOffer.offerId.toString() === offer._id.toString()
-        )
-    );
+    // const categoriesToUpdate = categories.filter(
+    //   (category) =>
+    //     !category.offers.some(
+    //       (existingOffer) =>
+    //         existingOffer.offerId.toString() === offer._id.toString()
+    //     )
+    // );
 
-    const categoryLabelsToUpdate = categoriesToUpdate.map(
+    const categoryLabelsToUpdate = categories.map(
       (category) => category.label
     );
 
-    if (categoriesToUpdate.length === 0) {
+    if (categories.length === 0) {
       return res.status(400).json({
         status: "error",
-        message: "Offer is already applied to the selected categories",
+        message: "select any category",
       });
     }
 
     // Apply the offer to the filtered categories
     await Category.updateMany(
-      { _id: { $in: categoriesToUpdate.map((category) => category._id) } },
+      { _id: { $in: categories.map((category) => category._id) } },
       {
         $addToSet: {
           offers: {
@@ -1538,10 +1539,10 @@ const applyOfferToCategories = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: `Offer applied to ${categoriesToUpdate.length} categories and ${productsToUpdate.length} products`,
+      message: `Offer applied to ${categories.length} categories and ${productsToUpdate.length} products`,
     });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res
       .status(500)
       .json({ status: "error", message: "Something went wrong" });
