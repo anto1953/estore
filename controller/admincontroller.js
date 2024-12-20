@@ -1687,10 +1687,10 @@ const adminhome = async (req, res) => {
       topCategories,
       totalSales,
       salesData,
-      totalSalesAmount: salesData? salesData[0].totalOrderAmount.toFixed(2):null,
+      totalSalesAmount: salesData[0] ? salesData[0].totalOrderAmount.toFixed(2):0,
       salesReport: salesData[0] || null,
-      totalDiscountAmount: salesData?salesData[0].totalDiscount.toFixed(2):null,
-      mostOrderedProduct: mostOrderedProduct.pname,
+      totalDiscountAmount: salesData[0]?salesData[0].totalDiscount.toFixed(2):0,
+      mostOrderedProduct: mostOrderedProduct ? mostOrderedProduct.pname:null,
     })};
   } catch (error) {
     console.log(error);
