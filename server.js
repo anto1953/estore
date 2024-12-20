@@ -64,6 +64,10 @@ app.use(passport.session());
 app.use("/admin", adminroute);
 app.use("/", userroute);
 
+app.use((req, res, next) => {
+  res.status(404).render("user/404", { title: "Page Not Found" });
+});
+
 app.listen(port, () => {
   console.log(`http://127.0.0.1:${port}`);
 });
