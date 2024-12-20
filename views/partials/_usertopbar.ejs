@@ -1,6 +1,21 @@
 <head>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
+<style>
+  .d-md-none {
+display: none;
+}
+
+@media (max-width: 768px) {
+.d-md-none {
+display: block;
+}
+
+.d-lg-block {
+display: none;
+}
+}
+</style>
 <header>
   <div class="header-area">
     <div class="main-header">
@@ -16,21 +31,16 @@
               </div>
             </div>
             <div class="col-xl-6 col-lg-8 col-md-7 col-sm-5">
-              <!-- Main-menu -->
               <div class="main-menu f-right d-none d-lg-block">
                 <nav>
                   <ul id="navigation">
                     <li><a href="/userhome">Home</a></li>
                     <li><a href="/userhome#category">Category</a></li>
                     <li><a href="/viewProducts">products</a></li>
-                    <!-- <li>
-                      <a href="blog.html">Blog</a>
-                      <ul class="submenu">
-                        <li><a href="blog.html">Blog</a></li>
-                        <li><a href="single-blog.html">Blog Details</a></li>
-                      </ul>
-                    </li>
-                    <li><a href="contact.html">Contact</a></li> -->
+                    <li class="d-md-none"><a href="/wallet">Wallet</a></li>
+                    <li class="d-md-none"><a href="/wishlist">wishlist</a></li>
+                    <li class="d-md-none"><a href="/cart">cart</a></li>
+                    <li class="d-md-none"><a href="/logout">Logout</a></li>
                   </ul>
                 </nav>
               </div>
