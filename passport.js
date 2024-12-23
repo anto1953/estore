@@ -8,7 +8,7 @@ const bcrypt=require('bcrypt');
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: 'http://localhost:2000/auth/google/callback',
+    callbackURL: process.env.CALLBACK_URL,
     passReqToCallback: true
 },
 async (request, accessToken, refreshToken, profile, done) => {
