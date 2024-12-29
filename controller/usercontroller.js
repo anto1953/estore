@@ -1640,6 +1640,12 @@ const cancelOrder = async (req, res) => {
       for (const item of order.products) {
         const product = item.productId;
         const quantityOrdered = item.quantity;
+        if (!item.isCancelled) {
+          await Product.updateOne(
+            { _id: product._id },
+            { $inc: { stock: quantityOrdered } }
+          );
+        }
         await Orders.updateOne(
           { _id: orderId },
           { 
@@ -1653,10 +1659,7 @@ const cancelOrder = async (req, res) => {
             arrayFilters: [{ "elem.productId": product._id }] 
           }
         );
-        await Product.updateOne(
-          { _id: product._id },
-          { $inc: { stock: quantityOrdered } }
-        );
+       
       }
       const nonCancelledTotal = order.products
   .filter((product) => !product.isCancelled)
@@ -1735,6 +1738,7 @@ const cancelAProduct = async (req, res) => {
 
     product.isCancelled = true;
     product.orderStatus='Cancelled';
+    await order.save();
     let totalPrice=product.price * product.quantity;
     if(order.coupon&&order.discount){ 
       totalPrice=totalPrice * ( order.coupon.discount / 100).toFixed(2);
