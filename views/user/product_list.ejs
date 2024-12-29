@@ -27,7 +27,7 @@
         <div class="container">
             <!-- Filters -->
             <div class="filters">
-                <form action="/viewProducts" method="GET">
+                <form action="/viewProducts" method="GET" id="searchForm">
                     <input type="text" name="Search" placeholder="Search keyword" value="<%= searchQuery || '' %>">
                 </form>
             
@@ -36,27 +36,24 @@
                     <div class="select_option_dropdown">
                         <% categories.forEach(category => { %>
                             <p>
-                            <a href="/viewProducts?Search=<%= searchQuery %>&category=<%= category.value %>" 
-                               class="category-option" 
-                               data-category="<%= category.value %>">
-                              <%= category.value %>
-                            </a>
-                          </p>
+                                <a href="javascript:void(0);" 
+                                   class="category-option" 
+                                   data-category="<%= category.value %>">
+                                   <%= category.value %>
+                                </a>
+                            </p>
                         <% }) %>
-                      </div>
+                    </div>
                 </div>
                 
                 <div class="select_option">
                     <div class="select_option_list">Sort by <i class="right fas fa-caret-down"></i></div>
                     <div class="select_option_dropdown">
-                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=popularity">Popularity</a></p>
-                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=price-asc">Price: Low to High</a></p>
-                        <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=price-desc">Price: High to Low</a></p>
-                        <!-- <p><a href="/viewProducts?Search=<%= searchQuery %>&sortBy=ratings">Average Ratings</a></p>                                                 -->
-                        <!-- <p><a href="#" class="sort-option" data-sort="featured">Featured</a></p>
-                        <p><a href="#" class="sort-option" data-sort="new-arrivals">New Arrivals</a></p> -->
-                        <p><a href="#" class="sort-option" data-sort="a-z">A-Z</a></p>
-                        <p><a href="#" class="sort-option" data-sort="z-a">Z-A</a></p>
+                        <p><a href="javascript:void(0);" class="sort-option" data-sort="popularity">Popularity</a></p>
+                        <p><a href="javascript:void(0);" class="sort-option" data-sort="price-asc">Price: Low to High</a></p>
+                        <p><a href="javascript:void(0);" class="sort-option" data-sort="price-desc">Price: High to Low</a></p>
+                        <p><a href="javascript:void(0);" class="sort-option" data-sort="a-z">A-Z</a></p>
+                        <p><a href="javascript:void(0);" class="sort-option" data-sort="z-a">Z-A</a></p>
                     </div>
                 </div>
             </div>
@@ -121,9 +118,29 @@
                         </div>
                     <% }); %>
                 </div>
-                <div class="load_more_btn text-center">
-                    <a href="#" class="btn_3">Load More</a>
-                </div>
+                <nav aria-label="Page navigation" style="display: flex; justify-content: center;">
+                    <ul class="pagination">
+                        <% if (currentPage > 1) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        <% } %>
+                        <% for (let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                            </li>
+                        <% } %>
+                        <% if (currentPage < totalPages) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
             </div>
         </div>
     </section>
@@ -264,104 +281,35 @@
 
 document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.querySelector("input[name='Search']");
+    const categoryOptions = document.querySelectorAll(".category-option");
     const sortOptions = document.querySelectorAll(".sort-option");
 
     function updateProductList() {
         const searchQuery = searchInput.value;
-        const selectedSort = document.querySelector(".sort-option.active")?.dataset.sort || "";
+        const selectedCategory = document.querySelector(".category-option.active")?.dataset.category || '';
+        const selectedSort = document.querySelector(".sort-option.active")?.dataset.sort || '';
 
-        window.location.href = `/viewProducts?Search=${encodeURIComponent(searchQuery)}&sortBy=${selectedSort}`;
-    }
-
-    // Trigger search on form submit
-    searchInput.addEventListener("change", updateProductList);
-
-    // Trigger sort on selection
-    sortOptions.forEach(option => {
-        option.addEventListener("click", function() {
-            sortOptions.forEach(opt => opt.classList.remove("active"));
-            option.classList.add("active");
-            updateProductList();
+        const params = new URLSearchParams({
+            Search: searchQuery,
+            category: selectedCategory,
+            sortBy: selectedSort
         });
-    });
-});
-  
-    // Handle sort option selection
-    document.querySelectorAll('.sort-option').forEach(option => {
-        option.addEventListener('click', function () {
-            const sortBy = this.getAttribute('data-sort'); 
-            updateProductList(sortBy);  
-        });
-    });
 
-    function updateProductList(sortBy) {
-        fetch(`/getSortedProducts?sortBy=${sortBy}`, {
-            method: "GET",
-        })
-        .then(response => response.json())
-        .then(data => { 
-            if (data.success) {
-                const productContainer = document.getElementById('product-container');
-                productContainer.innerHTML = '';  
-
-                data.products.forEach(product => {
-                    const productItem = document.createElement('div');
-                    productItem.classList.add('col-lg-4');
-                    productItem.innerHTML = `
-                        <div class="single_product_item">
-                            <a href="viewProductDetails/${product._id}">
-                                <img src="/uploads/${product.image}" alt="${product.pname}">
-                                <h3>${product.pname}</h3>
-                            </a>
-                            <p>₹${product.pprice}</p>
-                            <div class="buttons">
-                                <a class="btn btn-default btn-sm add-to-cart" href="javascript:void(0);" data-product-id="${product._id}">
-                                    <span class="glyphicon glyphicon-shopping-cart"></span> Add to Cart
-                                </a>
-                                <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-heart"></span> Wishlist</button>
-                            </div>
-                        </div>
-                    `;
-                    productContainer.appendChild(productItem);
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Unable to fetch sorted products.',
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while fetching sorted products.',
+        fetch(`/viewProducts?${params.toString()}&ajax=true`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayProducts(data.products);
+                } else {
+                    console.error('Error fetching products:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
-        });
     }
 
-
-    document.querySelectorAll('.category-option').forEach(option => {
-  option.addEventListener('click', function (event) {
-    event.preventDefault();
-    const selectedCategory = this.dataset.category;
-
-    fetch(`/viewProducts?category=${encodeURIComponent(selectedCategory)}&ajax=true`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          displayProducts(data.products);
-        } else {
-          console.error('Error:', data.message);
-        }
-        })
-      .catch(error => console.error('Error fetching products:', error));
-  });
-});
-
-function displayProducts(products) {
+    function displayProducts(products) {
   const productContainer = document.getElementById('product-container');
   productContainer.innerHTML = '';
   products.forEach(product => {
@@ -381,6 +329,82 @@ function displayProducts(products) {
     `;
   });
 }
+
+    // Search functionality
+    searchInput.addEventListener("change", updateProductList);
+
+    // Category filter functionality
+    categoryOptions.forEach(option => {
+        option.addEventListener('click', function(event) {
+            event.preventDefault();
+            categoryOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            updateProductList();
+        });
+    });
+
+    // Sort functionality
+    sortOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            sortOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            updateProductList();
+        });
+    });
+
+    // Initial load of products based on URL parameters
+    // updateProductList();
+});
+
+
+    document.querySelectorAll('.category-option').forEach(option => {
+  option.addEventListener('click', function (event) {
+    event.preventDefault();
+
+    const searchInput = document.querySelector("input[name='Search']");
+    const selectedCategory = this.dataset.category;
+    const selectedSort = document.querySelector(".sort-option.active")?.dataset.sort || "";
+
+
+    const params = new URLSearchParams({
+      Search: searchInput ? searchInput.value : "",
+      category: this.classList.contains("category-option") ? this.dataset.category : selectedCategory,
+      sortBy: this.classList.contains("sort-option") ? this.dataset.sort : selectedSort,
+    });
+
+    fetch(`/viewProducts?${params.toString()}&ajax=true`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          displayProducts(data.products);
+        } else {
+          console.error('Error:', data.message);
+        }
+        })
+      .catch(error => console.error('Error fetching products:', error));
+  });
+});
+
+// function displayProducts(products) {
+//   const productContainer = document.getElementById('product-container');
+//   productContainer.innerHTML = '';
+//   products.forEach(product => {
+//     productContainer.innerHTML += `
+//       <div class="col-lg-4">
+//         <div class="single_product_item">
+//           <a href="viewProductDetails/${product._id}">
+//             <img style="width: 300px; height: 300px;" src="/uploads/${product.image}">
+//             <h3>${product.pname.length > 30 ? product.pname.slice(0, 25) + '...' : product.pname}</h3>
+//           </a>
+//           <p>₹${product.pprice}</p>
+//           <p class="${product.stock > 0 ? (product.stock < 20 ? 'low-stock' : 'stock-status') : 'out-of-stock'}">
+//             ${product.stock > 0 ? (product.stock < 20 ? product.stock + ' left in stock' : 'In Stock') : 'Out of Stock'}
+//           </p>
+//         </div>
+//       </div>
+//     `;
+//   });
+// }
 
 
     async function addToWishlist(productId) {

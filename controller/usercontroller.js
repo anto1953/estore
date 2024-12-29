@@ -624,7 +624,6 @@ const newPasswordPost = async (req, res) => {
       stauts:'error',
       message:'something error'
     });
-
   }
 };
 
@@ -645,17 +644,25 @@ const userhome = async (req, res) => {
       cart
     });
   } catch (error) {
-    res.send(error.message);
+    console.log(error);
+    res.json({
+      stauts:'error',
+      message:'something error'
+    });
   }
 };
 
-const   viewProducts = async (req, res) => {  
+const viewProducts = async (req, res) => {  
   console.log('view products',req.query);
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 12;
+    const skip = (page - 1) * limit;
     const query = req.query.Search ? req.query.Search.toLowerCase() : "";
     const sortBy = req.query.sortBy || "";
     const category = req.query.category || "";
     const isAjax = req.query.ajax === "true";
+    
 
     let authenticated = false;
     const userid = req.session.user ? req.session.user._id : null;
@@ -671,13 +678,17 @@ const   viewProducts = async (req, res) => {
       { isListed: true }
     );
     
-    
     let products = await Product.find(
       Object.assign({}, filterCriteria, { isListed: true })
     ).populate({
       path: 'offers.offerId',
       model: 'Offers',
-    });        
+    }).skip(skip)
+    .limit(limit);            
+
+    const count = await Product.countDocuments(filterCriteria);
+    const totalPages = Math.ceil(count / limit);
+
 
     let categories = await Category.find({ isListed: true });
 
@@ -727,7 +738,8 @@ const   viewProducts = async (req, res) => {
       ? cart.products.map((item) => item.product.toString())
       : [];
 
-    const wishlist=user?.wishlist || null;  
+    const wishlist=user?user.wishlist : null;  
+
     
     res.render("user/product_list", {
       products,
@@ -738,13 +750,29 @@ const   viewProducts = async (req, res) => {
       categories,
       user,
       wishlist,
-      cart
-
+      cart,
+      currentPage: page,
+      totalPages,
     });
   } catch (error) {
     console.log(error);
-
-    res.send(error.message);
+   return res.send(`
+    <html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    </head>
+    <body>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                text: 'something error',
+            }).then(() => {
+          window.location.href='/userhome';
+          });
+        </script>
+    </body>   
+</html>
+   `)
   }
 };
 

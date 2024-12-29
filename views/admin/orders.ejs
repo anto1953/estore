@@ -108,7 +108,8 @@
                                                     <%= (order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled') ? 'disabled' : '' %>
                                                 >
                                                     <% ['Pending', 'Processing', 'Shipped', 'Delivered'].forEach(status => { %>
-                                                        <option value="<%= status %>" <%= order.orderStatus === status ? 'selected' : '' %>><%= status %></option>
+                                                        <option value="<%= status %>" <%= order.orderStatus === status ? 'selected' : '' %><%= ['Pending', 'Processing', 'Shipped', 'Delivered'].indexOf(order.orderStatus) > ['Pending', 'Processing', 'Shipped', 'Delivered'].indexOf(status) ? 'disabled' : '' %>
+                                                            ><%= status %></option>
                                                     <% }) %>
                                                 </select>
                                             <% } %>

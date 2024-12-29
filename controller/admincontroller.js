@@ -601,7 +601,10 @@ const orders = async (req, res) => {
       searchQuery: searchQuery,
     });
   } catch (error) {
-    res.send(error.message);
+    res.json({
+      status:'error',
+      message:'something error'
+  });
   }
 };
 
@@ -709,7 +712,7 @@ const acceptReturnRequest = async (req, res) => {
     const order = await Orders.findById({ _id: orderid }).populate({
       path:'coupon'
     });
-    console.log('orderrrr',order);
+    // console.log('orderrrr',order);
     
     const user = await User.findById(order.userId);
 
@@ -1568,111 +1571,115 @@ const adminhome = async (req, res) => {
       startDate = new Date(date.getFullYear(), 0, 1); // Start of the year
     }  
 
-    const ordersData = await Orders.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: startDate },
-        },
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          totalSales: { $sum: "$totalPrice" },
-          orderCount: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: 1 } },
-    ]);
-
-    const orderStatusData = await Orders.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: startDate },
-        },
-      },
-      {
-        $group: {
-          _id: "$orderStatus",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
     
-    const salesData = await Orders.aggregate([
-      {
-        $group: {
-          _id: null,
-          salesCount: { $sum: 1 },
-          totalOrderAmount: { $sum: "$totalPrice" },
-          totalDiscount: { $sum: "$discount" },
-          totalCoupons: { $sum: "$totalCouponDiscount" },
+    const queries = await Promise.all([
+      Orders.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate },
+          },
         },
-      },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            totalSales: { $sum: "$totalPrice" },
+            orderCount: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+
+      Orders.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate },
+          },
+        },
+        {
+          $group: {
+            _id: "$orderStatus",
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+
+      Orders.aggregate([
+        {
+          $group: {
+            _id: null,
+            salesCount: { $sum: 1 },
+            totalOrderAmount: { $sum: "$totalPrice" },
+            totalDiscount: { $sum: "$discount" },
+            totalCoupons: { $sum: "$totalCouponDiscount" },
+          },
+        },
+      ]),
+
+      Orders.aggregate([
+        {
+          $unwind: "$products",
+        },
+        {
+          $group: {
+            _id: "$products.productId",
+            totalQuantity: { $sum: "$products.quantity" },
+          },
+        },
+        {
+          $sort: { totalQuantity: -1 },
+        },
+        {
+          $limit: 1 },
+      ]),
+
+      Orders.aggregate([
+        { $unwind: "$products" },
+        {
+          $group: {
+            _id: "$products.productId",
+            totalSold: { $sum: "$products.quantity" },
+          },
+        },
+        { $sort: { totalSold: -1 } },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "productDetails",
+          },
+        },
+        { $unwind: "$productDetails" },
+      ]),
+
+      Orders.aggregate([
+        { $unwind: "$products" },
+        {
+          $lookup: {
+            from: "products",
+            localField: "products.productId",
+            foreignField: "_id",
+            as: "productDetails",
+          },
+        },
+        { $unwind: "$productDetails" },
+        {
+          $group: {
+            _id: "$productDetails.category",
+            totalSold: { $sum: "$products.quantity" },
+          },
+        },
+        { $sort: { totalSold: -1 } },
+        { $limit: 5 },
+      ]),
     ]);
 
-    const mostOrderedProductId = await Orders.aggregate([
-      {
-        $unwind: "$products",
-      },
-      {
-        $group: {
-          _id: "$products.productId",
-          totalQuantity: { $sum: "$products.quantity" },
-        },
-      },
-      {
-        $sort: { totalQuantity: -1 },
-      },
-      {
-        $limit: 1,
-      },
-    ]);
+    const [ordersData, orderStatusData, salesData, mostOrderedProductId, topProducts, topCategories] = queries;
 
-    const mostOrderedProduct = await Product.findById(mostOrderedProductId);
+    const mostOrderedProduct = mostOrderedProductId.length > 0 ? await Product.findById(mostOrderedProductId[0]._id) : null;
 
-    const totalSales = await Orders.countDocuments();
-
-    const topProducts = await Orders.aggregate([
-      { $unwind: "$products" },
-      {
-        $group: {
-          _id: "$products.productId",
-          totalSold: { $sum: "$products.quantity" },
-        },
-      },
-      { $sort: { totalSold: -1 } },
-      { $limit: 5 },
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "productDetails",
-        },
-      },
-      { $unwind: "$productDetails" },
-    ]);
-
-    const topCategories = await Orders.aggregate([
-  { $unwind: "$products" }, 
-  {
-    $lookup: {
-      from: "products",
-      localField: "products.productId",
-      foreignField: "_id",
-      as: "productDetails",
-    },
-  },
-  { $unwind: "$productDetails" }, 
-  {
-    $group: {
-      _id: "$productDetails.category", 
-      totalSold: { $sum: "$products.quantity" }, 
-    },
-  },
-  { $sort: { totalSold: -1 } },
-  { $limit: 5 }, 
-]);    
+    const totalSales = await Orders.countDocuments();     
 
     if (filter) {
       return res.json({
