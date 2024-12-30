@@ -2,7 +2,7 @@
 const express=require('express')
 const fs=require('fs');
 const path=require('path');
-const admincontroller=require('../../controller/admincontroller')
+const adminController=require('../../controller/admin/adminController')
 const { fileURLToPath }=require("url");
 
 // Importing extenal dependencies

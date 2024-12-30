@@ -37,8 +37,7 @@ app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use("public/uploads", express.static("uploads"));
 
-const adminroute = require("./routes/adminrouter");
-const userroute = require("./routes/userrouter");
+
 
 app.use(nocache());
 app.use((req, res, next) => {
@@ -57,6 +56,9 @@ app.use(
     },
   })
 );
+
+const adminroute = require("./routes/adminrouter");
+const userroute = require("./routes/userrouter");
 
 app.use(passport.initialize());
 app.use(passport.session());

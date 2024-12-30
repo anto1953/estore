@@ -1,6 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const usercontroller = require("../controller/usercontroller");
+const userController = require("../controller/user/userController");
+const authController = require("../controller/user/authcontroller");
+const cartController = require("../controller/user/cartController");
+const checkoutController = require("../controller/user/checkoutController");
+const orderController = require("../controller/user/orderController");
+const userProfileController = require("../controller/user/userProfileController");
+const wishlistController = require("../controller/user/wishlistController");
+
 const passport = require("passport");
 require("../passport");
 const { upload } = require("../config/multer");
@@ -9,13 +16,13 @@ const {
   checkSessionMiddleware,
   blockCheckMiddleware,
   checkCategoryisListed,
-} = require("../controller/usercontroller");
+} = require("../controller/user/middlewares");
 const { route } = require("./adminrouter");
 
-router.get("/", usercontroller.userhome);
-router.get("/login", usercontroller.login);
-router.get("/userBlockPage", usercontroller.userBlockPage);
-router.post("/login", checkAnySessionMiddleware, usercontroller.loginpost);
+router.get("/", userController.userhome);
+router.get("/login", authController.login);
+router.get("/userBlockPage", userController.userBlockPage);
+router.post("/login", checkAnySessionMiddleware, authController.loginpost);
 router.get(
   "/loadAuth",
   passport.authenticate("google", { scope: ["email", "profile"] })
@@ -29,157 +36,156 @@ router.get(
   }
 );
 
-router.get("/profile",usercontroller.profile);
-router.get("/success", usercontroller.success);
-router.get("/failure", usercontroller.failure);
-router.get("/userhome", usercontroller.userhome);
-router.get("/signup", usercontroller.signup);
-router.post("/signup", usercontroller.signuppost);
-router.post('/validateReferralCode',usercontroller.validateReferralCode)
-router.get("/otp", usercontroller.otp);
-router.post("/otp", usercontroller.otpPost);
-router.get("/email", usercontroller.email);
-router.post("/email", usercontroller.emailPost);
-router.post("/forgotOtp",checkSessionMiddleware,blockCheckMiddleware, usercontroller.forgotOtpPost);
+router.get("/profile",authController.profile);
+router.get("/success", authController.success);
+router.get("/failure", authController.failure);
+router.get("/userhome", userController.userhome);
+router.get("/signup", userController.signup);
+router.post("/signup", userController.signuppost);
+router.post('/validateReferralCode',userController.validateReferralCode)
+router.get("/otp", userController.otp);
+router.post("/otp", userController.otpPost);
+router.get("/email", userController.email);
+router.post("/email", userController.emailPost);
+router.get("/forgotOtp", userController.forgotOtp);
+router.post("/forgotOtp", userController.forgotOtpPost);
 router.get(
-  "/newPassword",checkSessionMiddleware,blockCheckMiddleware,usercontroller.newPassword
+  "/newPassword",userController.newPassword
 );
-router.post("/newPassword", usercontroller.newPasswordPost);
-router.get("/viewProducts", usercontroller.viewProducts);
-router.get("/getSortedProducts", usercontroller.getSortedProducts);
-router.get("/viewProductDetails/:id", usercontroller.viewProductDetails);
+router.post("/newPassword", userController.newPasswordPost);
+router.get("/viewProducts", userController.viewProducts);
+router.get("/getSortedProducts", userController.getSortedProducts);
+router.get("/viewProductDetails/:id", userController.viewProductDetails);
 router.get(
   "/wishlist",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.wishlist
+  wishlistController.wishlist
 );
 router.post(
   "/addToWishlist/:id",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.addToWishlist
+  wishlistController.addToWishlist
 );
-router.delete("/removeFromWishlist/:id", usercontroller.removeFromWishlist);
+router.delete("/removeFromWishlist/:id", wishlistController.removeFromWishlist);
 router.get(
   "/wallet",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.wallet
+  userController.wallet
 );
 router.get(
   "/cart",
   checkSessionMiddleware,
   blockCheckMiddleware,
   upload.single("image"),
-  usercontroller.cart
+  cartController.cart
 );
 router.post(
   "/addToCart/:id",
   upload.single("image"),
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.addToCart
+  cartController.addToCart
 );
-router.post("/updateQuantity", usercontroller.updateQuantity);
+router.post("/updateQuantity", cartController.updateQuantity);
 router.delete(
   "/deleteFromCart",
   blockCheckMiddleware,
-  usercontroller.deleteFromCart
+  cartController.deleteFromCart
 );
 router.get(
   "/checkout/:id",
   checkSessionMiddleware,
   blockCheckMiddleware,
   upload.single("image"),
-  usercontroller.checkout
+  checkoutController.checkout
 );
-router.post("/validateCoupon", usercontroller.validateCoupon);
-router.post("/placeOrder", blockCheckMiddleware, usercontroller.placeOrder);
-router.post('/continuePayment/:id',usercontroller.continuePayment)
-router.post("/verifyPayment", usercontroller.verifyPayment);
-router.post("/cancelOrder", blockCheckMiddleware, usercontroller.cancelOrder);
+router.post("/validateCoupon", checkoutController.validateCoupon);
+router.post("/placeOrder", blockCheckMiddleware, checkoutController.placeOrder);
+router.post('/continuePayment/:id',checkoutController.continuePayment)
+router.post("/verifyPayment", checkoutController.verifyPayment);
+router.post("/cancelOrder", blockCheckMiddleware, orderController.cancelOrder);
 router.post(
   "/cancelAProduct",
   blockCheckMiddleware,
-  usercontroller.cancelAProduct
+  orderController.cancelAProduct
 );
 router.post(
   "/returnAProduct",
   blockCheckMiddleware,
-  usercontroller.returnAProduct
+  orderController.returnAProduct
 );
 router.post(
   "/returnOrderRequest/:id",
   blockCheckMiddleware,
-  usercontroller.returnOrderRequest
+  orderController.returnOrderRequest
 );
 router.post(
   "/returnAProductRequest/:id",
   blockCheckMiddleware,
-  usercontroller.returnAProductRequest
+  orderController.returnAProductRequest
 );
 router.get(
   "/userProfile",
   checkSessionMiddleware,
   blockCheckMiddleware,
   upload.single("profileimage"),
-  usercontroller.userProfile
+  userProfileController.userProfile
 );
 router.get(
   "/editUserProfile",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.editUserProfile
+  userProfileController.editUserProfile
 );
 router.post(
   "/editUserProfile/:id",
   upload.single("profileImage"),
-  usercontroller.editUserProfilePost
+  userProfileController.editUserProfilePost
 );
 router.get(
   "/userProfileOrders",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.userProfileOrders
+  orderController.userProfileOrders
 );
 router.get(
   "/invoice/:id",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.invoice
+  orderController.invoice
 );
 router.get(
   "/addressbook",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.addressbook
+  userProfileController.addressbook
 );
 router.get(
   "/changePassword",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.changePassword
+  userProfileController.changePassword
 );
-router.post('/changePassword',usercontroller.changePasswordPost)
+router.post('/changePassword',userProfileController.changePasswordPost)
 router.get(
   "/addAddress",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.addAddress
+  userProfileController.addAddress
 );
-router.post("/addAddress", usercontroller.addAddressPost);
+router.post("/addAddress", userProfileController.addAddressPost);
 router.get(
   "/editAddress/:id",
   checkSessionMiddleware,
   blockCheckMiddleware,
-  usercontroller.editAddress
+  userProfileController.editAddress
 );
-router.post("/editAddress/:id", usercontroller.editAddressPost);
-router.post("/deleteAddress/:id", usercontroller.deleteAddress);
-router.post("/setDefaultAddress/:id", usercontroller.setDefaultAddress);
-router.get("/forgotOtp",checkSessionMiddleware,blockCheckMiddleware, usercontroller.forgotOtp);
-
-router.get("/logout", usercontroller.logout);
+router.post("/editAddress/:id", userProfileController.editAddressPost);
+router.post("/deleteAddress/:id", userProfileController.deleteAddress);
+router.post("/setDefaultAddress/:id", userProfileController.setDefaultAddress);
+router.get("/logout", userController.logout);
 
 module.exports = router;

@@ -3,6 +3,8 @@ const User=require('./model/userSchema')
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const bcrypt=require('bcrypt');
 
+console.log(process.env.CALLBACK_URL);
+
 
 // Google Strategy
 passport.use(new GoogleStrategy({
