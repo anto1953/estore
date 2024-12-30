@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controller/user/userController");
-const authController = require("../controller/user/authcontroller");
+const authcontroller = require("../controller/user/authcontroller");
 const cartController = require("../controller/user/cartController");
 const checkoutController = require("../controller/user/checkoutController");
 const orderController = require("../controller/user/orderController");
@@ -20,9 +20,9 @@ const {
 const { route } = require("./adminrouter");
 
 router.get("/", userController.userhome);
-router.get("/login", authController.login);
+router.get("/login", authcontroller.login);
 router.get("/userBlockPage", userController.userBlockPage);
-router.post("/login", checkAnySessionMiddleware, authController.loginpost);
+router.post("/login", checkAnySessionMiddleware, authcontroller.loginpost);
 router.get(
   "/loadAuth",
   passport.authenticate("google", { scope: ["email", "profile"] })
@@ -36,9 +36,9 @@ router.get(
   }
 );
 
-router.get("/profile",authController.profile);
-router.get("/success", authController.success);
-router.get("/failure", authController.failure);
+router.get("/profile",authcontroller.profile);
+router.get("/success", authcontroller.success);
+router.get("/failure", authcontroller.failure);
 router.get("/userhome", userController.userhome);
 router.get("/signup", userController.signup);
 router.post("/signup", userController.signuppost);
