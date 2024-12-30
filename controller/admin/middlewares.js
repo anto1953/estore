@@ -1,3 +1,5 @@
+const User = require("../../model/userSchema");
+
 const checkSessionMiddleware = (req, res, next) => {
     if (req.session.admin) {
       next();
