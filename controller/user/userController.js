@@ -335,7 +335,7 @@ const newPassword = async (req, res) => {
     console.log('view products',req.query);
     try {
       const page = parseInt(req.query.page) || 1;
-      const limit = 12;
+      const limit = 9;
       const skip = (page - 1) * limit;
       const query = req.query.Search ? req.query.Search.toLowerCase() : "";
       const sortBy = req.query.sortBy || "";
@@ -357,8 +357,7 @@ const newPassword = async (req, res) => {
         { isListed: true }
       );
       
-      let products = await Product.find(
-        Object.assign({}, filterCriteria, { isListed: true })
+      let products = await Product.find( Object.assign({}, filterCriteria, { isListed: true })
       ).populate({
         path: 'offers.offerId',
         model: 'Offers',
@@ -410,7 +409,7 @@ const newPassword = async (req, res) => {
           
       if (isAjax) {
         // Return JSON response for AJAX requests
-        return res.json({ success: true, products });
+        return res.json({ success: true, products,totalPages,currentPage:page });
       }
       const cart = await Cart.findOne(userid ? { user: userid } : {});
       const cartProductIds = cart
@@ -456,6 +455,8 @@ const newPassword = async (req, res) => {
   };
   
   const getSortedProducts = async (req, res) => {
+    console.log('sort',req.body);
+    
     const { sortBy } = req.query;
     let sortCriteria = {};
   
