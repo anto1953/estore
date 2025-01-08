@@ -331,8 +331,131 @@ const newPassword = async (req, res) => {
     }
   };
   
-  const viewProducts = async (req, res) => {  
-    console.log('view products',req.query);
+  // const viewProducts = async (req, res) => {  
+  //   console.log('view products',req.query);
+  //   try {
+  //     const page = parseInt(req.query.page) || 1;
+  //     const limit = 9;
+  //     const skip = (page - 1) * limit;
+  //     const query = req.query.Search ? req.query.Search.toLowerCase() : "";
+  //     const sortBy = req.query.sortBy || "";
+  //     const category = req.query.category || "";
+  //     const isAjax = req.query.ajax === "true";
+      
+  
+  //     let authenticated = false;
+  //     const userid = req.session.user ? req.session.user._id : null;
+  //     const user=userid?await User.findById({_id:userid}):null
+  
+  //     if (userid) {
+  //       authenticated = true;
+  //     }
+  
+  //     const filterCriteria = Object.assign(
+  //       query ? { pname: { $regex: query, $options: "i" } } : {},
+  //       category ? { category: category } : {},
+  //       { isListed: true }
+  //     );
+      
+  //     let products = await Product.find( Object.assign({}, filterCriteria, { isListed: true })
+  //     ).populate({
+  //       path: 'offers.offerId',
+  //       model: 'Offers',
+  //     }).skip(skip)
+  //     .limit(limit);            
+  
+  //     const count = await Product.countDocuments(filterCriteria);
+  //     const totalPages = Math.ceil(count / limit);
+  
+  
+  //     let categories = await Category.find({ isListed: true });
+  
+  //     if (sortBy) {
+  //       switch (sortBy) {
+  //         case "popularity":
+  //           products.sort((a, b) => b.popularity - a.popularity);
+  //           break;
+  //         case "price-asc":
+  //           products.sort((a, b) => a.pprice - b.pprice);
+  //           break;
+  //         case "price-desc":
+  //           products.sort((a, b) => b.pprice - a.pprice);
+  //           break;
+  //         case "ratings":
+  //           products.sort((a, b) => b.ratings - a.ratings);
+  //           break;
+  //         case "featured":
+  //           products.sort((a, b) => b.featured - a.featured);
+  //           break;
+  //         case "new-arrivals":
+  //           products.sort(
+  //             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  //           );
+  //           break;
+  //         case "a-z":
+  //           products.sort((a, b) => a.pname.localeCompare(b.pname));
+  //           break;
+  //         case "z-a":
+  //           products.sort((a, b) => b.pname.localeCompare(a.pname));
+  //           break;
+  //         default:
+  //           break;
+  //       }
+  //     }
+  //     products = products.map((product) => {
+  //       product.image = product.image[0];
+  //       return product;
+  //     });
+          
+  //     if (isAjax) {
+  //       // Return JSON response for AJAX requests
+  //       return res.json({ success: true, products,totalPages,currentPage:page });
+  //     }
+  //     const cart = await Cart.findOne(userid ? { user: userid } : {});
+  //     const cartProductIds = cart
+  //       ? cart.products.map((item) => item.product.toString())
+  //       : [];
+  
+  //     const wishlist=user?user.wishlist : null;  
+  
+      
+  //     res.render("user/product_list", {
+  //       products,
+  //       cartItem: cartProductIds,
+  //       searchQuery: query,
+  //       sortBy: sortBy,
+  //       category: category,
+  //       categories,
+  //       user,
+  //       wishlist,
+  //       cart,
+  //       currentPage: page,
+  //       totalPages,
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //    return res.send(`
+  //     <html>
+  //     <head>
+  //         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  //     </head>
+  //     <body>
+  //         <script>
+  //             Swal.fire({
+  //                 icon: 'error',
+  //                 text: 'something error',
+  //             }).then(() => {
+  //           window.location.href='/userhome';
+  //           });
+  //         </script>
+  //     </body>   
+  // </html>
+  //    `)
+  //   }
+  // };
+  
+  const viewProducts = async (req, res) => {
+    console.log("view products", req.query);
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = 9;
@@ -341,11 +464,10 @@ const newPassword = async (req, res) => {
       const sortBy = req.query.sortBy || "";
       const category = req.query.category || "";
       const isAjax = req.query.ajax === "true";
-      
   
       let authenticated = false;
       const userid = req.session.user ? req.session.user._id : null;
-      const user=userid?await User.findById({_id:userid}):null
+      const user = userid ? await User.findById({ _id: userid }) : null;
   
       if (userid) {
         authenticated = true;
@@ -356,69 +478,71 @@ const newPassword = async (req, res) => {
         category ? { category: category } : {},
         { isListed: true }
       );
-      
-      let products = await Product.find( Object.assign({}, filterCriteria, { isListed: true })
-      ).populate({
-        path: 'offers.offerId',
-        model: 'Offers',
-      }).skip(skip)
-      .limit(limit);            
   
-      const count = await Product.countDocuments(filterCriteria);
-      const totalPages = Math.ceil(count / limit);
-  
-  
-      let categories = await Category.find({ isListed: true });
-  
+      // sorting
+      let sortCriteria = {};
       if (sortBy) {
         switch (sortBy) {
           case "popularity":
-            products.sort((a, b) => b.popularity - a.popularity);
+            sortCriteria = { popularity: -1 };
             break;
           case "price-asc":
-            products.sort((a, b) => a.pprice - b.pprice);
+            sortCriteria = { pprice: 1 };
             break;
           case "price-desc":
-            products.sort((a, b) => b.pprice - a.pprice);
+            sortCriteria = { pprice: -1 };
             break;
           case "ratings":
-            products.sort((a, b) => b.ratings - a.ratings);
+            sortCriteria = { ratings: -1 };
             break;
           case "featured":
-            products.sort((a, b) => b.featured - a.featured);
+            sortCriteria = { featured: -1 };
             break;
           case "new-arrivals":
-            products.sort(
-              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-            );
+            sortCriteria = { createdAt: -1 };
             break;
           case "a-z":
-            products.sort((a, b) => a.pname.localeCompare(b.pname));
+            sortCriteria = { pname: 1 };
             break;
           case "z-a":
-            products.sort((a, b) => b.pname.localeCompare(a.pname));
+            sortCriteria = { pname: -1 };
             break;
           default:
             break;
         }
       }
+  
+      let products = await Product.find(filterCriteria)
+        .populate({
+          path: "offers.offerId",
+          model: "Offers",
+        })
+        .sort(sortCriteria) 
+        .skip(skip)
+        .limit(limit);
+  
+      const count = await Product.countDocuments(filterCriteria);
+      const totalPages = Math.ceil(count / limit);
+  
+      let categories = await Category.find({ isListed: true });
+  
       products = products.map((product) => {
         product.image = product.image[0];
         return product;
       });
-          
+  
       if (isAjax) {
         // Return JSON response for AJAX requests
-        return res.json({ success: true, products,totalPages,currentPage:page });
+        return res.json({ success: true, products, totalPages, currentPage: page });
       }
+  
       const cart = await Cart.findOne(userid ? { user: userid } : {});
       const cartProductIds = cart
         ? cart.products.map((item) => item.product.toString())
         : [];
   
-      const wishlist=user?user.wishlist : null;  
+      const wishlist = user ? user.wishlist : null;
   
-      
       res.render("user/product_list", {
         products,
         cartItem: cartProductIds,
@@ -434,23 +558,23 @@ const newPassword = async (req, res) => {
       });
     } catch (error) {
       console.log(error);
-     return res.send(`
-      <html>
-      <head>
-          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-      </head>
-      <body>
-          <script>
-              Swal.fire({
-                  icon: 'error',
-                  text: 'something error',
-              }).then(() => {
-            window.location.href='/userhome';
-            });
-          </script>
-      </body>   
-  </html>
-     `)
+      return res.send(`
+        <html>
+        <head>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        </head>
+        <body>
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    text: 'something error',
+                }).then(() => {
+              window.location.href='/userhome';
+              });
+            </script>
+        </body>   
+    </html>
+      `);
     }
   };
   
